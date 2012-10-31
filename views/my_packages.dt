@@ -1,0 +1,35 @@
+extends layout
+
+block title
+	- auto title = "My packages";
+	
+block body
+	- import vibe.data.json;
+	
+	table
+		tr
+			th Package
+			th Latest version
+			th Description
+			th Action
+		- foreach( p; registry.getPackages(user._id) )
+			- auto pack = registry.getPackageInfo(p);
+			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
+			tr
+				td= p
+				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
+				td= latest.type == Json.Type.Object ? latest.description.opt!string : "-"
+				td
+					form(method="POST", action="#{req.rootDir}my_packages/remove")
+						input(type="hidden", name="package", value="#{p}")
+						input(type="submit", value="Remove")
+		tr
+			td
+			td
+			td
+			td
+				form(method="GET", action="#{req.rootDir}my_packages/add")
+					input(type="submit", value="Add new package")
+
+	p Note that it can take up to 30 min until new packages and new git tags are reflected in the registry.
+	

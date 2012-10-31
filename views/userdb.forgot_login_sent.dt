@@ -1,0 +1,7 @@
+extends layout
+
+block title
+	- string title = "Password reset mail has been sent";
+	
+block body
+	p An email has been sent to you with yout user name and a one-time link to reset your password.

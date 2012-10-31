@@ -1,0 +1,16 @@
+extends layout
+
+block title
+	- string title = "Login forgotten";
+	
+block body
+	p Please enter your email address below to have an email sent to you containing your user name and a link to reset your password.
+
+	form(method="POST", action="login")
+		table.form
+			tr
+				td
+					label(for="email") Email:
+				td
+					input(type="text", name="email")
+		input(type="submit", value="Request password reset");

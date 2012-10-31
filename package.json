@@ -1,0 +1,12 @@
+﻿{
+	"name": "dub-registry",
+	"description": "Online registry for dub packages",
+	"homepage": "http://registry.vibed.org/",
+	"authors": [
+		"Sönke Ludwig",
+		"Matthias Dondorff"
+	],
+	"version": "0.9.0",
+	"dependencies": {
+	}
+}

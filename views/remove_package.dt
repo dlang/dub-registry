@@ -1,0 +1,17 @@
+extends layout
+
+block title
+	- auto title = "Remove package";
+	
+block body
+
+	p.warn Warning: removing a package will break all projects that depend on it! If you want to rename the project, please consider to create a new repository instead and leave the old one here.
+
+	p
+		form(method="POST", action="#{req.rootDir}my_packages/remove_confirm")
+			input(type="hidden", name="package", value='#{req.form["package"]}')
+			input(type="submit", value="Confirm package deletion!")
+
+	p
+		form(method="GET", action="#{req.rootDir}my_packages")
+			input(type="submit", value="No, cancel deletion.")

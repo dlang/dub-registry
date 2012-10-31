@@ -1,0 +1,29 @@
+﻿!!! 5
+html
+	head
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+		block title
+		title= "VPM Registry: " ~ title
+	body
+		#header
+			a.blind(href="http://vibed.org/")
+				img#logo(src="#{req.rootDir}images/logo-small.png")
+			div#title
+				| VPM registry
+				h1= title
+			#profile
+				- if( req.session )
+					a(href="#{req.rootDir}logout") Log out
+				- else
+					p
+						a(href="#{req.rootDir}register") Register
+					p
+						a(href="#{req.rootDir}login") Log in
+		#content
+			- if( req.path != "/" )
+				p
+					a(href="#{req.rootDir}") ◄ Back to package overview
+					br
+					br
+		
+			block body

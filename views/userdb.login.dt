@@ -1,0 +1,38 @@
+extends layout
+
+block title
+	- string title = "Login";
+	
+block body
+	- if( error.length > 0 )
+		p.error= error
+
+	p Please enter your user name and password to log in:
+		
+	p
+		form(method="POST", action="login")
+			table.form
+				- if( redirect.length )
+					input(type="hidden", name="redirect", value="#{redirect}")
+				tr
+					td
+						label(for="name") Username:
+					td
+						input(type="text", name="name")
+				tr
+					td
+						label(for="password") Password:
+					td
+						input(type="password", name="password")
+				tr
+					td(colspan="2")
+						input(type="submit", value="Login")
+	
+	p Cannot log in? 
+	
+	p
+		a(href="register") Register new account.
+		br
+		a(href="forgot_login") Forgot username or password?
+		br
+		a(href="resend_activation") Resend activation mail

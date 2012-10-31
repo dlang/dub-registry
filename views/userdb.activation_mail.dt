@@ -1,0 +1,16 @@
+!!! 5
+html
+	head
+		title Activation mail
+	body
+		- import vibe.textfilter.urlencode;
+	
+		h1 Account activation
+		
+		p Dear #{user.fullName},
+		p A request has been made to activate your #{serviceName} account.
+		p If you did not make this request, you can safely ignore this message.
+		p Otherwise, please open the link below in your browser to confirm the activation:
+		p
+			- string link = serviceUrl~"/activate?email="~urlEncode(user.email)~"&code="~urlEncode(user.activationCode);
+			a(href="link")= link

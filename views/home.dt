@@ -1,0 +1,29 @@
+extends layout
+
+block title
+	- auto title = "Home";
+	
+block body
+	p Welcome to the VPM registry. The following list shows the available packages:
+	
+	table
+		tr
+			th Package
+			th Latest version
+			th Description
+		- foreach( pl; packages )
+			- if( pl.versions.length )
+				- auto p = pl.versions[pl.versions.length-1];
+				tr
+					td
+						a(href="view_package/#{pl.name}")= pl.name
+					td= p["version"].opt!string()
+					td= p.description.opt!string
+
+	- if( req.session )
+		p
+			a(href="my_packages") Manage my packages
+	- else
+		p Please
+			a(href="login?redirect=/my_packages") log in
+			| to manage your own packages.

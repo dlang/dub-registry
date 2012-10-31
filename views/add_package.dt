@@ -1,0 +1,19 @@
+extends layout
+
+block title
+	- auto title = "Add new package";
+	
+block body
+
+	form(method="POST", action="#{req.rootDir}my_packages/add")
+		select(name="kind", size="1")
+			option(value="github") github project
+		
+		p
+			label(for="owner") github user:
+			input(type="text", name="owner")
+		p
+			label(for="project") github project:
+			input(type="text", name="project")
+		p
+			input(type="submit", value="Add")

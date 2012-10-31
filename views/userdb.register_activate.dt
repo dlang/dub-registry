@@ -1,0 +1,7 @@
+extends layout
+
+block title
+	- auto title = "Registration almost finished";
+
+block body
+	p An activation mail has been sent to your email address. Please visit the contained link to finish the registration process.

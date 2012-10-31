@@ -1,0 +1,10 @@
+extends layout
+
+block title
+	- auto title = "Account Activation";
+	
+block head
+	meta(http-equiv="refresh", content="5; url=/")
+	
+block body
+	p Your account has now been activated.

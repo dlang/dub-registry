@@ -1,0 +1,7 @@
+extends layout
+
+block title
+	- string title = "Logout";
+	
+block body
+	p You have been successfully logged out.

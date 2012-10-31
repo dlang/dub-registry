@@ -1,0 +1,37 @@
+extends layout
+
+block title
+	- string title = "Register new account";
+	
+block body
+	- if( error.length > 0 )
+		p.error= error
+
+	form(method="POST", action="")
+		table.form
+			tr
+				td.caption
+					label(for="email") Email:
+				td
+					input(type="text", name="email")
+			tr
+				td.caption
+					label(for="name") User name:
+				td
+					input(type="text", name="name")
+			tr
+				td.caption
+					label(for="fullName") Full name (optional):
+				td
+					input(type="text", name="fullName")
+			tr
+				td.caption
+					label(for="password") Password:
+				td
+					input(type="password", name="password")
+			tr
+				td.caption
+					label(for="passwordConfirmation") Password confirmation:
+				td
+					input(type="password", name="passwordConfirmation")
+		input(type="submit", value="Register account")
