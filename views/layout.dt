@@ -3,7 +3,7 @@ html
 	head
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
 		block title
-		title= "VPM Registry: " ~ title
+		title= "dub registry: " ~ title
 	body
 		#header
 			a.blind(href="http://vibed.org/")

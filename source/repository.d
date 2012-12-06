@@ -138,6 +138,6 @@ class GithubRepository : Repository {
 	{
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = "v" ~ ver;
-		return "https://nodeload.github.com/"~m_owner~"/"~m_project~"/zipball/"~ver;
+		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
 	}
 }
