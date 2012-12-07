@@ -132,7 +132,7 @@ class VpmRegistry {
 		Json[] vers;
 		if( !pack["branches"].isNull() )
 			foreach( string k, v; pack.branches ){
-				auto nfo = cast(Json)v;
+				auto nfo = v.toJson();
 				nfo["version"] = "~"~k;
 				vers ~= nfo;
 			}
