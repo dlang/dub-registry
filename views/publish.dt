@@ -1,0 +1,17 @@
+extends layout
+
+block title
+	- auto title = "Publishing packages";
+
+block body
+	h2 Creating the project
+
+	p ...
+
+	h2 Uploading to github
+
+	p ...
+
+	h2 Registering with the registry
+
+	p ...

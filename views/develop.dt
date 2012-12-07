@@ -1,0 +1,18 @@
+extends layout
+
+block title
+	- auto title = "Helping development";
+
+block body
+	h2 Source repositories
+
+	p You can help enhancing DUB by writing bug reports or by making pull requests. Writing additional project generators would be a good example.
+	
+	p The main development happens on github in the following repositories:
+
+	ul
+		li
+			a(href="https://github.com/rejectedsoftware/dub") <code>dub</code> command line tool
+		li
+			a(href="https://github.com/rejectedsoftware/dub-registry") registry website
+

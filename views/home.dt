@@ -4,7 +4,7 @@ block title
 	- auto title = "Home";
 	
 block body
-	p Welcome to the VPM registry. The following list shows the available packages:
+	p Welcome to the DUB registry. The following list shows the available packages:
 	
 	table
 		tr

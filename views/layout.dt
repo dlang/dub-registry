@@ -3,13 +3,13 @@ html
 	head
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
 		block title
-		title= "dub registry: " ~ title
+		title= "DUB registry: " ~ title
 	body
 		#header
-			a.blind(href="http://vibed.org/")
+			a.blind(href="http://registry.vibed.org/")
 				img#logo(src="#{req.rootDir}images/logo-small.png")
 			div#title
-				| VPM registry
+				| DUB registry
 				h1= title
 			#profile
 				- if( req.session )
@@ -27,3 +27,12 @@ html
 					br
 		
 			block body
+
+		nav#footer
+			ul
+				li
+					a(href="#{req.rootDir}usage") Using DUB
+				li
+					a(href="#{req.rootDir}publish") Publishing packages
+				li
+					a(href="#{req.rootDir}develop") Helping development

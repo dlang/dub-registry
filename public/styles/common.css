@@ -19,6 +19,7 @@ table { border-collapse: collapse; border-spacing: 0; }
 body {
 	font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
 	font-size: 10pt;
+	background-color: #fff;
 }
 
 p  {
@@ -41,12 +42,12 @@ pre.code {
 
 div#header {
 	padding: 6pt;
-	background-color: #E0D8D0;
-	background-image: -webkit-linear-gradient(top, #E0D8D0, #B0A8A0);
-	background-image:    -moz-linear-gradient(top, #E0D8D0, #B0A8A0);
-	background-image:     -ms-linear-gradient(top, #E0D8D0, #B0A8A0);
-	background-image:      -o-linear-gradient(top, #E0D8D0, #B0A8A0);
-	border-bottom: 1px solid #877;
+	background-color: #eee;
+	background-image: -webkit-linear-gradient(top, #fff, #eee);
+	background-image:    -moz-linear-gradient(top, #fff, #eee);
+	background-image:     -ms-linear-gradient(top, #fff, #eee);
+	background-image:      -o-linear-gradient(top, #fff, #eee);
+	border-bottom: 1px solid #ddd;
 }
 
 div#header #logo {
@@ -79,6 +80,7 @@ p.warn {
 #title {
 	display: inline-block;
 	margin-left: 9pt;
+	padding-bottom: 3pt;
 	vertical-align: middle;
 }
 
@@ -101,6 +103,14 @@ h2 {
 	font-size: 120%;
 }
 
+#content ul {
+	list-style: disc inside;	
+}
+
+#content ul li {
+	margin-bottom: 6pt;
+}
+
 #content table {
 	width: 100%;
 	margin: 9pt 0pt;
@@ -120,3 +130,24 @@ h2 {
 #content table.form { width: auto; }
 #content table.form th { border: none; background: none; }
 #content table.form td { border: none; }
+
+
+/********************/
+/* FOOTER           */
+/********************/
+
+nav#footer {
+	background-color: #eee;
+	background-image: -webkit-linear-gradient(top, #eee, #fff);
+	background-image:    -moz-linear-gradient(top, #eee, #fff);
+	background-image:     -ms-linear-gradient(top, #eee, #fff);
+	background-image:      -o-linear-gradient(top, #eee, #fff);
+	border-top: 1px solid #ddd;
+}
+
+nav#footer li {
+	margin: 0;
+	padding: 6pt 12pt;
+	display: inline-block;
+	border-right: 1px solid #ddd;
+}

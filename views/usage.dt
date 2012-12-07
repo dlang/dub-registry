@@ -1,0 +1,17 @@
+extends layout
+
+block title
+	- auto title = "Using DUB";
+
+block body
+	h2 Installation
+
+	p ...
+
+	h2 Building foreign projects
+
+	p ...
+
+	h2 Creating an own project
+
+	p ...
