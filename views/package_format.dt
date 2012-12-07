@@ -1,0 +1,63 @@
+extends layout
+
+block title
+	- auto title = "Helping development";
+
+block body
+	h2 Fields
+
+	table
+		tr
+			th Name
+			th Type
+			th Required
+			th Description
+		
+		tr
+			td name
+			td string
+			td yes
+			td Name of the package, used to uniquely identify the package
+
+		tr
+			td version
+			td string
+			td yes (still)
+			td Current package version - will not be needed in the future, as it is inferred from the git tag name
+
+		tr
+			td description
+			td string
+			td
+			td Brief description of the package
+
+		tr
+			td homepage
+			td string
+			td
+			td URL of the project website
+
+		tr
+			td authors
+			td string[]
+			td
+			td List of project authors
+
+		tr
+			td copyright
+			td string
+			td
+			td Copyright declaration string
+
+		tr
+			td license
+			td string
+			td
+			td License(s) under which the project can be used
+
+		tr
+			td dependencies
+			td string[string]
+			td
+			td List of project dependencies given as pairs of <code>"[name]" : "[version-spec]"</code>
+

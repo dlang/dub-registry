@@ -1,6 +1,7 @@
 extends layout
 
 block title
+	- import std.algorithm;
 	- import vibe.data.json;
 	- auto title = "Package "~pack.name.get!string;
 	
@@ -11,30 +12,42 @@ block body
 	
 	h2 Package Information
 	
-	dl
-		dt Latest version
-		dd= latest["version"]
+	table
+		tr
+			td Latest version
+			td= latest["version"]
 		
-		- if( "homepage" in latest )
-			dt Homepage
-			dd
-				a(href="#{latest.homepage}")= latest.homepage
+		- if( auto ph = "homepage" in latest )
+			tr
+				td Homepage
+				td
+					a(href="#{latest.homepage}")= *ph
 
-		- if( "authors" in latest )
-			dt Authors
-			dd
-				- foreach( size_t i, author; latest.authors )
-					|= (i > 0 ? ", " : "") ~ author.get!string
+		- if( auto pl = "license" in latest )
+			tr
+				td License
+				td= *pl
 
-		- if( "dependencies" in latest )
-			dt Dependencies
-			dd
-				- if( latest.dependencies.length )
-					- foreach( string dep, ver; latest.dependencies )
-						p
-							a(href="#{req.rootDir}view_package/#{dep}")= dep
-				- else
-					p none
+		- if( auto pl = "copyright" in latest )
+			tr
+				td Copyright
+				td= *pl
+
+		- if( auto pa = "authors" in latest )
+			tr
+				td Authors
+				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
+
+		- if( auto pd = "dependencies" in latest )
+			tr
+				td Dependencies
+				td
+					- if( pd.length )
+						- foreach( string dep, ver; *pd )
+							p
+								a(href="#{req.rootDir}view_package/#{dep}")= dep
+					- else
+						p none
 	
 	h2 Installation
 	

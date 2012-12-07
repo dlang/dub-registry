@@ -8,6 +8,8 @@ block body
 
 	p ...
 
+	p See the <a href="package-format">package format</a> page for the format of the <code>pakage.json</code> file.
+
 	h2 Uploading to github
 
 	p ...

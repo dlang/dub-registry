@@ -92,6 +92,7 @@ static this()
 	router.get("/usage", staticTemplate!"usage.dt");
 	router.get("/publish", staticTemplate!"publish.dt");
 	router.get("/develop", staticTemplate!"develop.dt");
+	router.get("/package-format", staticTemplate!"package_format.dt");
 	router.get("/view_package/:packname", &showPackage);
 	router.get("/my_packages", userctrl.auth(toDelegate(&showMyPackages)));
 	router.get("/my_packages/add", userctrl.auth(toDelegate(&showAddPackage)));

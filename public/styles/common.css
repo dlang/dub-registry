@@ -26,8 +26,14 @@ p  {
 	margin-bottom: 6pt;
 }
 
+code {
+	font-family: 'Courier New', monospace;
+	background-color: #eee;
+	border: 1px solid #ddd;
+}
+
 pre.code {
-	border: 1px solid #444;
+	border: 1px solid #bbb;
 	padding: 3pt;
 	background-color: #F0F0F0;
 	font-family: 'Courier New', monospace;
@@ -118,7 +124,7 @@ h2 {
 
 #content td, #content th {
 	border: 1px dotted #aaa;
-	padding: 2pt;
+	padding: 3pt;
 }
 #content th {
 	background-color: #666;

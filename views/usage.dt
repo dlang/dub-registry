@@ -15,3 +15,6 @@ block body
 	h2 Creating an own project
 
 	p ...
+
+	p See the <a href="package-format">package format</a> page for a full reference of the possibilities.
+	
