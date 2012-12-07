@@ -35,9 +35,8 @@ class VpmRegistry {
 
 	void addPackage(Json repository, BsonObjectID user)
 	{
-		RepositoryETags etags;
-		auto rep = getRepository(repository, etags);
-		auto info = rep.getPackageInfo("~master", etags);
+		auto rep = getRepository(repository);
+		auto info = rep.getPackageInfo("~master");
 
 		enforce(m_packages.findOne(["name": info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 
@@ -48,7 +47,6 @@ class VpmRegistry {
 		pack["repository"] = serializeToBson(repository);
 		pack["versions"] = cast(Bson[])null;
 		pack["branches"] = serializeToBson(["master": info]);
-		pack["etags"] = serializeToBson(etags);
 		m_packages.insert(pack);
 	}
 
@@ -93,13 +91,12 @@ class VpmRegistry {
 		logInfo("Checking for new versions...");
 		foreach( packname; this.availablePackages ){
 			try {
-				auto etags = getETags(packname);
 				auto pack = getPackageInfo(packname);
-				auto rep = getRepository(pack.repository, etags);
-				foreach( ver; rep.getVersions(etags) ){
+				auto rep = getRepository(pack.repository);
+				foreach( ver; rep.getVersions() ){
 					if( !hasVersion(packname, ver) ){
 						try {
-							addVersion(packname, ver, rep.getPackageInfo(ver, etags));
+							addVersion(packname, ver, rep.getPackageInfo(ver));
 							logInfo("Added version %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for version %s of %s: %s", ver, packname, e.msg);
@@ -108,10 +105,10 @@ class VpmRegistry {
 						}
 					}
 				}
-				foreach( ver; rep.getBranches(etags) ){
+				foreach( ver; rep.getBranches() ){
 					if( !hasVersion(packname, ver) ){
 						try {
-							addVersion(packname, ver, rep.getPackageInfo(ver, etags));
+							addVersion(packname, ver, rep.getPackageInfo(ver));
 							logInfo("Added branch %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for branch %s of %s: %s", ver, packname, e.msg);
@@ -120,7 +117,6 @@ class VpmRegistry {
 						}
 					}
 				}
-				setETags(packname, etags);
 			} catch( Exception e ){
 				logWarn("Error processing package %s: %s", packname, e.toString());
 				// TODO: store error message for web frontend!
@@ -146,20 +142,6 @@ class VpmRegistry {
 		} else {
 			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: info]]);
 		}
-	}
-
-	RepositoryETags getETags(string packname)
-	{
-		RepositoryETags tags;
-		auto p = m_packages.findOne(["name": packname], ["etags": 1]);
-		enforce(!p.isNull(), "Unknown package: "~packname);
-		if( !p.etags.isNull() ) deserializeBson(tags, p.etags);
-		return tags;
-	}
-
-	void setETags(string packname, RepositoryETags tags)
-	{
-		m_packages.update(["name": packname], ["$set": ["etags": tags]]);
 	}
 }
 

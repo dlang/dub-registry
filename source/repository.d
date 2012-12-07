@@ -1,33 +1,29 @@
 import vibe.vibe;
 
+import cache;
+
 
 private {
 	Repository[string] s_repositories;
 }
 
-Repository getRepository(Json repinfo, ref RepositoryETags etags)
+Repository getRepository(Json repinfo)
 {
 	auto ident = repinfo.toString();
 	if( auto pr = ident in s_repositories )
 		return *pr;
 
 	enforce(repinfo.kind == "github");
-	auto rep = new GithubRepository(repinfo.owner.get!string, repinfo.project.get!string, etags);
+	auto rep = new GithubRepository(repinfo.owner.get!string, repinfo.project.get!string);
 	s_repositories[ident] = rep;
 	return rep;
 }
 
 interface Repository {
-	string[] getVersions(ref RepositoryETags etags);
-	string[] getBranches(ref RepositoryETags etags);
-	Json getPackageInfo(string ver, ref RepositoryETags etags);
+	string[] getVersions();
+	string[] getBranches();
+	Json getPackageInfo(string ver);
 	string getDownloadUrl(string ver);
-}
-
-struct RepositoryETags {
-	string tags;
-	string branches;
-	string[string] packageInfo;
 }
 
 class GithubRepository : Repository {
@@ -40,29 +36,16 @@ class GithubRepository : Repository {
 		string[] m_branchList;
 	}
 
-	this(string owner, string project, ref RepositoryETags etags)
+	this(string owner, string project)
 	{
 		m_owner = owner;
 		m_project = project;
-		getVersions(etags); // download an initial version list
+		getVersions(); // download an initial version list
 	}
 
-	string[] getVersions(ref RepositoryETags etags)
+	string[] getVersions()
 	{
-		auto url = "https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags";
-		auto res = requestHttp(url, (req){
-				if( etags.tags.length ) req.headers["If-None-Match"] = etags.tags;
-			});
-		if( res.statusCode == HttpStatus.NotModified ){
-			logDebug("No new tags for %s/%s", m_owner, m_project);
-			return m_versionList;
-		}
-		if( res.statusCode != HttpStatus.OK ){
-			logDebug("GITHUB REPLY FOR TAG QUERY: %s", res.bodyReader.readAllUtf8());
-		}
-		enforce(res.statusCode == HttpStatus.OK, "Failed to get tags using the github API for "~m_owner~"/"~m_project~": "~httpStatusText(res.statusCode));
-		etags.tags = res.headers["ETag"];
-
+		auto res = downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags");
 		auto tags = res.readJson();
 		m_versionList.length = 0;
 		foreach_reverse( tag; tags ){
@@ -76,22 +59,9 @@ class GithubRepository : Repository {
 		return m_versionList;
 	}
 
-	string[] getBranches(ref RepositoryETags etags)
+	string[] getBranches()
 	{
-		auto url = "https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches";
-		auto res = requestHttp(url, (req){
-				if( etags.branches.length ) req.headers["If-None-Match"] = etags.branches;
-			});
-		if( res.statusCode == HttpStatus.NotModified ){
-			logDebug("No new branches for %s/%s", m_owner, m_project);
-			return m_branchList;
-		}
-		if( res.statusCode != HttpStatus.OK ){
-			logDebug("GITHUB REPLY FOR TAG QUERY: %s", res.bodyReader.readAllUtf8());
-		}
-		enforce(res.statusCode == HttpStatus.OK, "Failed to get tags using the github API for "~m_owner~"/"~m_project~": "~httpStatusText(res.statusCode));
-		etags.branches = res.headers["ETag"];
-
+		auto res = downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches");
 		auto branches = res.readJson();
 		m_branchList.length = 0;
 		foreach_reverse( branch; branches ){
@@ -103,7 +73,7 @@ class GithubRepository : Repository {
 		return m_branchList;
 	}
 
-	Json getPackageInfo(string ver, ref RepositoryETags etags)
+	Json getPackageInfo(string ver)
 	{
 		string url;
 		if( ver.startsWith("~") ){
@@ -113,16 +83,8 @@ class GithubRepository : Repository {
 			enforce(pc !is null, "Invalid version identifier.");
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(*pc)~"/package.json";
 		}
-		auto res = requestHttp(url, (req){
-				auto etag = etags.packageInfo.get(ver, "");
-				if( etag.length ) req.headers["If-None-Match"] = etag;
-			});
-		if( res.statusCode == HttpStatus.NotModified ){
-			logDebug("Package has not changed for %s/%s", m_owner, m_project);
-			return Json();
-		}
-		enforce(res.statusCode == HttpStatus.OK, "Failed to get package.json for version "~ver);
-		etags.packageInfo[ver] = res.headers["ETag"];
+		auto res = downloadCached(url);
+
 		logInfo("Getting JSON response from %s", url);
 		auto ret = res.readJson();
 		if( auto pv = "version" in ret )
@@ -140,4 +102,10 @@ class GithubRepository : Repository {
 		else ver = "v" ~ ver;
 		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
 	}
+}
+
+Json readJson(InputStream str)
+{
+	auto text = str.readAllUtf8();
+	return parseJson(text);
 }
