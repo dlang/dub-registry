@@ -22,11 +22,15 @@ class UrlCache {
 
 	InputStream get(Url url)
 	{
-		string etag;
 		auto be = m_entries.findOne(["url": url.toString()]);
-		if( !be.isNull() ) etag = be.etag.get!string();
+		CacheEntry entry;
+		if( !be.isNull() ) deserializeBson(entry, be);
+		else {
+			entry._id = BsonObjectID.generate();
+			entry.url = url.toString();
+		}
 		auto res = requestHttp(url, (req){
-				if( etag.length ) req.headers["If-None-Match"] = etag;
+				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
 			});
 
 		if( res.statusCode == HttpStatus.NotModified ){
@@ -40,14 +44,22 @@ class UrlCache {
 			auto dst = new MemoryOutputStream;
 			dst.write(res.bodyReader);
 			auto rawdata = dst.data;
-			auto data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
-			m_entries.update(["_id": be._id], ["$set": ["etag": Bson(*pet), "data": Bson(data)]]);
+			entry.etag = *pet;
+			entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
+			m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
 			return new MemoryStream(rawdata, false);
 		}
 
 		logDebug("Response without etag.. not caching: "~url.toString());
 		return res.bodyReader;
 	}
+}
+
+private struct CacheEntry {
+	BsonObjectID _id;
+	string url;
+	string etag;
+	BsonBinData data;
 }
 
 private UrlCache s_cache;
