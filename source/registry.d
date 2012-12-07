@@ -11,6 +11,15 @@ class VpmRegistrySettings {
 	Path metadataPath;
 }
 
+private struct DbPackage {
+	BsonObjectID _id;
+	BsonObjectID owner;
+	string name;
+	Bson repository;
+	Bson[] versions;
+	Bson[string] branches;
+}
+
 class VpmRegistry {
 	private {
 		MongoDB m_db;
@@ -23,6 +32,58 @@ class VpmRegistry {
 		m_db = db;
 		m_settings = settings;
 		m_packages = db["vpmreg.packages"];
+
+		repairVersionOrder();
+	}
+
+	void repairVersionOrder()
+	{
+		import std.algorithm;
+
+		static int[] linearizeVersion(string ver)
+		{
+			import std.conv;
+			static immutable prefixes = ["alpha", "beta", "rc"];
+			auto parts = ver.split(".");
+			int[] ret;
+			foreach( p; parts ){
+				ret ~= parse!int(p);
+
+				bool gotprefix = false;
+				foreach( i, prefix; prefixes ){
+					if( p.startsWith(prefix) ){
+						p = p[prefix.length .. $];
+						if( p.length ) ret ~= i*10000 + to!int(p);
+						else ret ~= i*10000;
+						gotprefix = true;
+						break;
+					}
+				}
+				if( !gotprefix ) ret ~= int.max;
+			}
+			return ret;
+		}
+
+		static bool vcmp(Bson a, Bson b)
+		{
+			try {
+				auto va = a["version"].get!string;
+				auto vb = b["version"].get!string;
+				auto aparts = linearizeVersion(va);
+				auto bparts = linearizeVersion(vb);
+
+				foreach( i; 0 .. min(aparts.length, bparts.length) )
+					if( aparts[i] != bparts[i] )
+						return aparts[i] < bparts[i];
+				return aparts.length < bparts.length;
+			} catch( Exception e ) return false;
+		}
+
+		foreach( bp; m_packages.find() ){
+			auto p = deserializeBson!DbPackage(bp);
+			sort!vcmp(p.versions);
+			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
+		}
 	}
 
 	@property string[] availablePackages()
@@ -40,13 +101,12 @@ class VpmRegistry {
 
 		enforce(m_packages.findOne(["name": info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 
-		Bson pack = Bson.EmptyObject;
-		pack["_id"] = BsonObjectID.generate();
-		pack["owner"] = user;
-		pack["name"] = info.name.get!string;
-		pack["repository"] = serializeToBson(repository);
-		pack["versions"] = cast(Bson[])null;
-		pack["branches"] = serializeToBson(["master": info]);
+		DbPackage pack;
+		pack._id = BsonObjectID.generate();
+		pack.owner = user;
+		pack.name = info.name.get!string;
+		pack.repository = serializeToBson(repository);
+		pack.branches["master"] = serializeToBson(info);
 		m_packages.insert(pack);
 	}
 
