@@ -38,17 +38,17 @@ block body
 				td Authors
 				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
 
-		- if( auto pd = "dependencies" in latest )
-			tr
-				td Dependencies
-				td
-					- if( pd.length )
+		tr
+			td Dependencies
+				- auto pd = "dependencies" in latest;
+				- if( pd && pd.length )
+					td
 						- foreach( string dep, ver; *pd )
 							p
 								a(href="#{req.rootDir}view_package/#{dep}")= dep
-					- else
-						p none
-	
+				- else
+					td none
+
 	h2 Installation
 	
 	p To use this package, put the following dependency into your project's package.json into the dependencies section:
