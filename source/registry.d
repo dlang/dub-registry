@@ -53,8 +53,8 @@ class VpmRegistry {
 				foreach( i, prefix; prefixes ){
 					if( p.startsWith(prefix) ){
 						p = p[prefix.length .. $];
-						if( p.length ) ret ~= i*10000 + to!int(p);
-						else ret ~= i*10000;
+						if( p.length ) ret ~= cast(int)i*10000 + to!int(p);
+						else ret ~= cast(int)i*10000;
 						gotprefix = true;
 						break;
 					}
