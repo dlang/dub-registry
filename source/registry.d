@@ -27,11 +27,11 @@ class VpmRegistry {
 		VpmRegistrySettings m_settings;
 	}
 
-	this(MongoDB db, VpmRegistrySettings settings)
+	this(VpmRegistrySettings settings)
 	{
-		m_db = db;
+		m_db = connectMongoDB("127.0.0.1");
 		m_settings = settings;
-		m_packages = db["vpmreg.packages"];
+		m_packages = m_db["vpmreg.packages"];
 
 		repairVersionOrder();
 	}

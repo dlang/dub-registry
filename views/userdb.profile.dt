@@ -1,7 +1,0 @@
-extends layout
-
-block title
-	- string title = "Edit profile";
-	
-block body
-	p You will be able to modify your profile information here later!

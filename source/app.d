@@ -2,7 +2,7 @@ import vibe.d;
 
 import registry;
 
-import userman.controller;
+import userman.web;
 
 VpmRegistry s_registry;
 
@@ -74,16 +74,20 @@ static this()
 	auto router = new UrlRouter;
 
 	// user management
-	auto db = connectMongoDB("127.0.0.1");
-	auto userdb = new UserDB(db, "vpmreg");
-	auto userctrl = new UserDBController(userdb);
-	userctrl.register(router, "/");
+	auto udbsettings = new UserManSettings;
+	udbsettings.serviceName = "DUB registry";
+	udbsettings.serviceUrl = "http://registry.vibed.org/";
+	udbsettings.serviceEmail = "noreply@vibed.org";
+	udbsettings.databaseName = "vpmreg";
+	auto userdb = new UserManController(udbsettings);
+	auto userdbweb = new UserManWebInterface(userdb);
+	userdbweb.register(router);
 
 	// VPM registry
 	auto vpmSettings = new VpmRegistrySettings;
 	vpmSettings.pathPrefix = "/";
 	vpmSettings.metadataPath = Path("public/packages");
-	s_registry = new VpmRegistry(db, vpmSettings);
+	s_registry = new VpmRegistry(vpmSettings);
 	auto regctrl = new VpmRegistryController(s_registry);
 	regctrl.register(router);
 
@@ -94,11 +98,11 @@ static this()
 	router.get("/develop", staticTemplate!"develop.dt");
 	router.get("/package-format", staticTemplate!"package_format.dt");
 	router.get("/view_package/:packname", &showPackage);
-	router.get("/my_packages", userctrl.auth(toDelegate(&showMyPackages)));
-	router.get("/my_packages/add", userctrl.auth(toDelegate(&showAddPackage)));
-	router.post("/my_packages/add", userctrl.auth(toDelegate(&addPackage)));
-	router.post("/my_packages/remove", userctrl.auth(toDelegate(&showRemovePackage)));
-	router.post("/my_packages/remove_confirm", userctrl.auth(toDelegate(&removePackage)));
+	router.get("/my_packages", userdbweb.auth(toDelegate(&showMyPackages)));
+	router.get("/my_packages/add", userdbweb.auth(toDelegate(&showAddPackage)));
+	router.post("/my_packages/add", userdbweb.auth(toDelegate(&addPackage)));
+	router.post("/my_packages/remove", userdbweb.auth(toDelegate(&showRemovePackage)));
+	router.post("/my_packages/remove_confirm", userdbweb.auth(toDelegate(&removePackage)));
 	router.get("*", serveStaticFiles("./public"));
 	
 	// start the web server
