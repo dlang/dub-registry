@@ -4,7 +4,26 @@ block title
 	- auto title = "Helping development";
 
 block body
-	h2 Fields
+	h2 Introduction
+
+	p Every DUB package <em>should</em> contain a <code>package.json</code> file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized fields and their meaning. Note that any unknown fields are ignored for backwards compatibility reasons.
+
+	p A typical example of a simple application that requires no platform specific setup:
+
+	pre.code
+		|{
+		|	"name": "myproject",
+		|	"description": "A little web service of mine.",
+		|	"authors": ["Peter Parker"],
+		|	"homepage": "http://myproject.com",
+		|	"license": "GPL v2",
+		|	"dependencies": {
+		|		"vibe.d": ">=0.7.11"
+		|	}
+		|}
+
+
+	h2#standard-fields Standard Fields
 
 	table
 		tr
@@ -15,49 +34,142 @@ block body
 		
 		tr
 			td name
-			td string
+			td
+				code string
 			td yes
 			td Name of the package, used to uniquely identify the package
 
 		tr
-			td version
-			td string
-			td yes (still)
-			td Current package version - will not be needed in the future, as it is inferred from the git tag name
-
-		tr
 			td description
-			td string
+			td
+				code string
 			td
 			td Brief description of the package
 
 		tr
 			td homepage
-			td string
+			td
+				code string
 			td
 			td URL of the project website
 
 		tr
 			td authors
-			td string[]
+			td
+				code string[]
 			td
 			td List of project authors
 
 		tr
 			td copyright
-			td string
+			td
+				code string
 			td
 			td Copyright declaration string
 
 		tr
 			td license
-			td string
+			td
+				code string
 			td
 			td License(s) under which the project can be used
 
 		tr
 			td dependencies
-			td string[string]
 			td
-			td List of project dependencies given as pairs of <code>"[name]" : "[version-spec]"</code>
+				code string[string]
+			td
+			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : "&lt;version-spec&gt;"</code> - see next section for how version specs look like
 
+	
+	h2#version-specs Version specifications
+
+	ul
+		li <code>&gt;=1.3.0</code>
+		li <code>&gt;=1.3.0 &lt;=1.3.4</code>
+		li <code>~master</code>
+
+	
+	h2#build-settings Build settings
+
+	p Build settings fields influence the command line options passed to the compiler and linker. All fields are optional.
+
+	p Platform specific settings are supported through the use of field name suffixes. Suffixes are dash separated platform identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
+
+	pre.code
+		|{
+		|	"dflags": ["-wi"],
+		|	"dflags-windows-x64-dmd": ["$PACKAGE_DIR/lib/win32/mylib.lib"],
+		|	"dflags-dmd": ["-wi"],
+		|	"libs-posix": ["ssl", "crypto"],
+		|	"dflags-x64": ["-version=UseSpecialImpl"]
+		|}
+
+	p Inside of build setting values, it is possible to use variables using dollar notation. <code>$PACKAGE_DIR</code> contains the path to the package itself and all other variables are taken from the program environment.
+
+	table
+		tr
+			th Name
+			th Type
+			th Description
+
+		tr
+			td dflags
+			td
+				code string[]
+			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use
+
+		tr
+			td lflags
+			td
+				code string[]
+			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
+
+		tr
+			td libs
+			td
+				code string[]
+			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
+
+		tr
+			td files
+			td
+				code string[]
+			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
+
+		tr
+			td versions
+			td
+				code string[]
+			td A list of D versions to be defined during compilation
+
+		tr
+			td importPath
+			td
+				code string[]
+			td Additional import paths to search for D modules (the <code>soruce/</code> folder is used by default as a source folder, if it exists)
+
+		tr
+			td stringImportPath
+			td
+				code string[]
+			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
+
+	
+	h2#configurations Configurations
+
+	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add to the global build settings. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. The configurations are defined by adding a "configurations" field. The following example defines a "metro-app" and a "desktop-app" configuration.
+
+	pre.code
+		|{
+		|	"configurations": {
+		|		"metro-app": {
+		|			"versions": ["MetroApp"],
+		|			"libs": ["d3d11"]
+		|		},
+		|		"desktop-app": {
+		|			"versions": ["DesktopApp"],
+		|			"libs": ["d3d9"]
+		|		}
+		|	}
+		|}

@@ -28,8 +28,9 @@ p  {
 
 code {
 	font-family: 'Courier New', monospace;
-	background-color: #eee;
-	border: 1px solid #ddd;
+	background-color: #f8f8f8;
+	border: 1px solid #d8d8d8;
+	padding: 0 2pt;
 }
 
 pre.code {
@@ -90,10 +91,6 @@ p.warn {
 	vertical-align: middle;
 }
 
-h1 {
-	font-size: 18pt;
-}
-
 /********************/
 /* CONTENT          */
 /********************/
@@ -103,8 +100,12 @@ div#content {
 	clear: both;
 }
 
+h1 {
+	font-size: 18pt;
+}
+
 h2 {
-	margin-top: 12pt;
+	margin-top: 18pt;
 	margin-bottom: 9pt;
 	font-size: 120%;
 }

@@ -10,6 +10,7 @@ block body
 		tr
 			th Package
 			th Latest version
+			th Date
 			th Description
 		- foreach( pl; packages )
 			- if( pl.versions.length )
@@ -18,6 +19,7 @@ block body
 					td
 						a(href="view_package/#{pl.name}")= pl.name
 					td= p["version"].opt!string()
+					td= p.date.opt!string
 					td= p.description.opt!string
 
 	- if( req.session )
