@@ -66,8 +66,10 @@ void removePackage(HttpServerRequest req, HttpServerResponse res, User user)
 	res.redirect("/my_packages");
 }
 
+extern(C) int getch();
 static this()
 {
+	getch();
 	setLogLevel(LogLevel.None);
 	setLogFile("log.txt", LogLevel.Debug);
 

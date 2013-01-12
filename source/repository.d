@@ -26,12 +26,17 @@ interface Repository {
 	string getDownloadUrl(string ver);
 }
 
+struct CommitInfo {
+	string sha;
+	string date;
+}
+
 class GithubRepository : Repository {
 	private {
 		string m_owner;
 		string m_project;
-		string[string] m_versions;
-		string[string] m_branches;
+		CommitInfo[string] m_versions;
+		CommitInfo[string] m_branches;
 		string[] m_versionList;
 		string[] m_branchList;
 	}
@@ -45,13 +50,15 @@ class GithubRepository : Repository {
 
 	string[] getVersions()
 	{
-		auto res = downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags");
-		auto tags = res.readJson();
+		Json tags;
+		downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
 		m_versionList.length = 0;
 		foreach_reverse( tag; tags ){
 			auto tagname = tag.name.get!string;
 			if( tagname.length >= 2 && tagname[0] == 'v' ){
-				m_versions[tagname[1 .. $]] = tag.commit.sha.get!string;
+				Json commit;
+				downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(); });
+				m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
 				m_versionList ~= tagname[1 .. $];
 				logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
 			}
@@ -61,12 +68,14 @@ class GithubRepository : Repository {
 
 	string[] getBranches()
 	{
-		auto res = downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches");
-		auto branches = res.readJson();
+		Json branches;
+		downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches", (scope input){ branches = input.readJson(); });
 		m_branchList.length = 0;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
-			m_branches[branchname] = branch.commit.sha.get!string;
+			Json commit;
+			downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, (scope input){ commit = input.readJson(); });
+			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
 			m_branchList ~= "~"~branchname;
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
@@ -76,21 +85,28 @@ class GithubRepository : Repository {
 	Json getPackageInfo(string ver)
 	{
 		string url;
+		string date;
 		if( ver.startsWith("~") ){
+			auto pc = ver[1 .. $] in m_branches;
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~ver[1 .. $]~"/package.json";
+			if( pc ) date = pc.date;
 		} else {
 			auto pc = ver in m_versions;
 			enforce(pc !is null, "Invalid version identifier.");
-			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(*pc)~"/package.json";
+			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
+			date = pc.date;
 		}
-		auto res = downloadCached(url);
 
+		Json ret;
 		logInfo("Getting JSON response from %s", url);
-		auto ret = res.readJson();
-		if( auto pv = "version" in ret )
+		downloadCached(url, (scope input){ ret = input.readJson(); });
+
+		if( auto pv = "version" in ret ){
 			if( *pv != ver )
 				logWarn("Package %s/%s package.json contains version and does not match tag: %s vs %s", m_owner, m_project, *pv, ver);
+		}
 		ret["version"] = ver;
+		if( date.length ) ret["date"] = date;
 		ret.url = getDownloadUrl(ver);
 		ret.downloadUrl = getDownloadUrl(ver);
 		return ret;

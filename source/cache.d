@@ -20,7 +20,7 @@ class UrlCache {
 		m_entries = m_db["urlcache.entries"];
 	}
 
-	InputStream get(Url url)
+	void get(Url url, scope void delegate(scope InputStream str) callback)
 	{
 		auto be = m_entries.findOne(["url": url.toString()]);
 		CacheEntry entry;
@@ -32,11 +32,12 @@ class UrlCache {
 		auto res = requestHttp(url, (req){
 				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
 			});
+		scope(exit) destroy(res);
 
 		if( res.statusCode == HttpStatus.NotModified ){
 			auto data = be["data"].get!BsonBinData().rawData();
-			auto str = new MemoryStream(cast(ubyte[])data, false);
-			return str;
+			callback(new MemoryStream(cast(ubyte[])data, false));
+			return;
 		}
 		enforce(res.statusCode == HttpStatus.OK, "Unexpeted reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
@@ -47,11 +48,13 @@ class UrlCache {
 			entry.etag = *pet;
 			entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
 			m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
-			return new MemoryStream(rawdata, false);
+			callback(new MemoryStream(rawdata, false));
+			return;
 		}
 
 		logDebug("Response without etag.. not caching: "~url.toString());
-		return res.bodyReader;
+
+		callback(res.bodyReader);
 	}
 }
 
@@ -64,13 +67,13 @@ private struct CacheEntry {
 
 private UrlCache s_cache;
 
-InputStream downloadCached(Url url)
+void downloadCached(Url url, scope void delegate(scope InputStream str) callback)
 {
 	if( !s_cache ) s_cache = new UrlCache;
-	return s_cache.get(url);
+	s_cache.get(url, callback);
 }
 
-InputStream downloadCached(string url)
+void downloadCached(string url, scope void delegate(scope InputStream str) callback)
 {
-	return downloadCached(Url.parse(url));
+	return downloadCached(Url.parse(url), callback);
 }
