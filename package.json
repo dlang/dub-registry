@@ -6,7 +6,6 @@
 		"Sönke Ludwig",
 		"Matthias Dondorff"
 	],
-	"version": "0.9.0",
 	"dependencies": {
 		"userman": "~master",
 		"vibe.d": "~master"
