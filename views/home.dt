@@ -17,7 +17,7 @@ block body
 				- auto p = pl.versions[pl.versions.length-1];
 				tr
 					td
-						a(href="view_package/#{pl.name}")= pl.name
+						a(href="packages/#{pl.name}")= pl.name
 					td= p["version"].opt!string()
 					td= p.date.opt!string
 					td= p.description.opt!string

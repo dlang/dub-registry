@@ -3,10 +3,16 @@ extends layout
 block title
 	- import std.algorithm;
 	- import vibe.data.json;
-	- auto title = "Package "~pack.name.get!string;
+	- auto title = "Package " ~ pack.name.get!string ~ (ver.length ? " "~ver : null);
 	
 block body
-	- Json latest = pack.versions[pack.versions.length-1];
+	- Json latest;
+	- if( ver.length == 0 )
+		- latest = pack.versions[pack.versions.length-1];
+	- else
+		- foreach( v; pack.versions )
+			- if( v["version"].get!string == ver )
+				- latest = v;
 
 	p= latest.description.opt!string
 	
@@ -63,5 +69,9 @@ block body
 	
 	h2 Available versions
 
-	- foreach_reverse( ver; pack.versions )
-		p= ver["version"]
+	- foreach_reverse( v; pack.versions )
+		- auto vs = v["version"];
+		- if( vs == ver )
+			em= vs
+		- else
+			a(href='#{req.rootDir}packages/#{pack.name}/#{vs}')= vs

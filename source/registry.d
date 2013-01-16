@@ -4,7 +4,7 @@ import repository;
 
 
 /// Settings to configure the package registry.
-class VpmRegistrySettings {
+class DubRegistrySettings {
 	/// Prefix used to acces the registry.
 	string pathPrefix;
 	/// location for the package.json files on the filesystem.
@@ -20,14 +20,14 @@ private struct DbPackage {
 	Bson[string] branches;
 }
 
-class VpmRegistry {
+class DubRegistry {
 	private {
 		MongoDB m_db;
 		MongoCollection m_packages;
-		VpmRegistrySettings m_settings;
+		DubRegistrySettings m_settings;
 	}
 
-	this(VpmRegistrySettings settings)
+	this(DubRegistrySettings settings)
 	{
 		m_db = connectMongoDB("127.0.0.1");
 		m_settings = settings;
@@ -202,40 +202,5 @@ class VpmRegistry {
 		} else {
 			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: info]]);
 		}
-	}
-}
-
-
-class VpmRegistryController {
-	private {
-		VpmRegistry m_registry;
-		string m_prefix;
-	}
-
-	this(VpmRegistry reg)
-	{
-		m_registry = reg;
-		m_prefix = reg.m_settings.pathPrefix;
-	}
-
-	void register(UrlRouter router)
-	{
-		router.get(m_prefix~"available", &showAvailable);
-		router.get(m_prefix~"packages/:packname", &showPackage);
-	}
-
-	void showAvailable(HttpServerRequest req, HttpServerResponse res)
-	{
-		res.writeJsonBody(m_registry.availablePackages);
-	}
-
-	void showPackage(HttpServerRequest req, HttpServerResponse res)
-	{
-		string pname = req.params["packname"];
-		if( pname.endsWith(".json") )
-			pname = pname[0 .. $-5];
-		auto info = m_registry.getPackageInfo(pname);
-		if( info == null ) return;
-		res.writeJsonBody(info);
 	}
 }

@@ -4,66 +4,142 @@ import registry;
 
 import userman.web;
 
-VpmRegistry s_registry;
+class DubRegistryWebFrontend {
+	private {
+		DubRegistry m_registry;
+		UserManWebInterface m_usermanweb;
+	}
 
-void showHome(HttpServerRequest req, HttpServerResponse res)
-{
-	Json[] packages;
-	foreach( pack; s_registry.availablePackages.sort )
-		packages ~= s_registry.getPackageInfo(pack);
-	res.renderCompat!("home.dt",
-		HttpServerRequest, "req",
-		Json[], "packages")(Variant(req), Variant(packages));
-}
+	this(DubRegistry registry, UserManController userman)
+	{
+		m_registry = registry;
+		m_usermanweb = new UserManWebInterface(userman);
+	}
 
-void showPackage(HttpServerRequest req, HttpServerResponse res)
-{
-	Json pack = s_registry.getPackageInfo(req.params["packname"]);
-	if( pack == null ) return;
+	void register(UrlRouter router)
+	{
+		m_usermanweb.register(router);
 
-	res.renderCompat!("view_package.dt",
-		HttpServerRequest, "req", 
-		Json, "pack")(Variant(req), Variant(pack));
-}
+		// user front end
+		router.get("/", &showHome);
+		router.get("/usage", staticTemplate!"usage.dt");
+		router.get("/publish", staticTemplate!"publish.dt");
+		router.get("/develop", staticTemplate!"develop.dt");
+		router.get("/package-format", staticTemplate!"package_format.dt");
+		router.get("/available", &showAvailable);
+		router.get("/packages/:packname", &showPackage); // HTML or .json
+		router.get("/packages/:packname/:version", &showPackageVersion); // HTML or .zip or .json
+		router.get("/my_packages", m_usermanweb.auth(toDelegate(&showMyPackages)));
+		router.get("/my_packages/add", m_usermanweb.auth(toDelegate(&showAddPackage)));
+		router.post("/my_packages/add", m_usermanweb.auth(toDelegate(&addPackage)));
+		router.post("/my_packages/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
+		router.post("/my_packages/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
+		router.get("*", serveStaticFiles("./public"));
+	}
 
-void showMyPackages(HttpServerRequest req, HttpServerResponse res, User user)
-{
-	res.renderCompat!("my_packages.dt",
-		HttpServerRequest, "req",
-		User, "user",
-		VpmRegistry, "registry")(Variant(req), Variant(user), Variant(s_registry));
-}
+	void showAvailable(HttpServerRequest req, HttpServerResponse res)
+	{
+		res.writeJsonBody(m_registry.availablePackages);
+	}
 
-void showAddPackage(HttpServerRequest req, HttpServerResponse res, User user)
-{
-	res.renderCompat!("add_package.dt",
-		HttpServerRequest, "req",
-		User, "user",
-		VpmRegistry, "registry")(Variant(req), Variant(user), Variant(s_registry));
-}
+	void showHome(HttpServerRequest req, HttpServerResponse res)
+	{
+		Json[] packages;
+		foreach( pack; m_registry.availablePackages.sort )
+			packages ~= m_registry.getPackageInfo(pack);
+		res.renderCompat!("home.dt",
+			HttpServerRequest, "req",
+			Json[], "packages")(req, packages);
+	}
 
-void addPackage(HttpServerRequest req, HttpServerResponse res, User user)
-{
-	Json rep = Json.EmptyObject;
-	rep["kind"] = req.form["kind"];
-	rep["owner"] = req.form["owner"];
-	rep["project"] = req.form["project"];
-	s_registry.addPackage(rep, user._id);
+	void showPackage(HttpServerRequest req, HttpServerResponse res)
+	{
+		bool json = false;
+		auto pname = req.params["packname"];
+		if( pname.endsWith(".json") ){
+			pname = pname[0 .. $-5];
+			json = true;
+		}
 
-	res.redirect("/my_packages");
-}
+		Json pack = m_registry.getPackageInfo(pname);
+		if( pack == null ) return;
 
-void showRemovePackage(HttpServerRequest req, HttpServerResponse res, User user)
-{
-	res.renderCompat!("remove_package.dt",
-		HttpServerRequest, "req",
-		User, "user")(Variant(req), Variant(user));
-}
+		if( json ){
+			res.writeJsonBody(pack);
+		} else {
+			res.renderCompat!("view_package.dt",
+				HttpServerRequest, "req", 
+				Json, "pack",
+				string, "ver")(req, pack, "");
+		}
+	}
 
-void removePackage(HttpServerRequest req, HttpServerResponse res, User user)
-{
-	s_registry.removePackage(req.form["package"], user._id);
-	res.redirect("/my_packages");
+	void showPackageVersion(HttpServerRequest req, HttpServerResponse res)
+	{
+		Json pack = m_registry.getPackageInfo(req.params["packname"]);
+		if( pack == null ) return;
+
+		auto ver = req.params["version"];
+		string ext;
+		if( ver.endsWith(".zip") ) ext = "zip", ver = ver[0 .. $-4];
+		else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
+
+		foreach( v; pack.versions )
+			if( v["version"].get!string == ver ){
+				if( ext == "zip" ){
+					res.redirect(v.downloadUrl.get!string);
+				} else if( ext == "json"){
+					res.writeJsonBody(v);
+				} else {
+					res.renderCompat!("view_package.dt",
+						HttpServerRequest, "req", 
+						Json, "pack",
+						string, "ver")(req, pack, v["version"].get!string);
+				}
+				return;
+			}
+
+	}
+
+	void showMyPackages(HttpServerRequest req, HttpServerResponse res, User user)
+	{
+		res.renderCompat!("my_packages.dt",
+			HttpServerRequest, "req",
+			User, "user",
+			DubRegistry, "registry")(req, user, m_registry);
+	}
+
+	void showAddPackage(HttpServerRequest req, HttpServerResponse res, User user)
+	{
+		res.renderCompat!("add_package.dt",
+			HttpServerRequest, "req",
+			User, "user",
+			DubRegistry, "registry")(req, user, m_registry);
+	}
+
+	void addPackage(HttpServerRequest req, HttpServerResponse res, User user)
+	{
+		Json rep = Json.EmptyObject;
+		rep["kind"] = req.form["kind"];
+		rep["owner"] = req.form["owner"];
+		rep["project"] = req.form["project"];
+		m_registry.addPackage(rep, user._id);
+
+		res.redirect("/my_packages");
+	}
+
+	void showRemovePackage(HttpServerRequest req, HttpServerResponse res, User user)
+	{
+		res.renderCompat!("remove_package.dt",
+			HttpServerRequest, "req",
+			User, "user")(req, user);
+	}
+
+	void removePackage(HttpServerRequest req, HttpServerResponse res, User user)
+	{
+		m_registry.removePackage(req.form["package"], user._id);
+		res.redirect("/my_packages");
+	}
 }
 
 static this()
@@ -80,30 +156,16 @@ static this()
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseName = "vpmreg";
 	auto userdb = new UserManController(udbsettings);
-	auto userdbweb = new UserManWebInterface(userdb);
-	userdbweb.register(router);
 
 	// VPM registry
-	auto vpmSettings = new VpmRegistrySettings;
-	vpmSettings.pathPrefix = "/";
-	vpmSettings.metadataPath = Path("public/packages");
-	s_registry = new VpmRegistry(vpmSettings);
-	auto regctrl = new VpmRegistryController(s_registry);
-	regctrl.register(router);
+	auto regsettings = new DubRegistrySettings;
+	regsettings.pathPrefix = "/";
+	regsettings.metadataPath = Path("public/packages");
+	auto registry = new DubRegistry(regsettings);
 
-	// user front end
-	router.get("/", &showHome);
-	router.get("/usage", staticTemplate!"usage.dt");
-	router.get("/publish", staticTemplate!"publish.dt");
-	router.get("/develop", staticTemplate!"develop.dt");
-	router.get("/package-format", staticTemplate!"package_format.dt");
-	router.get("/view_package/:packname", &showPackage);
-	router.get("/my_packages", userdbweb.auth(toDelegate(&showMyPackages)));
-	router.get("/my_packages/add", userdbweb.auth(toDelegate(&showAddPackage)));
-	router.post("/my_packages/add", userdbweb.auth(toDelegate(&addPackage)));
-	router.post("/my_packages/remove", userdbweb.auth(toDelegate(&showRemovePackage)));
-	router.post("/my_packages/remove_confirm", userdbweb.auth(toDelegate(&removePackage)));
-	router.get("*", serveStaticFiles("./public"));
+	// web front end
+	auto webfrontend = new DubRegistryWebFrontend(registry, userdb);
+	webfrontend.register(router);
 	
 	// start the web server
  	auto settings = new HttpServerSettings;
@@ -115,6 +177,6 @@ static this()
 	listenHttp(settings, router);
 
 	// poll github for new project versions
-	setTimer(dur!"minutes"(30), &s_registry.checkForNewVersions, true);
-	runTask(&s_registry.checkForNewVersions);
+	setTimer(dur!"minutes"(15), &registry.checkForNewVersions, true);
+	runTask(&registry.checkForNewVersions);
 }
