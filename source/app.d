@@ -98,7 +98,6 @@ class DubRegistryWebFrontend {
 				}
 				return;
 			}
-
 	}
 
 	void showMyPackages(HttpServerRequest req, HttpServerResponse res, User user)

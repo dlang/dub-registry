@@ -29,6 +29,16 @@ block body
 				td
 					a(href="#{latest.homepage}")= *ph
 
+		- if( auto pr = "repository" in pack )
+			- string url;
+			- if( pr.kind == "github" )
+				- url = "https://github.com/"~pr.owner.get!string~"/"~pr.project.get!string;
+			- if( url.length )
+				tr
+					td Repository
+					td
+						a(href=url)= url
+
 		- if( auto pl = "license" in latest )
 			tr
 				td License
