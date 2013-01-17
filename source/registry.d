@@ -1,6 +1,9 @@
-import vibe.vibe;
+module registry;
 
 import repository;
+
+import std.algorithm : sort;
+import vibe.vibe;
 
 
 /// Settings to configure the package registry.
@@ -45,50 +48,9 @@ class DubRegistry {
 
 	void repairVersionOrder()
 	{
-		import std.algorithm;
-
-		static int[] linearizeVersion(string ver)
-		{
-			import std.conv;
-			static immutable prefixes = ["alpha", "beta", "rc"];
-			auto parts = ver.split(".");
-			int[] ret;
-			foreach( p; parts ){
-				ret ~= parse!int(p);
-
-				bool gotprefix = false;
-				foreach( i, prefix; prefixes ){
-					if( p.startsWith(prefix) ){
-						p = p[prefix.length .. $];
-						if( p.length ) ret ~= cast(int)i*10000 + to!int(p);
-						else ret ~= cast(int)i*10000;
-						gotprefix = true;
-						break;
-					}
-				}
-				if( !gotprefix ) ret ~= int.max;
-			}
-			return ret;
-		}
-
-		static bool vcmp(DbPackageVersion a, DbPackageVersion b)
-		{
-			try {
-				auto va = a.version_;
-				auto vb = b.version_;
-				auto aparts = linearizeVersion(va);
-				auto bparts = linearizeVersion(vb);
-
-				foreach( i; 0 .. min(aparts.length, bparts.length) )
-					if( aparts[i] != bparts[i] )
-						return aparts[i] < bparts[i];
-				return aparts.length < bparts.length;
-			} catch( Exception e ) return false;
-		}
-
 		foreach( bp; m_packages.find() ){
 			auto p = deserializeBson!DbPackage(bp);
-			sort!vcmp(p.versions);
+			sort!((a, b) => vcmp(a, b))(p.versions);
 			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
 		}
 	}
@@ -196,7 +158,7 @@ class DubRegistry {
 			}
 
 			try {
-				foreach( ver; rep.getVersions() ){
+				foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
 					if( !hasVersion(packname, ver) ){
 						try {
 							addVersion(packname, ver, rep.getVersionInfo(ver));
@@ -258,3 +220,46 @@ class DubRegistry {
 		m_packages.update(["name": pack], ["$set": ["errors": error]]);
 	}
 }
+
+private int[] linearizeVersion(string ver)
+{
+	import std.conv;
+	static immutable prefixes = ["alpha", "beta", "rc"];
+	auto parts = ver.split(".");
+	int[] ret;
+	foreach( p; parts ){
+		ret ~= parse!int(p);
+
+		bool gotprefix = false;
+		foreach( i, prefix; prefixes ){
+			if( p.startsWith(prefix) ){
+				p = p[prefix.length .. $];
+				if( p.length ) ret ~= cast(int)i*10000 + to!int(p);
+				else ret ~= cast(int)i*10000;
+				gotprefix = true;
+				break;
+			}
+		}
+		if( !gotprefix ) ret ~= int.max;
+	}
+	return ret;
+}
+
+private bool vcmp(DbPackageVersion a, DbPackageVersion b)
+{
+	return vcmp(a.version_, b.version_);
+}
+
+private bool vcmp(string va, string vb)
+{
+	try {
+		auto aparts = linearizeVersion(va);
+		auto bparts = linearizeVersion(vb);
+
+		foreach( i; 0 .. min(aparts.length, bparts.length) )
+			if( aparts[i] != bparts[i] )
+				return aparts[i] < bparts[i];
+		return aparts.length < bparts.length;
+	} catch( Exception e ) return false;
+}
+
