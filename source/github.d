@@ -44,7 +44,7 @@ class GithubRepository : Repository {
 				auto tagname = tag.name.get!string;
 				if( tagname.length >= 2 && tagname[0] == 'v' ){
 					Json commit;
-					downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(); });
+					downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
 					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
 					m_versionList ~= tagname[1 .. $];
 					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
@@ -64,7 +64,7 @@ class GithubRepository : Repository {
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
 			Json commit;
-			downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, (scope input){ commit = input.readJson(); });
+			downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
 			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
 			m_branchList ~= "~"~branchname;
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
@@ -108,8 +108,8 @@ class GithubRepository : Repository {
 	}
 }
 
-private Json readJson(InputStream str)
+private Json readJson(InputStream str, bool sanitize = false)
 {
-	auto text = str.readAllUtf8();
+	auto text = str.readAllUtf8(sanitize);
 	return parseJson(text);
 }
