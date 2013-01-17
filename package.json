@@ -8,6 +8,6 @@
 	],
 	"dependencies": {
 		"userman": "~master",
-		"vibe.d": "~master"
+		"vibe-d": "~master"
 	}
 }
