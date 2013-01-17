@@ -27,22 +27,30 @@ class GithubRepository : Repository {
 	{
 		m_owner = owner;
 		m_project = project;
-		getVersions(); // download an initial version list
+		try getVersions(); // download an initial version list
+		catch( Exception e ){
+			logWarn("Failed to get initial version list for github:%s/%s: %s", owner, project, e.msg);
+		}
 	}
 
 	string[] getVersions()
 	{
 		Json tags;
-		downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
+		try downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
+		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		m_versionList.length = 0;
 		foreach_reverse( tag; tags ){
-			auto tagname = tag.name.get!string;
-			if( tagname.length >= 2 && tagname[0] == 'v' ){
-				Json commit;
-				downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(); });
-				m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
-				m_versionList ~= tagname[1 .. $];
-				logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
+			try {
+				auto tagname = tag.name.get!string;
+				if( tagname.length >= 2 && tagname[0] == 'v' ){
+					Json commit;
+					downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(); });
+					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
+					m_versionList ~= tagname[1 .. $];
+					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
+				}
+			} catch( Exception e ){
+				throw new Exception("Failed to process tag "~tag~": "~e.msg);
 			}
 		}
 		return m_versionList;
