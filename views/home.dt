@@ -1,6 +1,7 @@
 extends layout
 
 block title
+	- import viewutils;
 	- auto title = "Home";
 	
 block body
@@ -19,7 +20,7 @@ block body
 					td
 						a(href="packages/#{pl.name}")= pl.name
 					td= p["version"].opt!string()
-					td= p.date.opt!string
+					td= formatDate(p.date)
 					td= p.description.opt!string
 
 	- if( req.session )
