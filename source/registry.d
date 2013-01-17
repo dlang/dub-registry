@@ -178,8 +178,15 @@ class DubRegistry {
 		logInfo("Checking for new versions...");
 		foreach( packname; this.availablePackages ){
 			string[] errors;
+
+			Json pack;
+			try pack = getPackageInfo(packname);
+			catch( Exception e ){
+				errors ~= format("Error getting package info: %s", e.msg);
+				logDebug("%s", sanitize(e.toString()));
+				continue;
+			}
 			try {
-				auto pack = getPackageInfo(packname);
 				auto rep = getRepository(pack.repository);
 				foreach( ver; rep.getVersions() ){
 					if( !hasVersion(packname, ver) ){
@@ -187,7 +194,6 @@ class DubRegistry {
 							addVersion(packname, ver, rep.getVersionInfo(ver));
 							logInfo("Added version %s for %s", ver, packname);
 						} catch( Exception e ){
-							logWarn("Error for version %s of %s: %s", ver, packname, e.msg);
 							logDebug("version %s", sanitize(e.toString()));
 							errors ~= format("Version %s: %s", ver, e.msg);
 							// TODO: store error message for web frontend!
@@ -200,7 +206,6 @@ class DubRegistry {
 							addVersion(packname, ver, rep.getVersionInfo(ver));
 							logInfo("Added branch %s for %s", ver, packname);
 						} catch( Exception e ){
-							logWarn("Error for branch %s of %s: %s", ver, packname, e.msg);
 							logDebug("%s", sanitize(e.toString()));
 							// TODO: store error message for web frontend!
 							errors ~= format("Branch %s: %s", ver, e.msg);
@@ -208,7 +213,6 @@ class DubRegistry {
 					}
 				}
 			} catch( Exception e ){
-				logWarn("Error processing package %s: %s", packname, e.msg);
 				logDebug("%s", sanitize(e.toString()));
 				// TODO: store error message for web frontend!
 				errors ~= e.msg;
