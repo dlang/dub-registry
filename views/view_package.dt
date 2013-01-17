@@ -20,8 +20,8 @@ block body
 	
 	table
 		tr
-			td Latest version
-			td= latest["version"]
+			td Version
+			td #{latest["version"]} (#{latest.date.opt!string})
 		
 		- if( auto ph = "homepage" in latest )
 			tr

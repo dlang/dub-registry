@@ -1,8 +1,11 @@
-import vibe.d;
+module app;
 
+import github;
 import registry;
 
+import std.algorithm : sort;
 import userman.web;
+import vibe.d;
 
 class DubRegistryWebFrontend {
 	private {
@@ -44,9 +47,20 @@ class DubRegistryWebFrontend {
 
 	void showHome(HttpServerRequest req, HttpServerResponse res)
 	{
+		// collect the package list
 		Json[] packages;
-		foreach( pack; m_registry.availablePackages.sort )
-			packages ~= m_registry.getPackageInfo(pack);
+		foreach( pack; m_registry.availablePackages ){
+			auto packinfo = m_registry.getPackageInfo(pack);
+			packages ~= packinfo;
+		}
+
+		// sort by date of last version
+		string getDate(Json p){
+			if( p.versions.length == 0 ) return null;
+			return p.versions[p.versions.length-1].date.get!string;
+		}
+		sort!((a, b) => getDate(a) > getDate(b))(packages);
+
 		res.renderCompat!("home.dt",
 			HttpServerRequest, "req",
 			Json[], "packages")(req, packages);
@@ -145,6 +159,8 @@ static this()
 {
 	setLogLevel(LogLevel.None);
 	setLogFile("log.txt", LogLevel.Debug);
+
+	GithubRepository.register();
 
 	auto router = new UrlRouter;
 

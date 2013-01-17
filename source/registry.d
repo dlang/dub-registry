@@ -15,9 +15,15 @@ private struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
-	Bson repository;
-	Bson[] versions;
-	Bson[string] branches;
+	Json repository;
+	DbPackageVersion[] versions;
+	DbPackageVersion[string] branches;
+}
+
+private struct DbPackageVersion {
+	BsonDate date;
+	string version_;
+	Json info;
 }
 
 class DubRegistry {
@@ -64,11 +70,11 @@ class DubRegistry {
 			return ret;
 		}
 
-		static bool vcmp(Bson a, Bson b)
+		static bool vcmp(DbPackageVersion a, DbPackageVersion b)
 		{
 			try {
-				auto va = a["version"].get!string;
-				auto vb = b["version"].get!string;
+				auto va = a.version_;
+				auto vb = b.version_;
 				auto aparts = linearizeVersion(va);
 				auto bparts = linearizeVersion(vb);
 
@@ -97,16 +103,21 @@ class DubRegistry {
 	void addPackage(Json repository, BsonObjectID user)
 	{
 		auto rep = getRepository(repository);
-		auto info = rep.getPackageInfo("~master");
+		auto info = rep.getVersionInfo("~master");
 
-		enforce(m_packages.findOne(["name": info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
+		enforce(m_packages.findOne(["name": info.info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
+
+		DbPackageVersion vi;
+		vi.date = BsonDate(info.date);
+		vi.version_ = info.version_;
+		vi.info = info.info;
 
 		DbPackage pack;
 		pack._id = BsonObjectID.generate();
 		pack.owner = user;
-		pack.name = info.name.get!string;
-		pack.repository = serializeToBson(repository);
-		pack.branches["master"] = serializeToBson(info);
+		pack.name = info.info.name.get!string;
+		pack.repository = repository;
+		pack.branches["master"] = vi;
 		m_packages.insert(pack);
 	}
 
@@ -126,23 +137,35 @@ class DubRegistry {
 
 	Json getPackageInfo(string packname)
 	{
-		auto pack = m_packages.findOne(["name": packname]);
-		if( pack.isNull() ) return Json(null);
+		auto bpack = m_packages.findOne(["name": packname]);
+		if( bpack.isNull() ) return Json(null);
+
+		auto pack = deserializeBson!DbPackage(bpack);
+
+		auto rep = getRepository(pack.repository);
 
 		Json[] vers;
-		if( !pack["branches"].isNull() )
-			foreach( string k, v; pack.branches ){
-				auto nfo = v.toJson();
-				nfo["version"] = "~"~k;
-				vers ~= nfo;
-			}
-		foreach( v; pack.versions.get!(Bson[]) )
-			vers ~= v.toJson();
+		foreach( string k, v; pack.branches ){
+			auto nfo = v.info;
+			nfo["version"] = "~"~k;
+			nfo.date = v.date.toSysTime().toISOExtString();
+			nfo.url = rep.getDownloadUrl("~"~k);
+			nfo.downloadUrl = nfo.url;
+			vers ~= nfo;
+		}
+		foreach( v; pack.versions ){
+			auto nfo = v.info;
+			nfo["version"] = v.version_;
+			nfo.date = v.date.toSysTime().toISOExtString();
+			nfo.url = rep.getDownloadUrl(v.version_);
+			nfo.downloadUrl = nfo.url;
+			vers ~= nfo;
+		}
 
 		Json ret = Json.EmptyObject;
 		ret["name"] = packname;
 		ret["versions"] = Json(vers);
-		ret["repository"] = pack.repository.toJson();
+		ret["repository"] = pack.repository;
 		return ret;
 	}
 
@@ -156,7 +179,7 @@ class DubRegistry {
 				foreach( ver; rep.getVersions() ){
 					if( !hasVersion(packname, ver) ){
 						try {
-							addVersion(packname, ver, rep.getPackageInfo(ver));
+							addVersion(packname, ver, rep.getVersionInfo(ver));
 							logInfo("Added version %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for version %s of %s: %s", ver, packname, e.msg);
@@ -168,7 +191,7 @@ class DubRegistry {
 				foreach( ver; rep.getBranches() ){
 					if( !hasVersion(packname, ver) ){
 						try {
-							addVersion(packname, ver, rep.getPackageInfo(ver));
+							addVersion(packname, ver, rep.getVersionInfo(ver));
 							logInfo("Added branch %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for branch %s of %s: %s", ver, packname, e.msg);
@@ -188,19 +211,23 @@ class DubRegistry {
 	{
 		auto packbson = Bson(packname);
 		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
-		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson]);
+		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson], ["_id": true]);
 		return !ret.isNull();
 	}
 
-	protected void addVersion(string packname, string ver, Json info)
+	protected void addVersion(string packname, string ver, PackageVersionInfo info)
 	{
-		enforce(info.name == packname, "Package name must match the original package name.");
+		DbPackageVersion dbver;
+		dbver.date = BsonDate(info.date);
+		dbver.version_ = info.version_;
+		dbver.info = info.info;
+		enforce(info.info.name == packname, "Package name must match the original package name.");
 		if( !ver.startsWith("~") ){
-			enforce(!hasVersion(packname, info["version"].get!string), "Version already exists.");
-			enforce(info["version"] == ver, "Version in package.json differs from git tag version.");
-			m_packages.update(["name": packname], ["$push": ["versions": info]]);
+			enforce(!hasVersion(packname, info.version_), "Version already exists.");
+			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
+			m_packages.update(["name": packname], ["$push": ["versions": dbver]]);
 		} else {
-			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: info]]);
+			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: dbver]]);
 		}
 	}
 }
