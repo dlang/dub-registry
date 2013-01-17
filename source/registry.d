@@ -68,22 +68,7 @@ class DubRegistry {
 		auto rep = getRepository(repository);
 		auto info = rep.getVersionInfo("~master");
 
-		void checkPackageName(string n){
-			foreach( ch; n ){
-				switch(ch){
-					default:
-						throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-'.");
-					case 'a': .. case 'z':
-					case 'A': .. case 'Z':
-					case '0': .. case '9':
-					case '_', '-':
-						break;
-				}
-			}
-		}
-
 		checkPackageName(info.info.name.get!string);
-
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			checkPackageName(n);
 
@@ -220,11 +205,16 @@ class DubRegistry {
 
 	protected void addVersion(string packname, string ver, PackageVersionInfo info)
 	{
+		enforce(info.info.name == packname, "Package name must match the original package name.");
+
+		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
+			checkPackageName(n);
+
 		DbPackageVersion dbver;
 		dbver.date = BsonDate(info.date);
 		dbver.version_ = info.version_;
 		dbver.info = info.info;
-		enforce(info.info.name == packname, "Package name must match the original package name.");
+
 		if( !ver.startsWith("~") ){
 			enforce(!hasVersion(packname, info.version_), "Version already exists.");
 			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
@@ -239,6 +229,22 @@ class DubRegistry {
 		m_packages.update(["name": pack], ["$set": ["errors": error]]);
 	}
 }
+
+private void checkPackageName(string n){
+	enforce(n.length > 0, "Package names may not be empty.");
+	foreach( ch; n ){
+		switch(ch){
+			default:
+				throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-'.");
+			case 'a': .. case 'z':
+			case 'A': .. case 'Z':
+			case '0': .. case '9':
+			case '_', '-':
+				break;
+		}
+	}
+}
+
 
 private int[] linearizeVersion(string ver)
 {
