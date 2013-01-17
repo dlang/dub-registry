@@ -50,7 +50,7 @@ class GithubRepository : Repository {
 					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
 				}
 			} catch( Exception e ){
-				throw new Exception("Failed to process tag "~tag.get!string~": "~e.msg);
+				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
 		}
 		return m_versionList;

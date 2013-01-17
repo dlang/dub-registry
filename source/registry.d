@@ -186,8 +186,16 @@ class DubRegistry {
 				logDebug("%s", sanitize(e.toString()));
 				continue;
 			}
+
+			Repository rep;
+			try rep = getRepository(pack.repository);
+			catch( Exception e ){
+				errors ~= format("Error accessing repository: %s", e.msg);
+				logDebug("%s", sanitize(e.toString()));
+				continue;
+			}
+
 			try {
-				auto rep = getRepository(pack.repository);
 				foreach( ver; rep.getVersions() ){
 					if( !hasVersion(packname, ver) ){
 						try {
