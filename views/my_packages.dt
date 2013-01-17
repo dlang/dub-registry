@@ -13,12 +13,16 @@ block body
 			th Description
 			th Action
 		- foreach( p; registry.getPackages(user._id) )
-			- auto pack = registry.getPackageInfo(p);
+			- auto pack = registry.getPackageInfo(p, true);
 			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
 			tr
 				td= p
 				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 				td= latest.type == Json.Type.Object ? latest.description.opt!string : "-"
+					- if( pack.errors.length )
+						ul
+							- foreach( e; pack.errors )
+								li.error= e
 				td
 					form(method="POST", action="#{req.rootDir}my_packages/remove")
 						input(type="hidden", name="package", value="#{p}")

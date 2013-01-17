@@ -18,6 +18,7 @@ private struct DbPackage {
 	Json repository;
 	DbPackageVersion[] versions;
 	DbPackageVersion[string] branches;
+	string[] errors;
 }
 
 private struct DbPackageVersion {
@@ -135,7 +136,7 @@ class DubRegistry {
 		return ret;
 	}
 
-	Json getPackageInfo(string packname)
+	Json getPackageInfo(string packname, bool include_errors = false)
 	{
 		auto bpack = m_packages.findOne(["name": packname]);
 		if( bpack.isNull() ) return Json(null);
@@ -163,16 +164,20 @@ class DubRegistry {
 		}
 
 		Json ret = Json.EmptyObject;
-		ret["name"] = packname;
-		ret["versions"] = Json(vers);
-		ret["repository"] = pack.repository;
+		ret.name = packname;
+		ret.versions = Json(vers);
+		ret.repository = pack.repository;
+		if( include_errors ) ret.errors = serializeToJson(pack.errors);
 		return ret;
 	}
 
 	void checkForNewVersions()
 	{
+		import std.encoding;
+
 		logInfo("Checking for new versions...");
 		foreach( packname; this.availablePackages ){
+			string[] errors;
 			try {
 				auto pack = getPackageInfo(packname);
 				auto rep = getRepository(pack.repository);
@@ -183,7 +188,8 @@ class DubRegistry {
 							logInfo("Added version %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for version %s of %s: %s", ver, packname, e.msg);
-							logDebug("%s", e.toString());
+							logDebug("version %s", sanitize(e.toString()));
+							errors ~= format("Version %s: %s", ver, e.msg);
 							// TODO: store error message for web frontend!
 						}
 					}
@@ -195,15 +201,19 @@ class DubRegistry {
 							logInfo("Added branch %s for %s", ver, packname);
 						} catch( Exception e ){
 							logWarn("Error for branch %s of %s: %s", ver, packname, e.msg);
-							logDebug("%s", e.toString());
+							logDebug("%s", sanitize(e.toString()));
 							// TODO: store error message for web frontend!
+							errors ~= format("Branch %s: %s", ver, e.msg);
 						}
 					}
 				}
 			} catch( Exception e ){
-				logWarn("Error processing package %s: %s", packname, e.toString());
+				logWarn("Error processing package %s: %s", packname, e.msg);
+				logDebug("%s", sanitize(e.toString()));
 				// TODO: store error message for web frontend!
+				errors ~= e.msg;
 			}
+			setPackageErrors(packname, errors);
 		}
 	}
 
@@ -229,5 +239,10 @@ class DubRegistry {
 		} else {
 			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: dbver]]);
 		}
+	}
+
+	protected void setPackageErrors(string pack, string[] error...)
+	{
+		m_packages.update(["name": pack], ["$set": ["errors": error]]);
 	}
 }
