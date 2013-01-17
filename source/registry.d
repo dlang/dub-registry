@@ -68,6 +68,25 @@ class DubRegistry {
 		auto rep = getRepository(repository);
 		auto info = rep.getVersionInfo("~master");
 
+		void checkPackageName(string n){
+			foreach( ch; n ){
+				switch(ch){
+					default:
+						throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-'.");
+					case 'a': .. case 'z':
+					case 'A': .. case 'Z':
+					case '0': .. case '9':
+					case '_', '-':
+						break;
+				}
+			}
+		}
+
+		checkPackageName(info.info.name.get!string);
+
+		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
+			checkPackageName(n);
+
 		enforce(m_packages.findOne(["name": info.info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 
 		DbPackageVersion vi;
