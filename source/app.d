@@ -32,6 +32,7 @@ class DubRegistryWebFrontend {
 		router.get("/available", &showAvailable);
 		router.get("/packages/:packname", &showPackage); // HTML or .json
 		router.get("/packages/:packname/:version", &showPackageVersion); // HTML or .zip or .json
+		router.get("/view_package/:packname", &redirectViewPackage);
 		router.get("/my_packages", m_usermanweb.auth(toDelegate(&showMyPackages)));
 		router.get("/my_packages/add", m_usermanweb.auth(toDelegate(&showAddPackage)));
 		router.post("/my_packages/add", m_usermanweb.auth(toDelegate(&addPackage)));
@@ -64,6 +65,11 @@ class DubRegistryWebFrontend {
 		res.renderCompat!("home.dt",
 			HttpServerRequest, "req",
 			Json[], "packages")(req, packages);
+	}
+
+	void redirectViewPackage(HttpServerRequest req, HttpServerResponse res)
+	{
+		res.redirect("/packages/"~req.params["packname"]);
 	}
 
 	void showPackage(HttpServerRequest req, HttpServerResponse res)
