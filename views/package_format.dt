@@ -138,19 +138,25 @@ block body
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
 
 		tr
+			td copyFiles
+			td
+				code string[]
+			td Files that are copied to the applications directory - typically these are DLLs on Windows
+
+		tr
 			td versions
 			td
 				code string[]
 			td A list of D versions to be defined during compilation
 
 		tr
-			td importPath
+			td importPaths
 			td
 				code string[]
 			td Additional import paths to search for D modules (the <code>soruce/</code> folder is used by default as a source folder, if it exists)
 
 		tr
-			td stringImportPath
+			td stringImportPaths
 			td
 				code string[]
 			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
@@ -162,6 +168,7 @@ block body
 
 	pre.code
 		|{
+		|	...
 		|	"configurations": {
 		|		"metro-app": {
 		|			"versions": ["MetroApp"],
@@ -171,5 +178,18 @@ block body
 		|			"versions": ["DesktopApp"],
 		|			"libs": ["d3d9"]
 		|		}
+		|	}
+		|}
+
+	p To pre-select a configuration, a "default" field can be added. The same platform suffixes as for build flags can be used to vary depending on the plaform:
+
+	pre.code
+		|{
+		|	...
+		|	"configurations": {
+		|		...
+		|		"default-windows": "metro-app",
+		|		"default-osx": "desktop-app",
+		|		"default": "console-app"
 		|	}
 		|}
