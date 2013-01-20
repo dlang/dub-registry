@@ -7,11 +7,7 @@ block body
 
 	h2#project-creation Creating the project
 
-	p To create a DUB compatible project, the easiest way is to use the dub executable:
-
-	pre.code $ dub init myproject
-
-	p will create a new folder <code>myproject</code> that contains the recommended skeleton and a basic <code>package.json</code> file. Running <code>$ dub</code> from this directory will build and run the empty project.
+	p To create a DUB compatible project, the easiest way is to use the dub executable. <code>$ dub init myproject</code> will create a new folder <code>myproject</code> that contains the recommended skeleton and a basic <code>package.json</code> file. Running <code>$ dub</code> from this directory will build and run the empty project.
 
 	p You should then adjust <code>package.json</code> to fit the project. For details about the format of this file, see the <a href="package-format">package format page</a>.
 

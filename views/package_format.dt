@@ -18,7 +18,7 @@ block body
 		|	"homepage": "http://myproject.com",
 		|	"license": "GPL v2",
 		|	"dependencies": {
-		|		"vibe.d": ">=0.7.11"
+		|		"vibe-d": ">=0.7.11"
 		|	}
 		|}
 
@@ -98,11 +98,11 @@ block body
 
 	pre.code
 		|{
-		|	"dflags": ["-wi"],
-		|	"dflags-windows-x64-dmd": ["$PACKAGE_DIR/lib/win32/mylib.lib"],
-		|	"dflags-dmd": ["-wi"],
-		|	"libs-posix": ["ssl", "crypto"],
+		|	"dflags": ["-w"],
+		|	"dflags-dmd": ["-gc"],
 		|	"dflags-x64": ["-version=UseSpecialImpl"]
+		|	"libs-posix": ["ssl", "crypto"],
+		|	"files-windows-x64-dmd": ["lib/win32/mylib.lib"],
 		|}
 
 	p Inside of build setting values, it is possible to use variables using dollar notation. <code>$PACKAGE_DIR</code> contains the path to the package itself and all other variables are taken from the program environment.
