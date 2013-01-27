@@ -10,14 +10,14 @@ import std.exception;
 
 class UrlCache {
 	private {
-		MongoDB m_db;
+		MongoClient m_db;
 		MongoCollection m_entries;
 	}
 
 	this()
 	{
 		m_db = connectMongoDB("127.0.0.1");
-		m_entries = m_db["urlcache.entries"];
+		m_entries = m_db.getCollection("urlcache.entries");
 	}
 
 	void get(Url url, scope void delegate(scope InputStream str) callback)

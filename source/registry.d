@@ -32,7 +32,7 @@ private struct DbPackageVersion {
 
 class DubRegistry {
 	private {
-		MongoDB m_db;
+		MongoClient m_db;
 		MongoCollection m_packages;
 		DubRegistrySettings m_settings;
 	}
@@ -41,7 +41,7 @@ class DubRegistry {
 	{
 		m_db = connectMongoDB("127.0.0.1");
 		m_settings = settings;
-		m_packages = m_db["vpmreg.packages"];
+		m_packages = m_db.getCollection("vpmreg.packages");
 
 		repairVersionOrder();
 	}
