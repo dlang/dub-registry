@@ -32,7 +32,7 @@ class UrlCache {
 		auto res = requestHttp(url, (req){
 				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
 			});
-		scope(exit) destroy(res);
+		scope(exit) res.dropBody();
 
 		if( res.statusCode == HttpStatus.NotModified ){
 			auto data = be["data"].get!BsonBinData().rawData();
