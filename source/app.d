@@ -26,6 +26,7 @@ class DubRegistryWebFrontend {
 		// user front end
 		router.get("/", &showHome);
 		router.get("/usage", staticTemplate!"usage.dt");
+		router.get("/download", staticTemplate!"download.dt");
 		router.get("/publish", staticTemplate!"publish.dt");
 		router.get("/develop", staticTemplate!"develop.dt");
 		router.get("/package-format", staticTemplate!"package_format.dt");

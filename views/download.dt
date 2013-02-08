@@ -1,0 +1,26 @@
+extends layout
+
+block title
+	- import viewutils;
+	- auto title = "Download";
+	
+block body
+	p The following table contains a list of precompiled binaries. The platform support is rather limited here for the moment and will be extended later.
+
+	p If your platform is not supported, installation is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
+
+	table
+		tr
+			th Platform
+			th Version
+			th Download
+		tr
+			td Linux i386
+			td 0.9.3
+			td
+				a(href="files/dub-0.9.3-linux-i386.zip") dub-0.9.3-linux-i386.zip
+		tr
+			td Linux amd64
+			td 0.9.3
+			td
+				a(href="files/dub-0.9.3-linux-amd64.zip") dub-0.9.3-linux-amd64.zip
