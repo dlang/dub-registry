@@ -5,9 +5,9 @@ block title
 	- auto title = "Download";
 	
 block body
-	p The following table contains a list of precompiled binaries. The platform support is rather limited here for the moment and will be extended later.
+	p The following table contains a list of precompiled binaries. The platform support is rather limited here for the time being and will be extended later.
 
-	p If your platform is not supported, installation is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
+	p If your platform is not supported, building is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
 
 	table
 		tr
@@ -15,12 +15,17 @@ block body
 			th Version
 			th Download
 		tr
-			td Linux i386
+			td Linux, x86
 			td 0.9.3
 			td
-				a(href="files/dub-0.9.3-linux-i386.zip") dub-0.9.3-linux-i386.zip
+				a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.3-linux-x86.gz
 		tr
-			td Linux amd64
+			td Linux, x86-64
 			td 0.9.3
 			td
-				a(href="files/dub-0.9.3-linux-amd64.zip") dub-0.9.3-linux-amd64.zip
+				a(href="files/dub-0.9.3-linux-x86_64.gz") dub-0.9.3-linux-x86_64.gz
+		tr
+			td Windows, x86
+			td 0.9.3
+			td
+				a(href="files/dub-0.9.3-windows-x86.zip") dub-0.9.3-windows-x86.zip
