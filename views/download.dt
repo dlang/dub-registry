@@ -29,3 +29,8 @@ block body
 			td 0.9.3
 			td
 				a(href="files/dub-0.9.3-windows-x86.zip") dub-0.9.3-windows-x86.zip
+		tr
+			td OS X 10.7, x86
+			td 0.9.3
+			td
+				a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.3-osx-x86_64.gz
