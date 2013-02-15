@@ -162,6 +162,21 @@ class DubRegistryWebFrontend {
 	}
 }
 
+Task s_checkTask;
+DubRegistry s_registry;
+
+void startMonitoring()
+{
+	void monitorNewVersions()
+	{
+		while(true){
+			s_registry.checkForNewVersions();
+			sleep(15.minutes());
+		}
+	}
+	s_checkTask = runTask(&monitorNewVersions);
+}
+
 static this()
 {
 	setLogLevel(LogLevel.None);
@@ -170,6 +185,7 @@ static this()
 	GithubRepository.register();
 
 	auto router = new UrlRouter;
+	router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
 
 	// user management
 	auto udbsettings = new UserManSettings;
@@ -183,10 +199,10 @@ static this()
 	auto regsettings = new DubRegistrySettings;
 	regsettings.pathPrefix = "/";
 	regsettings.metadataPath = Path("public/packages");
-	auto registry = new DubRegistry(regsettings);
+	s_registry = new DubRegistry(regsettings);
 
 	// web front end
-	auto webfrontend = new DubRegistryWebFrontend(registry, userdb);
+	auto webfrontend = new DubRegistryWebFrontend(s_registry, userdb);
 	webfrontend.register(router);
 	
 	// start the web server
@@ -199,6 +215,5 @@ static this()
 	listenHttp(settings, router);
 
 	// poll github for new project versions
-	setTimer(dur!"minutes"(15), &registry.checkForNewVersions, true);
-	runTask(&registry.checkForNewVersions);
+	startMonitoring();
 }
