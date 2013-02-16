@@ -3,7 +3,7 @@ html
 	head
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
 		block title
-		title= "DUB registry: " ~ title
+		title= title ~ " - DUB registry"
 	body
 		#header
 			a.blind(href="http://registry.vibed.org/")
