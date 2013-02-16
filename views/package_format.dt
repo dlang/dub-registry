@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Helping development";
+	- auto title = "Package file format";
 
 block body
 	h2 Introduction

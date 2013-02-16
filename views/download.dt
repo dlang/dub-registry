@@ -11,26 +11,28 @@ block body
 
 	table
 		tr
-			th Platform
 			th Version
-			th Download
-		tr
 			td Linux, x86
+			td Linux, x86-64
+			td Windows, x86
+			td OS X 10.7, x86-64
+		tr
+			td 0.9.4
+			td
+				//-a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.3-linux-x86.gz
+			td
+				a(href="files/dub-0.9.4-linux-x86_64.gz") dub-0.9.4-linux-x86_64.gz
+			td
+				a(href="files/dub-0.9.4-windows-x86.zip") dub-0.9.4-windows-x86.zip
+			td
+				//-a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.3-osx-x86_64.gz
+		tr
 			td 0.9.3
 			td
 				a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.3-linux-x86.gz
-		tr
-			td Linux, x86-64
-			td 0.9.3
 			td
 				a(href="files/dub-0.9.3-linux-x86_64.gz") dub-0.9.3-linux-x86_64.gz
-		tr
-			td Windows, x86
-			td 0.9.3
 			td
 				a(href="files/dub-0.9.3-windows-x86.zip") dub-0.9.3-windows-x86.zip
-		tr
-			td OS X 10.7, x86
-			td 0.9.3
 			td
 				a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.3-osx-x86_64.gz
