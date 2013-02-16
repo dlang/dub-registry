@@ -100,9 +100,9 @@ block body
 		|{
 		|	"dflags": ["-w"],
 		|	"dflags-dmd": ["-gc"],
-		|	"dflags-x64": ["-version=UseSpecialImpl"]
+		|	"dflags-x86_64": ["-version=UseSpecialImpl"]
 		|	"libs-posix": ["ssl", "crypto"],
-		|	"files-windows-x64-dmd": ["lib/win32/mylib.lib"],
+		|	"files-windows-x86_64-dmd": ["lib/win32/mylib.lib"],
 		|}
 
 	p Inside of build setting values, it is possible to use variables using dollar notation. <code>$PACKAGE_DIR</code> contains the path to the package itself and all other variables are taken from the program environment.

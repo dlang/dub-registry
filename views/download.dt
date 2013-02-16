@@ -19,13 +19,13 @@ block body
 		tr
 			td 0.9.4
 			td
-				//-a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.4-linux-x86.gz
+				//- a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.4-linux-x86.gz
 			td
 				a(href="files/dub-0.9.4-linux-x86_64.gz") dub-0.9.4-linux-x86_64.gz
 			td
 				a(href="files/dub-0.9.4-windows-x86.zip") dub-0.9.4-windows-x86.zip
 			td
-				//-a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.4-osx-x86_64.gz
+				//- a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.4-osx-x86_64.gz
 		tr
 			td 0.9.3
 			td
