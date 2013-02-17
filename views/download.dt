@@ -7,6 +7,8 @@ block title
 block body
 	p The following table contains a list of precompiled binaries. The platform support is rather limited here for the time being and will be extended later.
 
+	p On Linux and Mac OS you need to have libevent 2.0.x and libssl/libcrypto installed.
+
 	p If your platform is not supported, building is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
 
 	table
