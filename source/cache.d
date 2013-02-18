@@ -35,6 +35,7 @@ class UrlCache {
 		scope(exit) res.dropBody();
 
 		if( res.statusCode == HttpStatus.NotModified ){
+			res.dropBody();
 			auto data = be["data"].get!BsonBinData().rawData();
 			callback(new MemoryStream(cast(ubyte[])data, false));
 			return;
