@@ -27,7 +27,7 @@ block body
 			td
 				a(href="files/dub-0.9.5-windows-x86.zip") dub-0.9.5-windows-x86.zip
 			td
-				//- a(href="files/dub-0.9.5-osx-x86_64.gz") dub-0.9.4-osx-x86_64.gz
+				a(href="files/dub-0.9.5-osx-x86_64.gz") dub-0.9.4-osx-x86_64.gz
 		tr
 			td 0.9.4
 			td
