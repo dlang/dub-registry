@@ -77,9 +77,9 @@ block body
 		tr
 			td dependencies
 			td
-				code string[string]
+				code T[string]
 			td
-			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : "&lt;version-spec&gt;"</code> - see next section for how version specs look like
+			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see next section for how version specs look like
 		tr
 			td sourcePath
 			td
@@ -90,10 +90,14 @@ block body
 	
 	h2#version-specs Version specifications
 
+	p Some examples of typical version specifications:
+
 	ul
-		li <code>&gt;=1.3.0</code>
-		li <code>&gt;=1.3.0 &lt;=1.3.4</code>
-		li <code>~master</code>
+		li Require a certain version: <code>"==1.3.0"</code>
+		li Require a minimum version: <code>"&gt;=1.3.0"</code>
+		li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
+		li Use the GIT master branch: <code>"~master"</code>
+		li Use a folder to source a package from: <code>{"version": "~master", "path": "path/to/package"}</code>
 
 	
 	h2#build-settings Build settings
