@@ -108,7 +108,7 @@ class DubRegistryWebFrontend {
 			info.addFile(parts[1], parts[2]~"-"~parts[3], name);
 		}
 
-		info.versions.sort!((a, b) => vcmp(a.id, b.id) < 0)();
+		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
 
 		res.renderCompat!("download.dt",
 			HttpServerRequest, "req",
