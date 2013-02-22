@@ -19,6 +19,16 @@ block body
 			th Windows, x86
 			th OS X 10.7, x86-64
 		tr
+			td 0.9.7
+			td
+				a(href="files/dub-0.9.7-linux-x86.gz") dub-0.9.7-linux-x86.gz
+			td
+				a(href="files/dub-0.9.7-linux-x86_64.gz") dub-0.9.7-linux-x86_64.gz
+			td
+				a(href="files/dub-0.9.7-windows-x86.zip") dub-0.9.7-windows-x86.zip
+			td
+				a(href="files/dub-0.9.7-osx-x86_64.gz") dub-0.9.7-osx-x86_64.gz
+		tr
 			td 0.9.6
 			td
 				a(href="files/dub-0.9.6-linux-x86.gz") dub-0.9.6-linux-x86.gz
