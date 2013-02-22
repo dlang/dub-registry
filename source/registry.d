@@ -270,12 +270,12 @@ private int[] linearizeVersion(string ver)
 	return ret;
 }
 
-private bool vcmp(DbPackageVersion a, DbPackageVersion b)
+bool vcmp(DbPackageVersion a, DbPackageVersion b)
 {
 	return vcmp(a.version_, b.version_);
 }
 
-private bool vcmp(string va, string vb)
+bool vcmp(string va, string vb)
 {
 	try {
 		auto aparts = linearizeVersion(va);

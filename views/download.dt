@@ -18,53 +18,10 @@ block body
 			th Linux, x86-64
 			th Windows, x86
 			th OS X 10.7, x86-64
-		tr
-			td 0.9.7
-			td
-				a(href="files/dub-0.9.7-linux-x86.gz") dub-0.9.7-linux-x86.gz
-			td
-				a(href="files/dub-0.9.7-linux-x86_64.gz") dub-0.9.7-linux-x86_64.gz
-			td
-				a(href="files/dub-0.9.7-windows-x86.zip") dub-0.9.7-windows-x86.zip
-			td
-				a(href="files/dub-0.9.7-osx-x86_64.gz") dub-0.9.7-osx-x86_64.gz
-		tr
-			td 0.9.6
-			td
-				a(href="files/dub-0.9.6-linux-x86.gz") dub-0.9.6-linux-x86.gz
-			td
-				a(href="files/dub-0.9.6-linux-x86_64.gz") dub-0.9.6-linux-x86_64.gz
-			td
-				a(href="files/dub-0.9.6-windows-x86.zip") dub-0.9.6-windows-x86.zip
-			td
-				a(href="files/dub-0.9.6-osx-x86_64.gz") dub-0.9.6-osx-x86_64.gz
-		tr
-			td 0.9.5
-			td
-				//- a(href="files/dub-0.9.5-linux-x86.gz") dub-0.9.5-linux-x86.gz
-			td
-				a(href="files/dub-0.9.5-linux-x86_64.gz") dub-0.9.5-linux-x86_64.gz
-			td
-				a(href="files/dub-0.9.5-windows-x86.zip") dub-0.9.5-windows-x86.zip
-			td
-				a(href="files/dub-0.9.5-osx-x86_64.gz") dub-0.9.5-osx-x86_64.gz
-		tr
-			td 0.9.4
-			td
-				//- a(href="files/dub-0.9.4-linux-x86.gz") dub-0.9.4-linux-x86.gz
-			td
-				a(href="files/dub-0.9.4-linux-x86_64.gz") dub-0.9.4-linux-x86_64.gz
-			td
-				a(href="files/dub-0.9.4-windows-x86.zip") dub-0.9.4-windows-x86.zip
-			td
-				//- a(href="files/dub-0.9.4-osx-x86_64.gz") dub-0.9.4-osx-x86_64.gz
-		tr
-			td 0.9.3
-			td
-				a(href="files/dub-0.9.3-linux-x86.gz") dub-0.9.3-linux-x86.gz
-			td
-				a(href="files/dub-0.9.3-linux-x86_64.gz") dub-0.9.3-linux-x86_64.gz
-			td
-				a(href="files/dub-0.9.3-windows-x86.zip") dub-0.9.3-windows-x86.zip
-			td
-				a(href="files/dub-0.9.3-osx-x86_64.gz") dub-0.9.3-osx-x86_64.gz
+		- foreach_reverse(v; info.versions)
+			tr
+				td= v.id
+				- foreach(p; ["linux-x86", "linux-x86_64", "windows-x86", "osx-x86_64"])
+					td
+						- if( auto pf = p in v.files )
+							a(href="files/#{pf.fileName}")= pf.fileName

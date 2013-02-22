@@ -4,6 +4,8 @@ import github;
 import registry;
 
 import std.algorithm : sort;
+import std.file;
+import std.path;
 import userman.web;
 import vibe.d;
 
@@ -26,7 +28,7 @@ class DubRegistryWebFrontend {
 		// user front end
 		router.get("/", &showHome);
 		router.get("/usage", staticTemplate!"usage.dt");
-		router.get("/download", staticTemplate!"download.dt");
+		router.get("/download", &showDownloads);
 		router.get("/publish", staticTemplate!"publish.dt");
 		router.get("/develop", staticTemplate!"develop.dt");
 		router.get("/package-format", staticTemplate!"package_format.dt");
@@ -66,6 +68,51 @@ class DubRegistryWebFrontend {
 		res.renderCompat!("home.dt",
 			HttpServerRequest, "req",
 			Json[], "packages")(req, packages);
+	}
+
+	void showDownloads(HttpServerRequest req, HttpServerResponse res)
+	{
+		static struct DownloadFile {
+			string fileName;
+		}
+
+		static struct DownloadVersion {
+			string id;
+			DownloadFile[string] files;
+		}
+
+		static struct Info {
+			DownloadVersion[] versions;
+			void addFile(string ver, string platform, string filename)
+			{
+				auto df = DownloadFile(filename);
+				foreach(ref v; versions)
+					if( v.id == ver ){
+						v.files[platform] = df;
+						return;
+					}
+				DownloadVersion dv = DownloadVersion(ver);
+				dv.files[platform] = df;
+				versions ~= dv;
+			}
+		}
+
+		Info info;
+
+		foreach(de; dirEntries("public/files", "*.{zip,gz}", SpanMode.shallow)){
+			auto name = Path(de.name).head.toString();
+			auto basename = stripExtension(name);
+			auto parts = basename.split("-");
+			if( parts.length != 4 ) continue;
+			if( parts[0] != "dub" ) continue;
+			info.addFile(parts[1], parts[2]~"-"~parts[3], name);
+		}
+
+		info.versions.sort!((a, b) => vcmp(a.id, b.id) < 0)();
+
+		res.renderCompat!("download.dt",
+			HttpServerRequest, "req",
+			Info*, "info")(req, &info);
 	}
 
 	void redirectViewPackage(HttpServerRequest req, HttpServerResponse res)
