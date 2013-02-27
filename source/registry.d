@@ -86,6 +86,8 @@ class DubRegistry {
 		pack.repository = repository;
 		pack.branches["master"] = vi;
 		m_packages.insert(pack);
+
+		runTask({ checkForNewVersions(pack.name); });
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -143,56 +145,61 @@ class DubRegistry {
 
 		logInfo("Checking for new versions...");
 		foreach( packname; this.availablePackages ){
-			string[] errors;
-
-			Json pack;
-			try pack = getPackageInfo(packname);
-			catch( Exception e ){
-				errors ~= format("Error getting package info: %s", e.msg);
-				logDebug("%s", sanitize(e.toString()));
-				continue;
-			}
-
-			Repository rep;
-			try rep = getRepository(pack.repository);
-			catch( Exception e ){
-				errors ~= format("Error accessing repository: %s", e.msg);
-				logDebug("%s", sanitize(e.toString()));
-				continue;
-			}
-
-			try {
-				foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
-					if( !hasVersion(packname, ver) ){
-						try {
-							addVersion(packname, ver, rep.getVersionInfo(ver));
-							logInfo("Added version %s for %s", ver, packname);
-						} catch( Exception e ){
-							logDebug("version %s", sanitize(e.toString()));
-							errors ~= format("Version %s: %s", ver, e.msg);
-							// TODO: store error message for web frontend!
-						}
-					}
-				}
-				foreach( ver; rep.getBranches() ){
-					if( !hasVersion(packname, ver) ){
-						try {
-							addVersion(packname, ver, rep.getVersionInfo(ver));
-							logInfo("Added branch %s for %s", ver, packname);
-						} catch( Exception e ){
-							logDebug("%s", sanitize(e.toString()));
-							// TODO: store error message for web frontend!
-							errors ~= format("Branch %s: %s", ver, e.msg);
-						}
-					}
-				}
-			} catch( Exception e ){
-				logDebug("%s", sanitize(e.toString()));
-				// TODO: store error message for web frontend!
-				errors ~= e.msg;
-			}
-			setPackageErrors(packname, errors);
+			checkForNewVersions(packname);
 		}
+	}
+
+	void checkForNewVersions(string packname)
+	{
+		string[] errors;
+
+		Json pack;
+		try pack = getPackageInfo(packname);
+		catch( Exception e ){
+			errors ~= format("Error getting package info: %s", e.msg);
+			logDebug("%s", sanitize(e.toString()));
+			continue;
+		}
+
+		Repository rep;
+		try rep = getRepository(pack.repository);
+		catch( Exception e ){
+			errors ~= format("Error accessing repository: %s", e.msg);
+			logDebug("%s", sanitize(e.toString()));
+			continue;
+		}
+
+		try {
+			foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
+				if( !hasVersion(packname, ver) ){
+					try {
+						addVersion(packname, ver, rep.getVersionInfo(ver));
+						logInfo("Added version %s for %s", ver, packname);
+					} catch( Exception e ){
+						logDebug("version %s", sanitize(e.toString()));
+						errors ~= format("Version %s: %s", ver, e.msg);
+						// TODO: store error message for web frontend!
+					}
+				}
+			}
+			foreach( ver; rep.getBranches() ){
+				if( !hasVersion(packname, ver) ){
+					try {
+						addVersion(packname, ver, rep.getVersionInfo(ver));
+						logInfo("Added branch %s for %s", ver, packname);
+					} catch( Exception e ){
+						logDebug("%s", sanitize(e.toString()));
+						// TODO: store error message for web frontend!
+						errors ~= format("Branch %s: %s", ver, e.msg);
+					}
+				}
+			}
+		} catch( Exception e ){
+			logDebug("%s", sanitize(e.toString()));
+			// TODO: store error message for web frontend!
+			errors ~= e.msg;
+		}
+		setPackageErrors(packname, errors);
 	}
 
 	bool hasVersion(string packname, string ver)
