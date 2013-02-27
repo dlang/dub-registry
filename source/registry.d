@@ -141,8 +141,6 @@ class DubRegistry {
 
 	void checkForNewVersions()
 	{
-		import std.encoding;
-
 		logInfo("Checking for new versions...");
 		foreach( packname; this.availablePackages ){
 			checkForNewVersions(packname);
@@ -151,6 +149,7 @@ class DubRegistry {
 
 	void checkForNewVersions(string packname)
 	{
+		import std.encoding;
 		string[] errors;
 
 		Json pack;
@@ -158,7 +157,7 @@ class DubRegistry {
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
-			continue;
+			return;
 		}
 
 		Repository rep;
@@ -166,7 +165,7 @@ class DubRegistry {
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
-			continue;
+			return;
 		}
 
 		try {
