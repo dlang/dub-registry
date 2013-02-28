@@ -13,6 +13,8 @@ class GithubRepository : Repository {
 		CommitInfo[string] m_branches;
 		string[] m_versionList;
 		string[] m_branchList;
+		bool m_gotVersions = false;
+		bool m_gotBranches = false;
 	}
 
 	static void register()
@@ -27,14 +29,12 @@ class GithubRepository : Repository {
 	{
 		m_owner = owner;
 		m_project = project;
-		try getVersions(); // download an initial version list
-		catch( Exception e ){
-			logWarn("Failed to get initial version list for github:%s/%s: %s", owner, project, e.msg);
-		}
 	}
 
 	string[] getVersions()
 	{
+		m_gotVersions = true;
+
 		Json tags;
 		try downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
@@ -77,10 +77,12 @@ class GithubRepository : Repository {
 		string url;
 		SysTime date;
 		if( ver.startsWith("~") ){
+			if( !m_gotBranches ) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~ver[1 .. $]~"/package.json";
 			if( pc ) date = pc.date.toSysTime();
 		} else {
+			if( !m_gotVersions ) getVersions();
 			auto pc = ver in m_versions;
 			enforce(pc !is null, "Invalid version identifier.");
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
