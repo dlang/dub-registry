@@ -34,6 +34,8 @@ block body
 			- string url;
 			- if( pr.kind == "github" )
 				- url = "https://github.com/"~pr.owner.get!string~"/"~pr.project.get!string;
+			- else if( pr.kind == "bitbucket" )
+				- url = "https://bitbucket.org/"~pr.owner.get!string~"/"~pr.project.get!string;
 			- if( url.length )
 				tr
 					td Repository

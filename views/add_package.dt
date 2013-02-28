@@ -7,13 +7,13 @@ block body
 
 	form(method="POST", action="#{req.rootDir}my_packages/add")
 		select(name="kind", size="1")
-			option(value="github") github project
-		
+			option(value="github") GitHub project
+			option(value="bitbucket") Bitbucket project
 		p
-			label(for="owner") github user:
+			label(for="owner") Repository owner:
 			input(type="text", name="owner")
 		p
-			label(for="project") github project:
+			label(for="project") Repository name:
 			input(type="text", name="project")
 		p
 			input(type="submit", value="Add")

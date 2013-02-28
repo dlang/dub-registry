@@ -1,5 +1,6 @@
 module app;
 
+import bitbucket;
 import github;
 import registry;
 
@@ -231,6 +232,7 @@ static this()
 	setLogFile("log.txt", LogLevel.Debug);
 
 	GithubRepository.register();
+	BitbucketRepository.register();
 
 	auto router = new UrlRouter;
 	router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
