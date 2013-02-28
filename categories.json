@@ -1,0 +1,46 @@
+[
+	{"name": "application", "description": "Stand-alone applications", "categories": [
+		{"name": "desktop", "description": "Desktop applications", "categories": [
+			{"name": "development", "description": "Development tools", "categories": [
+				{"name": "analyzer", "description": "Profilers, Code analyzers, etc."},
+				{"name": "build", "description": "Build tools"},
+				{"name": "compiler", "description": "Compilers"},
+				{"name": "debugger", "description": "Debuggers"},
+				{"name": "packaging", "description": "Packaging tools"},
+				{"name": "ide", "description": "Integrated development environments"}
+			]},
+			{"name": "editor", "description": "Text editors"},
+			{"name": "game", "description": "Games"},
+			{"name": "graphics", "description": "Graphics editing"},
+			{"name": "network", "description": "Network tools"},
+			{"name": "photo", "description": "Photogrphic applications"},
+			{"name": "productivity", "description": "Office and productivity"},
+			{"name": "web", "description": "Web tools"}
+		]},
+		{"name": "mobile", "description": "Mobile device applications"},
+		{"name": "server", "description": "Server software", "categories": [
+			{"name": "messaging", "description": "Chat/email servers"},
+			{"name": "database", "description": "Database servers"}
+		]},
+		{"name": "web", "description": "Web applications", "categories": [
+			{"name": "communication", "description": "Blogs, chats, forums, etc."},
+			{"name": "productivity", "Office and productivity"}
+		]},
+		{"name": "website", "description": "Websites"}
+	]},
+	{"name": "library", "description": "Development library", "categories": [
+		{"name": "binding", "description": "Foreign language bindings"},
+		{"name": "crypto", "description": "Cryptographic libraries"},
+		{"name": "data", "description": "Data storage and format support"},
+		{"name": "database", "description": "Database clients or implementations"},
+		{"name": "graphics", "description": "2D/3D graphics"},
+		{"name": "gui", "description": "Graphhical user interfaces"},
+		{"name": "network", "description": "General networking", "categories"},
+		{"name": "scripting", "description": "Scripting language support"},
+		{"name": "web", "description": "Web related", "categories": [
+			{"name": "auth", "description": "Authentication and user management"},
+			{"name": "communication", "description": "Communication components"},
+			{"name": "framework", "description": "Web framework"}
+		]}
+	]}
+]

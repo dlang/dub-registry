@@ -2,6 +2,7 @@
 	"name": "dub-registry",
 	"description": "Online registry for dub packages",
 	"homepage": "http://registry.vibed.org/",
+	"license": "GPLv3",
 	"authors": [
 		"Sönke Ludwig",
 		"Matthias Dondorff"
