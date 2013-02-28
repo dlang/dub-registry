@@ -81,11 +81,11 @@ block body
 			td
 			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see next section for how version specs look like
 		tr
-			td sourcePath
+			td sourcePaths
 			td
-				code string
+				code string[]
 			td
-			td Allows to customize the path where to look for source files (default is "source")
+			td Allows to customize the path where to look for source files (default is <code>["source"]</code>)
 
 	
 	h2#version-specs Version specifications
