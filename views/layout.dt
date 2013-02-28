@@ -13,7 +13,10 @@ html
 				h1= title
 			#profile
 				- if( req.session )
-					a(href="#{req.rootDir}logout") Log out
+					p
+						a(href="#{req.rootDir}logout") Log out
+					p
+						a(href="#{req.rootDir}profile") Edit profile
 				- else
 					p
 						a(href="#{req.rootDir}register") Register
