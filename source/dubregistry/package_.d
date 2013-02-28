@@ -1,4 +1,4 @@
-module package_;
+module dubregistry.package_;
 
 class PackageVersion {
 	string name;

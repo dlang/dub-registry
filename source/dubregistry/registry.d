@@ -1,6 +1,6 @@
-module registry;
+module dubregistry.registry;
 
-import repository;
+import dubregistry.repositories.repository;
 
 import std.algorithm : sort;
 import vibe.vibe;

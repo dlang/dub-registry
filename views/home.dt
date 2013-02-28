@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- import viewutils;
+	- import dubregistry.viewutils;
 	- auto title = "Home";
 	
 block body

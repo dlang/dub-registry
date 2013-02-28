@@ -1,4 +1,4 @@
-module cache;
+module dubregistry.cache;
 
 import vibe.core.log;
 import vibe.db.mongo.mongo;

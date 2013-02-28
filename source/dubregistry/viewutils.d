@@ -1,4 +1,4 @@
-module viewutils;
+module dubregistry.viewutils;
 
 import std.datetime;
 import std.string;

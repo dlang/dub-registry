@@ -3,7 +3,7 @@ extends layout
 block title
 	- import std.algorithm;
 	- import vibe.data.json;
-	- import viewutils;
+	- import dubregistry.viewutils;
 	- auto title = "Package " ~ pack.name.get!string ~ (ver.length ? " "~ver : null);
 	
 block body

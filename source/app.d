@@ -1,8 +1,8 @@
 module app;
 
-import bitbucket;
-import github;
-import registry;
+import dubregistry.repositories.bitbucket;
+import dubregistry.repositories.github;
+import dubregistry.registry;
 
 import std.algorithm : sort;
 import std.file;

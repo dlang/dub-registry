@@ -1,6 +1,8 @@
+module dubregistry.repositories.repository;
+
 import vibe.vibe;
 
-import cache;
+import dubregistry.cache;
 import std.digest.sha;
 
 

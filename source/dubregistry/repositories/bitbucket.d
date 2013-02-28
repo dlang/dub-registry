@@ -1,11 +1,13 @@
-module github;
+module dubregistry.repositories.bitbucket;
 
-import cache;
-import repository;
+import dubregistry.cache;
+import dubregistry.repositories.repository;
+import std.array;
+import std.string;
 import vibe.vibe;
 
 
-class GithubRepository : Repository {
+class BitbucketRepository : Repository {
 	private {
 		string m_owner;
 		string m_project;
@@ -20,9 +22,9 @@ class GithubRepository : Repository {
 	static void register()
 	{
 		Repository factory(Json info){
-			return new GithubRepository(info.owner.get!string, info.project.get!string);
+			return new BitbucketRepository(info.owner.get!string, info.project.get!string);
 		}
-		addRepositoryFactory("github", &factory);
+		addRepositoryFactory("bitbucket", &factory);
 	}
 
 	this(string owner, string project)
@@ -36,16 +38,15 @@ class GithubRepository : Repository {
 		m_gotVersions = true;
 
 		Json tags;
-		try downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
+		try downloadCached("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		m_versionList.length = 0;
-		foreach_reverse( tag; tags ){
+		foreach( string tagname, tag; tags ){
 			try {
-				auto tagname = tag.name.get!string;
 				if( tagname.length >= 2 && tagname[0] == 'v' ){
-					Json commit;
-					downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
-					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
+					auto commit_hash = tag.raw_node.get!string();
+					auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
+					m_versions[tagname[1 .. $]] = CommitInfo(commit_hash, commit_date);
 					m_versionList ~= tagname[1 .. $];
 					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
 				}
@@ -59,13 +60,12 @@ class GithubRepository : Repository {
 	string[] getBranches()
 	{
 		Json branches;
-		downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches", (scope input){ branches = input.readJson(); });
+		downloadCached("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches", (scope input){ branches = input.readJson(); });
 		m_branchList.length = 0;
-		foreach_reverse( branch; branches ){
-			auto branchname = branch.name.get!string;
-			Json commit;
-			downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
-			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
+		foreach( string branchname, branch; branches ){
+			auto commit_hash = branch.raw_node.get!string();
+			auto commit_date = bbToIsoDate(branch.utctimestamp.get!string());
+			m_branches[branchname] = CommitInfo(commit_hash, commit_date);
 			m_branchList ~= "~"~branchname;
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
@@ -79,13 +79,13 @@ class GithubRepository : Repository {
 		if( ver.startsWith("~") ){
 			if( !m_gotBranches ) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
-			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~ver[1 .. $]~"/package.json";
+			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~ver[1 .. $]~"/package.json";
 			if( pc ) date = pc.date.toSysTime();
 		} else {
 			if( !m_gotVersions ) getVersions();
 			auto pc = ver in m_versions;
 			enforce(pc !is null, "Invalid version identifier.");
-			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
+			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~(pc.sha)~"/package.json";
 			date = pc.date.toSysTime();
 		}
 
@@ -106,7 +106,7 @@ class GithubRepository : Repository {
 	{
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = "v" ~ ver;
-		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
+		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~ver~".zip";
 	}
 }
 
@@ -114,4 +114,15 @@ private Json readJson(InputStream str, bool sanitize = false)
 {
 	auto text = str.readAllUtf8(sanitize);
 	return parseJson(text);
+}
+
+private string bbToIsoDate(string bbdate)
+{
+	auto ttz = bbdate.split("+");
+	if( ttz.length < 2 ) ttz ~= "00:00";
+	auto parts = ttz[0].split("-");
+	parts = parts[0 .. $-1] ~ parts[$-1].split(" ");
+	parts = parts[0 .. $-1] ~ parts[$-1].split(":");
+
+	return SysTime.fromISOString(format("%s%s%sT%s%s%s+%s", parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], ttz[1])).toISOExtString();
 }
