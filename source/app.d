@@ -99,13 +99,14 @@ class DubRegistryWebFrontend {
 
 		Info info;
 
-		foreach(de; dirEntries("public/files", "*.{zip,gz}", SpanMode.shallow)){
+		foreach(de; dirEntries("public/files", "*.{zip,gz,exe}", SpanMode.shallow)){
 			auto name = Path(de.name).head.toString();
 			auto basename = stripExtension(name);
 			auto parts = basename.split("-");
-			if( parts.length != 4 ) continue;
+			if( parts.length < 3 ) continue;
 			if( parts[0] != "dub" ) continue;
-			info.addFile(parts[1], parts[2]~"-"~parts[3], name);
+			if( parts[2] == "setup" ) info.addFile(parts[1], "windows-x86", name);
+			else if( parts.length == 4 ) info.addFile(parts[1], parts[2]~"-"~parts[3], name);
 		}
 
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
