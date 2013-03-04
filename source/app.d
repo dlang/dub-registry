@@ -5,6 +5,7 @@
 */
 module app;
 
+import dubregistry.dbcontroller;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
@@ -252,8 +253,6 @@ static this()
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
-	regsettings.pathPrefix = "/";
-	regsettings.metadataPath = Path("public/packages");
 	s_registry = new DubRegistry(regsettings);
 
 	// web front end

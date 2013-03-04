@@ -5,6 +5,7 @@
 */
 module dubregistry.registry;
 
+import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
 import std.algorithm : sort;
@@ -13,59 +14,24 @@ import vibe.vibe;
 
 /// Settings to configure the package registry.
 class DubRegistrySettings {
-	/// Prefix used to acces the registry.
-	string pathPrefix;
-	/// location for the package.json files on the filesystem.
-	Path metadataPath;
-}
-
-private struct DbPackage {
-	BsonObjectID _id;
-	BsonObjectID owner;
-	string name;
-	Json repository;
-	DbPackageVersion[] versions;
-	DbPackageVersion[string] branches;
-	string[] errors;
-}
-
-private struct DbPackageVersion {
-	BsonDate date;
-	string version_;
-	Json info;
+	string databaseName = "vpmreg";
 }
 
 class DubRegistry {
 	private {
-		MongoClient m_db;
-		MongoCollection m_packages;
 		DubRegistrySettings m_settings;
+		DbController m_db;
 	}
 
 	this(DubRegistrySettings settings)
 	{
-		m_db = connectMongoDB("127.0.0.1");
 		m_settings = settings;
-		m_packages = m_db.getCollection("vpmreg.packages");
-
-		repairVersionOrder();
-	}
-
-	void repairVersionOrder()
-	{
-		foreach( bp; m_packages.find() ){
-			auto p = deserializeBson!DbPackage(bp);
-			sort!((a, b) => vcmp(a, b))(p.versions);
-			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
-		}
+		m_db = new DbController(settings.databaseName);
 	}
 
 	@property string[] availablePackages()
 	{
-		string[] all;
-		foreach( p; m_packages.find(Bson.EmptyObject, ["name": 1]) )
-			all ~= p.name.get!string;
-		return all;
+		return m_db.getAllPackages();
 	}
 
 	void addPackage(Json repository, BsonObjectID user)
@@ -77,20 +43,17 @@ class DubRegistry {
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			checkPackageName(n);
 
-		enforce(m_packages.findOne(["name": info.info.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
-
 		DbPackageVersion vi;
 		vi.date = BsonDate(info.date);
 		vi.version_ = info.version_;
 		vi.info = info.info;
 
 		DbPackage pack;
-		pack._id = BsonObjectID.generate();
 		pack.owner = user;
 		pack.name = info.info.name.get!string;
 		pack.repository = repository;
 		pack.branches["master"] = vi;
-		m_packages.insert(pack);
+		m_db.addPackage(pack);
 
 		runTask({ checkForNewVersions(pack.name); });
 	}
@@ -98,23 +61,19 @@ class DubRegistry {
 	void removePackage(string packname, BsonObjectID user)
 	{
 		logInfo("Removing package %s of %s", packname, user);
-		m_packages.remove(["name": Bson(packname), "owner": Bson(user)]);
+		m_db.removePackage(packname, user);
 	}
 
 	string[] getPackages(BsonObjectID user)
 	{
-		string[] ret;
-		foreach( p; m_packages.find(["owner": user], ["name": 1]) )
-			ret ~= p.name.get!string;
-		return ret;
+		return m_db.getUserPackages(user);
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
-		auto bpack = m_packages.findOne(["name": packname]);
-		if( bpack.isNull() ) return Json(null);
-
-		auto pack = deserializeBson!DbPackage(bpack);
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
+		catch(Exception) return Json(null);
 
 		auto rep = getRepository(pack.repository);
 
@@ -123,16 +82,16 @@ class DubRegistry {
 			auto nfo = v.info;
 			nfo["version"] = "~"~k;
 			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl("~"~k);
-			nfo.downloadUrl = nfo.url;
+			nfo.url = rep.getDownloadUrl("~"~k); // obsolete, will be removed in april 2013
+			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			vers ~= nfo;
 		}
 		foreach( v; pack.versions ){
 			auto nfo = v.info;
 			nfo["version"] = v.version_;
 			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl(v.version_);
-			nfo.downloadUrl = nfo.url;
+			nfo.url = rep.getDownloadUrl(v.version_); // obsolete, will be removed in april 2013
+			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			vers ~= nfo;
 		}
 
@@ -175,7 +134,7 @@ class DubRegistry {
 
 		try {
 			foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
-				if( !hasVersion(packname, ver) ){
+				if( !m_db.hasVersion(packname, ver) ){
 					try {
 						addVersion(packname, ver, rep.getVersionInfo(ver));
 						logInfo("Added version %s for %s", ver, packname);
@@ -187,7 +146,7 @@ class DubRegistry {
 				}
 			}
 			foreach( ver; rep.getBranches() ){
-				if( !hasVersion(packname, ver) ){
+				if( !m_db.hasVersion(packname, ver) ){
 					try {
 						addVersion(packname, ver, rep.getVersionInfo(ver));
 						logInfo("Added branch %s for %s", ver, packname);
@@ -203,15 +162,7 @@ class DubRegistry {
 			// TODO: store error message for web frontend!
 			errors ~= e.msg;
 		}
-		setPackageErrors(packname, errors);
-	}
-
-	bool hasVersion(string packname, string ver)
-	{
-		auto packbson = Bson(packname);
-		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
-		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson], ["_id": true]);
-		return !ret.isNull();
+		m_db.setPackageErrors(packname, errors);
 	}
 
 	protected void addVersion(string packname, string ver, PackageVersionInfo info)
@@ -223,21 +174,16 @@ class DubRegistry {
 
 		DbPackageVersion dbver;
 		dbver.date = BsonDate(info.date);
-		dbver.version_ = info.version_;
+		dbver.version_ = ver;
 		dbver.info = info.info;
 
 		if( !ver.startsWith("~") ){
-			enforce(!hasVersion(packname, info.version_), "Version already exists.");
+			enforce(!m_db.hasVersion(packname, info.version_), "Version already exists.");
 			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
-			m_packages.update(["name": packname], ["$push": ["versions": dbver]]);
+			m_db.addVersion(packname, dbver);
 		} else {
-			m_packages.update(["name": packname], ["$set": ["branches."~ver[1 .. $]: dbver]]);
+			m_db.addBranch(packname, dbver);
 		}
-	}
-
-	protected void setPackageErrors(string pack, string[] error...)
-	{
-		m_packages.update(["name": pack], ["$set": ["errors": error]]);
 	}
 }
 
@@ -254,48 +200,5 @@ private void checkPackageName(string n){
 				break;
 		}
 	}
-}
-
-
-private int[] linearizeVersion(string ver)
-{
-	import std.conv;
-	static immutable prefixes = ["alpha", "beta", "rc"];
-	auto parts = ver.split(".");
-	int[] ret;
-	foreach( p; parts ){
-		ret ~= parse!int(p);
-
-		bool gotprefix = false;
-		foreach( i, prefix; prefixes ){
-			if( p.startsWith(prefix) ){
-				p = p[prefix.length .. $];
-				if( p.length ) ret ~= cast(int)i*10000 + to!int(p);
-				else ret ~= cast(int)i*10000;
-				gotprefix = true;
-				break;
-			}
-		}
-		if( !gotprefix ) ret ~= int.max;
-	}
-	return ret;
-}
-
-bool vcmp(DbPackageVersion a, DbPackageVersion b)
-{
-	return vcmp(a.version_, b.version_);
-}
-
-bool vcmp(string va, string vb)
-{
-	try {
-		auto aparts = linearizeVersion(va);
-		auto bparts = linearizeVersion(vb);
-
-		foreach( i; 0 .. min(aparts.length, bparts.length) )
-			if( aparts[i] != bparts[i] )
-				return aparts[i] < bparts[i];
-		return aparts.length < bparts.length;
-	} catch( Exception e ) return false;
 }
 
