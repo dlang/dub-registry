@@ -29,14 +29,12 @@ block body
 		tr
 			th Name
 			th Type
-			th Required
 			th Description
 		
 		tr
-			td name
+			td name [required]
 			td
 				code string
-			td yes
 			td Name of the package, used to uniquely identify the package
 
 		tr
@@ -142,7 +140,7 @@ block body
 			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
 
 		tr
-			td files
+			td sourceFiles
 			td
 				code string[]
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
@@ -170,6 +168,26 @@ block body
 			td
 				code string[]
 			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
+		tr
+			td preGenerateCommands
+			td
+				code string[]
+			td A list of shell commands that is executed before project generation is started
+		tr
+			td postGenerateCommands
+			td
+				code string[]
+			td A list of shell commands that is executed after project generation is finished
+		tr
+			td preBuildCommands
+			td
+				code string[]
+			td A list of shell commands that is executed always before the project is built
+		tr
+			td postBuildCommands
+			td
+				code string[]
+			td A list of shell commands that is executed always after the project is built
 
 	
 	h2#configurations Configurations
