@@ -50,7 +50,7 @@ class DubRegistry {
 
 		DbPackage pack;
 		pack.owner = user;
-		pack.name = info.info.name.get!string;
+		pack.name = info.info.name.get!string.toLower();
 		pack.repository = repository;
 		pack.branches["master"] = vi;
 		m_db.addPackage(pack);
@@ -167,6 +167,7 @@ class DubRegistry {
 
 	protected void addVersion(string packname, string ver, PackageVersionInfo info)
 	{
+		info.info.name = toLower(info.info.name);
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
