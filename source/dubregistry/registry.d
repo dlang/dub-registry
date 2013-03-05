@@ -167,7 +167,7 @@ class DubRegistry {
 
 	protected void addVersion(string packname, string ver, PackageVersionInfo info)
 	{
-		info.info.name = toLower(info.info.name);
+		info.info.name = toLower(info.info.name.get!string());
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
