@@ -45,7 +45,7 @@ class UrlCache {
 			callback(new MemoryStream(cast(ubyte[])data, false));
 			return;
 		}
-		enforce(res.statusCode == HttpStatus.OK, "Unexpeted reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
+		enforce(res.statusCode == HttpStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
 		if( auto pet = "ETag" in res.headers ){
 			auto dst = new MemoryOutputStream;
