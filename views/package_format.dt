@@ -108,11 +108,25 @@ block body
 			th Name
 			th Type
 			th Description
+		
 		tr
 			td targetType
 			td
 				code string
 			td Specifies a specific <a href="#target-types">target type</a> - this field does not support platform suffixes
+		
+		tr
+			td targetName
+			td
+				code string
+			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this field does not support platform suffixes
+
+		tr
+			td targetPath
+			td
+				code string
+			td The destination path of the output binary - this field does not support platform suffixes
+
 		tr
 			td dflags
 			td
