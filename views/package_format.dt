@@ -113,7 +113,11 @@ block body
 			th Name
 			th Type
 			th Description
-
+		tr
+			td targetType
+			td
+				code string
+			td Specifies a specific <a href="#target-types">target type</a> - this field does not support platform suffixes
 		tr
 			td dflags
 			td
@@ -137,6 +141,12 @@ block body
 			td
 				code string[]
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
+
+		tr
+			td excludedSourceFiles
+			td
+				code string[]
+			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths")
 
 		tr
 			td copyFiles
@@ -185,32 +195,91 @@ block body
 	
 	h2#configurations Configurations
 
-	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add to the global build settings. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. The configurations are defined by adding a "configurations" field. The following example defines a "metro-app" and a "desktop-app" configuration.
+	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" field. The following example defines a "metro-app" and a "desktop-app" configuration.
 
 	pre.code
 		|{
 		|	...
-		|	"configurations": {
-		|		"metro-app": {
+		|	"configurations": [
+		|		{
+		|			"name": "metro-app",
+		|			"targetType": "executable",
+		|			"platforms": ["windows"],
 		|			"versions": ["MetroApp"],
 		|			"libs": ["d3d11"]
 		|		},
-		|		"desktop-app": {
+		|		{
+		|			"name": "desktop-app",
+		|			"targetType": "executable",
+		|			"platforms": ["windows"],
 		|			"versions": ["DesktopApp"],
 		|			"libs": ["d3d9"]
+		|		},
+		|		{
+		|			"name": "cocoa-app",
+		|			"targetType": "executable",
+		|			"platforms": ["osx"],
+		|			"versions": ["CocoaApp"]
 		|		}
 		|	}
 		|}
 
-	p To pre-select a configuration, a "default" field can be added. The same platform suffixes as for build flags can be used to vary depending on the plaform:
+	p If no configuration list is specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found:
 
-	pre.code
-		|{
-		|	...
-		|	"configurations": {
-		|		...
-		|		"default-windows": "metro-app",
-		|		"default-osx": "desktop-app",
-		|		"default": "console-app"
-		|	}
-		|}
+	ul
+		li source/app.d
+		li source/&lt;package name&gt;.d
+		li src/app.d
+		li src/&lt;package name&gt;.d
+
+	p Those files are then only added to the "application" configuration and are expected to contain the application entry point (<code>main</code>).
+
+
+	h3 Configuration specific fields
+
+	p In addition to the usual <a href="#build-settings">build settings</a>, the following fields are recognized inside of a configuration block:
+
+	table
+		tr
+			th Name
+			th Type
+			th Description
+		
+		tr
+			td name [required]
+			td
+				code string
+			td Name of the configuration
+		tr
+			td platforms
+			td
+				code string[]
+			td A list of platform suffixes (as used for the build settings) to limit on which plaforms the configuration applies.
+		tr
+			td dependencies
+			td
+				code string[string]
+			td Locks the dependencies to a specific configuration
+
+	h2#target-types Target types
+
+	p The following values are recognized for the <code>"targetType"</code> field:
+
+	dl
+		dt <code>"autodetect"</code>
+		dd Automatically detects the target type. This is the default global value and causes dub to try and generate "application" and "library" configurations. Use of other values limits the auto-generated configurations to either of the two. This value is not allowed inside of a configuration block.
+
+		dt <code>"executable"</code>
+		dd Generates an executable binary
+
+		dt <code>"library"</code>
+		dd Specifies that the package is to be used as a library, without limiting the actual type of library. This should be the default for most libraries.
+
+		dt <code>"sourceLibrary"</code>
+		dd This target type does not generate a binary, but rather forces dub to add all source files directly to the same compiler invocation as the dependent project.
+
+		dt <code>"staticLibrary"</code>
+		dd Forces output as a static library container.
+
+		dt <code>"dynamicLibrary"</code>
+		dd Forces output as a dynamic/shared library.
