@@ -71,12 +71,7 @@ block body
 			td dependencies
 			td
 				code T[string]
-			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see next section for how version specs look like
-		tr
-			td sourcePaths
-			td
-				code string[]
-			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given)
+			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see next section for how version specifications look like
 
 	
 	h3#version-specs Version specifications
@@ -141,6 +136,12 @@ block body
 			td
 				code string[]
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
+
+		tr
+			td sourcePaths
+			td
+				code string[]
+			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given)
 
 		tr
 			td excludedSourceFiles
@@ -228,7 +229,11 @@ block body
 
 	h2#configurations Configurations
 
-	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" field. The following example defines a "metro-app" and a "desktop-app" configuration.
+	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" field.
+
+	p If no configurations are specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/&lt;package name&gt;.d</code>, <code>src/app.d</code>, <code>src/&lt;package name&gt;.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
+
+	p The following example defines "metro-app" and "desktop-app" configurations that are only available on Windows and a "glut-app" configuration that is available on all platforms.
 
 	pre.code
 		|{
@@ -256,10 +261,6 @@ block body
 		|	}
 		|}
 
-	p If no configuration list is specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/&lt;package name&gt;.d</code>, <code>src/app.d</code>, <code>src/&lt;package name&gt;.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
-
-
-	h3 Configuration specific fields
 
 	p In addition to the usual <a href="#build-settings">build settings</a>, the following fields are recognized inside of a configuration block:
 
