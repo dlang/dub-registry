@@ -23,7 +23,7 @@ block body
 		|}
 
 
-	h2#standard-fields Standard Fields
+	h2#standard-fields Global fields
 
 	table
 		tr
@@ -79,7 +79,7 @@ block body
 			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given)
 
 	
-	h2#version-specs Version specifications
+	h3#version-specs Version specifications
 
 	p Some examples of typical version specifications:
 
@@ -193,6 +193,39 @@ block body
 			td A list of shell commands that is executed always after the project is built
 
 	
+	h3#target-types Target types
+
+	p The following values are recognized for the <code>"targetType"</code> field:
+
+	table
+		tr
+			th Value
+			th Description
+		tr
+			td "autodetect"
+			td Automatically detects the target type. This is the default global value and causes dub to try and generate "application" and "library" <a href="#configurations">configurations</a>. Use of other values limits the auto-generated configurations to either of the two. This value is not allowed inside of a configuration block.
+
+		tr
+			td "executable"</code>
+			td Generates an executable binary
+
+		tr
+			td "library"</code>
+			td Specifies that the package is to be used as a library, without limiting the actual type of library. This should be the default for most libraries.
+
+		tr
+			td "sourceLibrary"</code>
+			td This target type does not generate a binary, but rather forces dub to add all source files directly to the same compiler invocation as the dependent project.
+
+		tr
+			td "staticLibrary"</code>
+			td Forces output as a static library container.
+
+		tr
+			td "dynamicLibrary"</code>
+			td Forces output as a dynamic/shared library.
+
+
 	h2#configurations Configurations
 
 	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" field. The following example defines a "metro-app" and a "desktop-app" configuration.
@@ -216,23 +249,14 @@ block body
 		|			"libs": ["d3d9"]
 		|		},
 		|		{
-		|			"name": "cocoa-app",
+		|			"name": "glut-app",
 		|			"targetType": "executable",
-		|			"platforms": ["osx"],
-		|			"versions": ["CocoaApp"]
+		|			"versions": ["GlutApp"]
 		|		}
 		|	}
 		|}
 
-	p If no configuration list is specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found:
-
-	ul
-		li source/app.d
-		li source/&lt;package name&gt;.d
-		li src/app.d
-		li src/&lt;package name&gt;.d
-
-	p Those files are then only added to the "application" configuration and are expected to contain the application entry point (<code>main</code>).
+	p If no configuration list is specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/&lt;package name&gt;.d</code>, <code>src/app.d</code>, <code>src/&lt;package name&gt;.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
 
 
 	h3 Configuration specific fields
@@ -254,32 +278,9 @@ block body
 			td platforms
 			td
 				code string[]
-			td A list of platform suffixes (as used for the build settings) to limit on which plaforms the configuration applies.
-		tr
+			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies.
+		//- tr
 			td dependencies
 			td
 				code string[string]
-			td Locks the dependencies to a specific configuration
-
-	h2#target-types Target types
-
-	p The following values are recognized for the <code>"targetType"</code> field:
-
-	dl
-		dt <code>"autodetect"</code>
-		dd Automatically detects the target type. This is the default global value and causes dub to try and generate "application" and "library" configurations. Use of other values limits the auto-generated configurations to either of the two. This value is not allowed inside of a configuration block.
-
-		dt <code>"executable"</code>
-		dd Generates an executable binary
-
-		dt <code>"library"</code>
-		dd Specifies that the package is to be used as a library, without limiting the actual type of library. This should be the default for most libraries.
-
-		dt <code>"sourceLibrary"</code>
-		dd This target type does not generate a binary, but rather forces dub to add all source files directly to the same compiler invocation as the dependent project.
-
-		dt <code>"staticLibrary"</code>
-		dd Forces output as a static library container.
-
-		dt <code>"dynamicLibrary"</code>
-		dd Forces output as a dynamic/shared library.
+			td Locks the dependencies to specific configurations

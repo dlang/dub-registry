@@ -48,7 +48,7 @@ block body
 			td &nbsp;&nbsp;&nbsp;&nbsp;package.json
 			td Contains the package description of the project
 
-	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, if the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
+	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
 	
 
 	h2#command-line Command line interface

@@ -19,6 +19,7 @@ table { border-collapse: collapse; border-spacing: 0; }
 body {
 	font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
 	font-size: 10pt;
+	line-height: 12pt;
 	background-color: #fff;
 }
 
@@ -42,6 +43,8 @@ pre.code {
     -o-tab-size:   4;
     tab-size:      4;
 }
+
+dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt;}
 
 /********************/
 /* HEADER           */
@@ -108,6 +111,12 @@ h2 {
 	margin-top: 18pt;
 	margin-bottom: 9pt;
 	font-size: 120%;
+}
+
+h3 {
+	margin-top: 18pt;
+	margin-bottom: 9pt;
+	font-style: italic;
 }
 
 #content ul {
