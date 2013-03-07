@@ -21,4 +21,4 @@ block body
 
 	p The repository will be monitored for changes and new version tags. To add a new version, just create a tag with a name of the form <code>v1.2.3</code>, where 1.2.3 should be changed to the actual version number. About twice per hour, the repository will be queried for new tags and any detected version will be made available on the registry.
 
-	p Furthermore, all named branches will be available as special running versions of the form <code>~master</code> (in case of the git master branch).
+	p Furthermore, all named branches will be available as special rolling versions of the form <code>~master</code> (in case of the git "master" branch).

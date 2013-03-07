@@ -4,17 +4,53 @@ block title
 	- auto title = "Using DUB";
 
 block body
-	h2 Installation
+	h2#installation Installation
 
-	p ...
+	p Simply <a href="download">download</a> the precompiled package for your platform. On Windows, the installer will perform all the necessary setup. On other systems, the only thing that you may want to do other than extracting the archive, is to place the <code>dub</code> executable somewhere in your PATH so that you can call it from anywhere.
 
-	h2 Building foreign projects
+	p If a binary is not available for your platform, simply clone or download the <a href="https://github.com/rejectedsoftware/dub">dub repository</a> and run the contained <code>./build.sh</code>. You need to have DMD and libcurl development files installed (Only DMD on Windows).
 
-	p ...
 
-	h2 Creating an own project
+	h2#foreign-projects Building foreign projects
 
-	p ...
+	p Building existing projects is as simple as getting the package and running either <code>dub</code> to run or <code>dub build</code> from the package's root directory to build it. DUB will automatically download all needed dependencies and issue the build command. See the <a href="#command-line">command line documentation</a> for information on how to customize the build process.
 
-	p See the <a href="package-format">package format</a> page for a full reference of the possibilities.
+	p To get the package, either use <code>git clone</code> with the projects git URL, or type <code>dub install --local &lt;package name&gt;</code> to have the package downloaded and installed in a subfolder of the current working directory.
+
+
+	h2#own-projects Creating an own project
+
+	p The easiest way is to type <code>dub init &lt;package name&gt;</code> on the command line to have DUB create an application skeleton for you. It will create the following directory structure:
+
+	table
+		tr
+			th Folder
+			th Description
+		tr
+			td &lt;package name&gt;/
+			td The root folder of the new project
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;source/
+			td The root folder for the project's source code
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;app.d
+			td Suggested source file for the application entry point - this will automatically excluded if the project is used as a library
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;package name&gt;/
+			td The suggested root package under which the project's source code will be stored
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;public/
+			td A folder for putting public files that are used at run time (mostly meant for web service projects)
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;views/
+			td May contain string import files, such as HTML or UI templates
+		tr
+			td &nbsp;&nbsp;&nbsp;&nbsp;package.json
+			td Contains the package description of the project
+
+	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, if the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
 	
+
+	h2#command-line Command line interface
+
+	p TODO! Please run <code>dub help</code> for a brief description of the command line interface.
