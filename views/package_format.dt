@@ -128,10 +128,16 @@ block body
 			td The destination path of the output binary - this field does not support platform suffixes
 
 		tr
+			td subConfigurations
+			td
+				code string[string]
+			td Locks the dependencies to specific configurations; a map from package name to configuration name - this field does not support platform suffixes
+
+		tr
 			td dflags
 			td
 				code string[]
-			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use
+			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
 
 		tr
 			td lflags
@@ -293,9 +299,4 @@ block body
 			td platforms
 			td
 				code string[]
-			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies.
-		//- tr
-			td dependencies
-			td
-				code string[string]
-			td Locks the dependencies to specific configurations
+			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies
