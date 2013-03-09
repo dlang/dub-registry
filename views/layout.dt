@@ -22,22 +22,24 @@ html
 						a(href="#{req.rootDir}register") Register
 					p
 						a(href="#{req.rootDir}login") Log in
-		#content
-			- if( req.path != "/" )
-				p
-					a(href="#{req.rootDir}") ◄ Back to package overview
-					br
-					br
 		
+		nav#topnav
+			- static immutable items = ["Packages;", "Download;download", "Development;develop", "About;about"];
+			ul
+			- foreach(itm; items)
+				- auto parts = split(itm, ";");
+				- bool active = startsWith(req.path[1..$], parts[1]);
+				- if( parts[1].empty ) active = req.path == "/";
+				li(class=(active ? "active" : ""))
+					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
+
+
+		#content
 			block body
 
 		nav#footer
 			ul
 				li
-					a(href="#{req.rootDir}usage") Using DUB
-				li
-					a(href="#{req.rootDir}download") Download
-				li
 					a(href="#{req.rootDir}publish") Publishing packages
 				li
-					a(href="#{req.rootDir}develop") Helping development
+					a(href="#{req.rootDir}package-format") Package format

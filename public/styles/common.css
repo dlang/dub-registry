@@ -44,14 +44,15 @@ pre.code {
     tab-size:      4;
 }
 
-dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt;}
+dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt; }
+
 
 /********************/
 /* HEADER           */
 /********************/
 
 div#header {
-	padding: 6pt;
+	padding: 6pt 12pt;
 	background-color: #eee;
 	background-image: -webkit-linear-gradient(top, #fff, #eee);
 	background-image:    -moz-linear-gradient(top, #fff, #eee);
@@ -61,7 +62,6 @@ div#header {
 }
 
 div#header #logo {
-	margin-left: 6pt;
 	vertical-align: middle;
 }
 
@@ -95,6 +95,38 @@ p.warn {
 }
 
 /********************/
+/* HEADER NAV       */
+/********************/
+
+nav#topnav {
+	background-color: #eee;
+	background-image: -webkit-linear-gradient(top, #eee, #fff);
+	background-image:    -moz-linear-gradient(top, #444, #222);
+	background-image:     -ms-linear-gradient(top, #eee, #fff);
+	background-image:      -o-linear-gradient(top, #eee, #fff);
+	border-bottom: 1px solid #ddd;
+	color: white;
+}
+
+nav#topnav a {
+	color: white;
+	text-decoration: none;
+}
+
+nav#topnav li {
+	margin: 0;
+	padding: 3pt 12pt;
+	display: inline-block;
+	/*border-left: 1px solid #666;
+	border-right: 1px solid #666;*/
+}
+
+nav#topnav li.active {
+	background-color: #666;
+}
+
+
+/********************/
 /* CONTENT          */
 /********************/
 
@@ -108,23 +140,25 @@ h1 {
 }
 
 h2 {
-	margin-top: 18pt;
-	margin-bottom: 9pt;
-	font-size: 120%;
+	margin-top: 24pt;
+	margin-bottom: 12pt;
+	font-size: 150%;
 }
 
 h3 {
 	margin-top: 18pt;
 	margin-bottom: 9pt;
+	font-size: 120%;
 	font-style: italic;
 }
 
 #content ul {
-	list-style: disc inside;	
+	list-style: circle outside;	
+	margin-left: 18pt;
 }
 
 #content ul li {
-	margin-bottom: 6pt;
+	margin-bottom: 3pt;
 }
 
 #content table {
@@ -153,6 +187,7 @@ h3 {
 /********************/
 
 nav#footer {
+	padding: 0pt 12pt;
 	background-color: #eee;
 	background-image: -webkit-linear-gradient(top, #eee, #fff);
 	background-image:    -moz-linear-gradient(top, #eee, #fff);
@@ -163,7 +198,16 @@ nav#footer {
 
 nav#footer li {
 	margin: 0;
-	padding: 6pt 12pt;
+	padding: 6pt 0pt;
+	padding-right: 12pt;
 	display: inline-block;
 	border-right: 1px solid #ddd;
+}
+
+
+@media (min-width: 600pt) {
+	div#header { padding: 6pt 10%; }
+	nav#topnav { padding-left: 10%; }
+	div#content { padding: 12pt 10%; }
+	nav#footer { padding-left: 10%; }
 }

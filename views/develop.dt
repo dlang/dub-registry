@@ -6,13 +6,24 @@ block title
 block body
 	h2 Source repositories
 
-	p You can help enhancing DUB by writing bug reports or by making pull requests. Writing additional project generators would be a good example.
+	p You can help enhancing DUB by writing bug reports or by making pull requests.
 	
 	p The main development happens on github in the following repositories:
 
 	ul
 		li
-			a(href="https://github.com/rejectedsoftware/dub") <code>dub</code> command line tool
+			a(href="https://github.com/rejectedsoftware/dub") DUB command line tool
 		li
-			a(href="https://github.com/rejectedsoftware/dub-registry") registry website
+			a(href="https://github.com/rejectedsoftware/dub-registry") DUB registry website
 
+
+	h2 Development focus
+
+	p If you want to help out, the most important things right now are:
+
+	ul
+		li Help getting a final call on some design decisions (see the <a href="http://news.rejectedsoftware.com/groups/rejectedsoftware.dub/">forum</a>)
+		li Improved package representation on the registry (categories, search function and different top-lists)
+		li Test and fix the different target types for various platforms and compilers
+
+	p But in general, of course, any kind support is greatly appreciated!
