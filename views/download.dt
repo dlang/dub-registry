@@ -5,13 +5,19 @@ block title
 	- auto title = "Download";
 	
 block body
-	p The following table contains a list of precompiled binaries. The platform support is rather limited here for the time being and will be extended later.
+	h2 System packages and manual build
+	
+	:markdown
+		If your platform is not supported, building is as easy as checking out the [git repository](https://github.com/rejectedsoftware/dub) and running `./build.sh`. You need to have the development version of libcurl with SSL support installed. The resulting binary can then optionally be made available in `PATH`.
 
-	p On Linux and Mac OS you need to have libevent 2.0.x and libssl/libcrypto installed.
+		For Arch Linux, Moritz Maxeiner maintains two AUR packages: [dub](https://aur.archlinux.org/packages/dub/) and [dub-git](https://aur.archlinux.org/packages/dub-git).
 
-	p If your platform is not supported, building is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
 
-	p If you are running Arch Linux, Moritz Maxeiner maintains two AUR packages: [dub](https://aur.archlinux.org/packages/dub/) and [dub-git](https://aur.archlinux.org/packages/dub-git/).
+	h2 Precompiled binaries
+
+	p The following table contains a list of precompiled binaries. The platform support is rather limited here for now and will be extended over time.
+
+	p On Linux you need to have licurl with SSL supported installed.
 
 	table
 		tr
