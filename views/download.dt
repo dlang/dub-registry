@@ -11,6 +11,8 @@ block body
 
 	p If your platform is not supported, building is as easy as checking out the <a href="https://github.com/rejectedsoftware/dub">git repository</a> and running <code>vibe build</code> with <a href="http://vibed.org/">vibe.d</a> installed. The resulting binary can then optionally be renamed and made available in PATH.
 
+	p If you are running Arch Linux, Moritz Maxeiner maintains two AUR packages: [dub](https://aur.archlinux.org/packages/dub/) and [dub-git](https://aur.archlinux.org/packages/dub-git/).
+
 	table
 		tr
 			th Version
