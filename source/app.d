@@ -47,7 +47,7 @@ static this()
 	// user management
 	auto udbsettings = new UserManSettings;
 	udbsettings.serviceName = "DUB registry";
-	udbsettings.serviceUrl = "http://registry.vibed.org/";
+	udbsettings.serviceUrl = Url("http://registry.vibed.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseName = "vpmreg";
 	auto userdb = new UserManController(udbsettings);
