@@ -278,7 +278,7 @@ block body
 		|			"targetType": "executable",
 		|			"versions": ["GlutApp"]
 		|		}
-		|	}
+		|	]
 		|}
 
 
