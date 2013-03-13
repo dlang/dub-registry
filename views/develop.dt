@@ -22,7 +22,7 @@ block body
 	p If you want to help out, the most important things right now are:
 
 	ul
-		li Help getting a final call on some design decisions (see the <a href="http://news.rejectedsoftware.com/groups/rejectedsoftware.dub/">forum</a>)
+		li Help getting a final call on some design decisions (see the <a href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/">forum</a>)
 		li Improved package representation on the registry (categories, search function and different top-lists)
 		li Test and fix the different target types for various platforms and compilers
 
