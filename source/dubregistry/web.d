@@ -68,6 +68,7 @@ class DubRegistryWebFrontend {
 
 		// sort by date of last version
 		string getDate(Json p){
+			if( p.type != Json.Type.Object || "versions" !in p ) return null;
 			if( p.versions.length == 0 ) return null;
 			return p.versions[p.versions.length-1].date.get!string;
 		}
