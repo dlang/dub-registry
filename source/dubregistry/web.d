@@ -9,6 +9,7 @@ import dubregistry.dbcontroller;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
+import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import std.algorithm : sort;
 import std.file;

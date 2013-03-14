@@ -45,14 +45,14 @@ class DubRegistry {
 
 		DbPackageVersion vi;
 		vi.date = BsonDate(info.date);
-		vi.version_ = info.version_;
+		vi.version_ = "~master";
 		vi.info = info.info;
 
 		DbPackage pack;
 		pack.owner = user;
 		pack.name = info.info.name.get!string.toLower();
 		pack.repository = repository;
-		pack.branches["master"] = vi;
+		pack.branches = [vi];
 		m_db.addPackage(pack);
 
 		runTask({ checkForNewVersions(pack.name); });
@@ -78,11 +78,11 @@ class DubRegistry {
 		auto rep = getRepository(pack.repository);
 
 		Json[] vers;
-		foreach( string k, v; pack.branches ){
+		foreach( v; pack.branches ){
 			auto nfo = v.info;
-			nfo["version"] = "~"~k;
+			nfo["version"] = v.version_;
 			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl("~"~k); // obsolete, will be removed in april 2013
+			nfo.url = rep.getDownloadUrl(v.version_); // obsolete, will be removed in april 2013
 			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			vers ~= nfo;
 		}
@@ -146,7 +146,7 @@ class DubRegistry {
 				}
 			}
 			foreach( ver; rep.getBranches() ){
-				if( !m_db.hasVersion(packname, ver) ){
+				if( !m_db.hasBranch(packname, ver) ){
 					try {
 						addVersion(packname, ver, rep.getVersionInfo(ver));
 						logInfo("Added branch %s for %s", ver, packname);

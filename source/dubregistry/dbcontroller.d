@@ -23,6 +23,17 @@ class DbController {
 		auto db = connectMongoDB("127.0.0.1").getDatabase(dbname);
 		m_packages = db["packages"];
 
+		// update package format
+		foreach(p; m_packages.find()){
+			if( p.branches.type == Bson.Type.Object ){
+				Bson[] branches;
+				foreach( b; p.branches )
+					branches ~= b;
+				p.branches = branches;
+			}
+			m_packages.update(["_id": p._id], p);
+		}
+
 		repairVersionOrder();
 	}
 
@@ -74,7 +85,7 @@ class DbController {
 	void addBranch(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~"));
-		m_packages.update(["name": packname], ["$set": ["branches."~ver.version_[1 .. $]: ver]]);
+		m_packages.update(["name": packname], ["$push": ["branches": ver]]);
 	}
 
 	bool hasVersion(string packname, string ver)
@@ -82,6 +93,14 @@ class DbController {
 		auto packbson = Bson(packname);
 		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
 		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson], ["_id": true]);
+		return !ret.isNull();
+	}
+
+	bool hasBranch(string packname, string ver)
+	{
+		auto packbson = Bson(packname);
+		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
+		auto ret = m_packages.findOne(["name": packbson, "branches" : verbson], ["_id": true]);
 		return !ret.isNull();
 	}
 
@@ -101,6 +120,7 @@ class DbController {
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
+			logDebug("pack %s", bp.toJson());
 			auto p = deserializeBson!DbPackage(bp);
 			sort!((a, b) => vcmp(a, b))(p.versions);
 			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
@@ -114,7 +134,7 @@ struct DbPackage {
 	string name;
 	Json repository;
 	DbPackageVersion[] versions;
-	DbPackageVersion[string] branches;
+	DbPackageVersion[] branches;
 	string[] errors;
 	string[] categories;
 	string[] searchTerms;
