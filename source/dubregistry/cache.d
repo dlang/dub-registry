@@ -34,33 +34,40 @@ class UrlCache {
 			entry._id = BsonObjectID.generate();
 			entry.url = url.toString();
 		}
-		auto res = requestHttp(url, (req){
+
+		InputStream result;
+
+		requestHttp(url,
+			(scope req){
 				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
-			});
-		scope(exit) res.dropBody();
+			},
+			(scope res){
+				if( res.statusCode == HttpStatus.NotModified ){
+					auto data = be["data"].get!BsonBinData().rawData();
+					result = new MemoryStream(cast(ubyte[])data, false);
+					return;
+				}
 
-		if( res.statusCode == HttpStatus.NotModified ){
-			res.dropBody();
-			auto data = be["data"].get!BsonBinData().rawData();
-			callback(new MemoryStream(cast(ubyte[])data, false));
-			return;
-		}
-		enforce(res.statusCode == HttpStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
+				enforce(res.statusCode == HttpStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
-		if( auto pet = "ETag" in res.headers ){
-			auto dst = new MemoryOutputStream;
-			dst.write(res.bodyReader);
-			auto rawdata = dst.data;
-			entry.etag = *pet;
-			entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
-			m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
-			callback(new MemoryStream(rawdata, false));
-			return;
-		}
+				if( auto pet = "ETag" in res.headers ){
+					auto dst = new MemoryOutputStream;
+					dst.write(res.bodyReader);
+					auto rawdata = dst.data;
+					entry.etag = *pet;
+					entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
+					m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
+					result = new MemoryStream(rawdata, false);
+					return;
+				}
 
-		logDebug("Response without etag.. not caching: "~url.toString());
+				logDebug("Response without etag.. not caching: "~url.toString());
 
-		callback(res.bodyReader);
+				callback(res.bodyReader);
+			}
+		);
+
+		if( result ) callback(result);
 	}
 }
 
