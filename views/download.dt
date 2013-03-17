@@ -19,7 +19,7 @@ block body
 
 	p The following table contains a list of precompiled binaries. The platform support is rather limited here for now and will be extended over time.
 
-	p On Linux you need to have licurl with SSL supported installed.
+	p On Linux you need to have libcurl with SSL supported installed.
 
 	table
 		tr
