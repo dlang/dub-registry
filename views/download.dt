@@ -12,6 +12,8 @@ block body
 
 		For Arch Linux, Moritz Maxeiner maintains two AUR packages: [dub](https://aur.archlinux.org/packages/dub/) and [dub-git](https://aur.archlinux.org/packages/dub-git).
 
+		Debian packages are available as part of Jordi Sayol's [D APT repository](https://code.google.com/p/d-apt/wiki/APT_Repository).
+
 
 	h2 Precompiled binaries
 
