@@ -42,6 +42,7 @@ class DubRegistryWebFrontend {
 		router.get("/develop", staticTemplate!"develop.dt");
 		router.get("/package-format", staticTemplate!"package_format.dt");
 		router.get("/available", &showAvailable);
+		router.get("/packages/index.json", &showAvailable);
 		router.get("/packages/:packname", &showPackage); // HTML or .json
 		router.get("/packages/:packname/:version", &showPackageVersion); // HTML or .zip or .json
 		router.get("/view_package/:packname", &redirectViewPackage);
@@ -109,9 +110,10 @@ class DubRegistryWebFrontend {
 
 		Info info;
 
-		foreach(de; dirEntries("public/files", "*.{zip,gz,exe}", SpanMode.shallow)){
+		foreach(de; dirEntries("public/files", "*.{zip,gz,tgz,exe}", SpanMode.shallow)){
 			auto name = Path(de.name).head.toString();
 			auto basename = stripExtension(name);
+			if( basename.endsWith(".tar") ) basename = basename[0 .. $-4];
 			auto parts = basename.split("-");
 			if( parts.length < 3 ) continue;
 			if( parts[0] != "dub" ) continue;
