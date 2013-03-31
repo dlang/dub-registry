@@ -120,7 +120,7 @@ class DbController {
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
-			logDebug("pack %s", bp.toJson());
+			logDebugV("pack %s", bp.toJson());
 			auto p = deserializeBson!DbPackage(bp);
 			sort!((a, b) => vcmp(a, b))(p.versions);
 			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
