@@ -114,7 +114,7 @@ class DbController {
 			barekeywords ~= parts;
 			barekeywords ~= join(barekeywords);
 		}
-		return m_packages.find(["searchTerms": ["$in": keywords]]).map!(b => deserializeBson!DbPackage(b));
+		return m_packages.find(["searchTerms": ["$in": keywords]]).map!(b => deserializeBson!DbPackage(b))();
 	}
 
 	private void repairVersionOrder()
