@@ -212,6 +212,11 @@ block body
 			td
 				code string[]
 			td A list of shell commands that is executed always after the project is built
+		tr
+			td buildRequirements
+			td
+				code string[]
+			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
 
 	
 	h3#target-types Target types
@@ -245,6 +250,40 @@ block body
 		tr
 			td "dynamicLibrary"</code>
 			td Forces output as a dynamic/shared library.
+
+	h3#build-requirements Build requirements
+
+	table
+		tr
+			th Value
+			th Description
+		tr
+			td "allowWarnings"
+			td Warnings do not abort compilation
+		tr
+			td "silenceWarnings"
+			td Don't show warnings
+		tr
+			td "disallowDeprecations"
+			td Using deprecated features aborts compilation
+		tr
+			td "silenceDeprecations"
+			td Don't show deprecation warnings
+		tr
+			td "disallowInlining"
+			td Avoid function inlining, even in release builds
+		tr
+			td "disallowOptimization"
+			td Avoid optimizations, even in release builds
+		tr
+			td "requireBoundsCheck"
+			td Always perform bounds checks
+		tr
+			td "requireContracts"
+			td Leave assertions and contracts enabled in release builds
+		tr
+			td "relaxProperties"
+			td Do not enforce strict property handling (-property)
 
 
 	h2#configurations Configurations
