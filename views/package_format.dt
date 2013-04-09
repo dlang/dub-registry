@@ -72,7 +72,11 @@ block body
 			td
 				code T[string]
 			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see next section for how version specifications look like
-
+		tr
+			td -ddoxFilterArgs
+			td
+				code string[]
+			td Specifies a list of command line flags usable for controlling filter behavior for --build=ddox <span style="color: red;">[experimental]</span>
 	
 	h3#version-specs Version specifications
 
@@ -252,6 +256,8 @@ block body
 			td Forces output as a dynamic/shared library.
 
 	h3#build-requirements Build requirements
+
+	p The following values are recognized as array items in the "buildRequirements" field:
 
 	table
 		tr
