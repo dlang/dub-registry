@@ -43,3 +43,5 @@ html
 					a(href="#{req.rootDir}publish") Publishing packages
 				li
 					a(href="#{req.rootDir}package-format") Package format
+				li
+					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums
