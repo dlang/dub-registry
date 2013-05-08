@@ -38,10 +38,13 @@ class DubRegistry {
 	{
 		auto rep = getRepository(repository);
 		auto info = rep.getVersionInfo("~master");
+		auto name = info.info.name.get!string;
 
-		checkPackageName(info.info.name.get!string);
+		checkPackageName(name);
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			checkPackageName(n);
+
+		info.info.name = name.toLower();
 
 		DbPackageVersion vi;
 		vi.date = BsonDate(info.date);
