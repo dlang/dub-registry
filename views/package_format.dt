@@ -103,9 +103,9 @@ block body
 
 	pre.code
 		|{
-		|	"dflags": ["-w"],
-		|	"dflags-dmd": ["-gc"],
-		|	"dflags-x86_64": ["-version=UseSpecialImpl"]
+		|	"versions": ["PrintfDebugging"],
+		|	"dflags-dmd": ["-vtls"],
+		|	"versions-x86_64": ["UseAmd64Impl"]
 		|	"libs-posix": ["ssl", "crypto"],
 		|	"files-windows-x86_64-dmd": ["lib/win32/mylib.lib"],
 		|}
