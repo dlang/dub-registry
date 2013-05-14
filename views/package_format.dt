@@ -92,7 +92,7 @@ block body
 	
 	ul		
 		li Use a folder to source a package from: <code>{"version": "~master", "path": "path/to/package"}</code>
-		li Indicate an optional dependency, so that it is used, when it is found: <code><code>{"version": "~master", "optional": "true"}</code><span style="color: red;">[work in progress]</span>
+		li Indicate an optional dependency, so that it is used, when it is found: <code>{"version": "~master", "optional": "true"}</code><span style="color: red;">[work in progress]</span>
 
 	
 	h2#build-settings Build settings
