@@ -294,7 +294,10 @@ block body
 			td Leave assertions and contracts enabled in release builds
 		tr
 			td "relaxProperties"
-			td Do not enforce strict property handling (-property)
+			td Do not enforce strict property handling (removes the -property switch) <span style="color: red;">[deprecated, recent versions of DUB never issue -property]</span>
+		tr
+			td "noDefaultFlags"
+			td Does not emit any of the default build flags (e.g. -debug, -unittest, -w, -property), but still emits import folder flags and version flags <span style="color: red;">(This flag should never be used for released packages and is indended purely as a development/debugging tool)</span>
 
 
 	h2#configurations Configurations
