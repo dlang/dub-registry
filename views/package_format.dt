@@ -68,10 +68,21 @@ block body
 			td License(s) under which the project can be used
 
 		tr
+			td subPackages
+			td
+				code T[]
+			td Defines an array of sub-packages defined in the same directory as the root project, where each entry is an object of the same format as a package.json file - see the <a href="#sub-packages">sub package section</a> for more information
+
+		tr
 			td -ddoxFilterArgs
 			td
 				code string[]
 			td Specifies a list of command line flags usable for controlling filter behavior for --build=ddox <span style="color: red;">[experimental]</span>
+
+
+	h3#sub-packages Sub packages
+
+	p A package may contain an arbitrary number of additional packages. These packages can either be in subdirectories using a separate package.json file, or they can be defined in the <code>"subPackages"</code> field of the main package.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
 	
 	
 	h2#build-settings Build settings
