@@ -42,7 +42,8 @@ class DubRegistry {
 
 		checkPackageName(name);
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
-			checkPackageName(n);
+			foreach (p; n.split(":"))
+				checkPackageName(p);
 
 		info.info.name = name.toLower();
 
@@ -196,7 +197,7 @@ private void checkPackageName(string n){
 	foreach( ch; n ){
 		switch(ch){
 			default:
-				throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-'.");
+				throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-': "~n);
 			case 'a': .. case 'z':
 			case 'A': .. case 'Z':
 			case '0': .. case '9':

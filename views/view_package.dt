@@ -64,7 +64,7 @@ block body
 					td
 						- foreach( string dep, ver; *pd )
 							p
-								a(href="#{req.rootDir}view_package/#{dep}")= dep
+								a(href="#{req.rootDir}view_package/#{dep.split(":")[0]}")= dep
 				- else
 					td none
 
