@@ -19,7 +19,7 @@ block body
 
 	p The following table contains a list of precompiled binaries. The platform support is rather limited here for now and will be extended over time.
 
-	p On Linux you need to have libcurl with SSL supported installed.
+	p On Linux you need to have libcurl with SSL support installed.
 
 	table
 		tr
@@ -38,3 +38,5 @@ block body
 							a(href="files/#{pf.fileName}")= pf.fileName
 				td
 					a(href="https://github.com/rejectedsoftware/dub/archive/v#{v.id}.tar.gz") dub-#{v.id}.tar.gz
+
+	p See the <a href="https://github.com/rejectedsoftware/dub/blob/master/CHANGELOG.md">change log</a> for the list of significant changes in each release.
