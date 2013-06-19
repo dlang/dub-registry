@@ -82,7 +82,26 @@ block body
 
 	h3#sub-packages Sub packages
 
-	p A package may contain an arbitrary number of additional packages. These packages can either be in subdirectories using a separate package.json file, or they can be defined in the <code>"subPackages"</code> field of the main package.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
+	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined in the <code>"subPackages"</code> field of the main package.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
+
+	p The typical use for this feature is to split up a library into a number of parts without breaking it up into different code repositories:
+
+	pre.code
+		|{
+		|	"name": "mylib",
+		|	"targetType": "none",
+		|	"dependencies": {
+		|		"mylib:component1": "~master",
+		|		"mylib:component2": "~master"
+		|	},
+		|	"subPackages": [
+		|		{
+		|			"name": "component1",
+		|			"targetType": "library",
+		|			"sourcePaths": ["source/component1"]
+		|		}
+		|	]
+		|}
 	
 	
 	h2#build-settings Build settings
@@ -254,6 +273,10 @@ block body
 		tr
 			td "autodetect"
 			td Automatically detects the target type. This is the default global value and causes dub to try and generate "application" and "library" <a href="#configurations">configurations</a>. Use of other values limits the auto-generated configurations to either of the two. This value is not allowed inside of a configuration block.
+
+		tr
+			td "none"
+			td Does not generate an output file. This is useful for packages that are supposed to drag in other packages using its "dependencies" field.
 
 		tr
 			td "executable"</code>
