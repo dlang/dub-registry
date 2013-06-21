@@ -51,20 +51,14 @@ class DbController {
 		return deserializeBson!DbPackage(bpack);
 	}
 
-	string[] getAllPackages()
+	auto getAllPackages()
 	{
-		string[] all;
-		foreach( p; m_packages.find(Bson.EmptyObject, ["name": 1]) )
-			all ~= p.name.get!string;
-		return all;
+		return m_packages.find(Bson.EmptyObject, ["name": 1]).map!(p => p.name.get!string)();
 	}
 
-	string[] getUserPackages(BsonObjectID user_id)
+	auto getUserPackages(BsonObjectID user_id)
 	{
-		string[] ret;
-		foreach( p; m_packages.find(["owner": user_id], ["name": 1]) )
-			ret ~= p.name.get!string;
-		return ret;
+		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p.name.get!string)();
 	}
 
 	void removePackage(string packname, BsonObjectID user)

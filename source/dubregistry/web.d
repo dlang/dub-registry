@@ -12,6 +12,7 @@ import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import std.algorithm : sort;
+import std.array;
 import std.file;
 import std.path;
 import userman.web;
@@ -62,11 +63,10 @@ class DubRegistryWebFrontend {
 	void showHome(HttpServerRequest req, HttpServerResponse res)
 	{
 		// collect the package list
-		Json[] packages;
-		foreach( pack; m_registry.availablePackages ){
-			auto packinfo = m_registry.getPackageInfo(pack);
-			packages ~= packinfo;
-		}
+		auto packapp = appender!(Json[])();
+		packapp.reserve(200);
+		foreach (pack; m_registry.availablePackages) packapp.put(m_registry.getPackageInfo(pack));
+		auto packages = packapp.data;
 
 		// sort by date of last version
 		string getDate(Json p){

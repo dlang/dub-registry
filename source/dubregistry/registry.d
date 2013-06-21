@@ -21,6 +21,7 @@ class DubRegistry {
 	private {
 		DubRegistrySettings m_settings;
 		DbController m_db;
+		Json[string] m_packageInfos;
 	}
 
 	this(DubRegistrySettings settings)
@@ -29,7 +30,7 @@ class DubRegistry {
 		m_db = new DbController(settings.databaseName);
 	}
 
-	@property string[] availablePackages()
+	@property auto availablePackages()
 	{
 		return m_db.getAllPackages();
 	}
@@ -66,15 +67,21 @@ class DubRegistry {
 	{
 		logInfo("Removing package %s of %s", packname, user);
 		m_db.removePackage(packname, user);
+		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 	}
 
-	string[] getPackages(BsonObjectID user)
+	auto getPackages(BsonObjectID user)
 	{
 		return m_db.getUserPackages(user);
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
+		if (!include_errors) {
+			if (auto ppi = packname in m_packageInfos)
+				return *ppi;
+		}
+
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return Json(null);
@@ -104,6 +111,7 @@ class DubRegistry {
 		ret.versions = Json(vers);
 		ret.repository = pack.repository;
 		if( include_errors ) ret.errors = serializeToJson(pack.errors);
+		else m_packageInfos[packname] = ret;
 		return ret;
 	}
 
@@ -171,6 +179,9 @@ class DubRegistry {
 
 	protected void addVersion(string packname, string ver, PackageVersionInfo info)
 	{
+		// clear cached Json
+		if (packname in m_packageInfos) m_packageInfos.remove(packname);
+
 		info.info.name = toLower(info.info.name.get!string());
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
