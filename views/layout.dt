@@ -7,7 +7,7 @@ html
 		title= title ~ " - DUB registry"
 	body
 		#header
-			a.blind(href="http://registry.vibed.org/")
+			a.blind(href="http://code.dlang.org/")
 				img#logo(src="#{req.rootDir}images/logo-small.png")
 			div#title
 				| DUB registry

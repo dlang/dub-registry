@@ -47,7 +47,7 @@ static this()
 	// user management
 	auto udbsettings = new UserManSettings;
 	udbsettings.serviceName = "DUB registry";
-	udbsettings.serviceUrl = Url("http://registry.vibed.org/");
+	udbsettings.serviceUrl = Url("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseName = "vpmreg";
 	auto userdb = new UserManController(udbsettings);
@@ -62,7 +62,7 @@ static this()
 	
 	// start the web server
  	auto settings = new HttpServerSettings;
-	settings.hostName = "registry.vibed.org";
+	settings.hostName = "code.dlang.org";
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
 	settings.sessionStore = new MemorySessionStore;

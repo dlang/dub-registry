@@ -1,7 +1,7 @@
 ﻿{
 	"name": "dub-registry",
 	"description": "Online registry for dub packages",
-	"homepage": "http://registry.vibed.org/",
+	"homepage": "http://code.dlang.org/",
 	"license": "GPLv3",
 	"authors": [
 		"Sönke Ludwig",
