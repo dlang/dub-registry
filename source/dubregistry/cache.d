@@ -32,6 +32,7 @@ class UrlCache {
 		if( !be.isNull() ) {
 			deserializeBson(entry, be);
 			if (cache_priority) {
+				logDiagnostic("Cache HIT (early): %s", url.toString());
 				auto data = be["data"].get!BsonBinData().rawData();
 				scope result = new MemoryStream(cast(ubyte[])data, false);
 				callback(result);
@@ -50,6 +51,7 @@ class UrlCache {
 			},
 			(scope res){
 				if( res.statusCode == HTTPStatus.NotModified ){
+					logDiagnostic("Cache HIT: %s", url.toString());
 					auto data = be["data"].get!BsonBinData().rawData();
 					result = new MemoryStream(cast(ubyte[])data, false);
 					return;
@@ -58,6 +60,7 @@ class UrlCache {
 				enforce(res.statusCode == HTTPStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
 				if( auto pet = "ETag" in res.headers ){
+					logDiagnostic("Cache MISS: %s", url.toString());
 					auto dst = new MemoryOutputStream;
 					dst.write(res.bodyReader);
 					auto rawdata = dst.data;
@@ -70,6 +73,7 @@ class UrlCache {
 
 				logDebug("Response without etag.. not caching: "~url.toString());
 
+				logDiagnostic("Cache MISS (no etag): %s", url.toString());
 				callback(res.bodyReader);
 			}
 		);

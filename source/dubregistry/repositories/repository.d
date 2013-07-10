@@ -31,6 +31,20 @@ void addRepositoryFactory(string kind, RepositoryFactory factory)
 	s_repositoryFactories[kind] = factory;
 }
 
+package Json readJson(string url, bool sanitize = false, bool cache_priority = false)
+{
+	Json ret;
+	logDiagnostic("Getting JSON response from %s", url);
+	try downloadCached(url, (scope input){
+		auto text = input.readAllUTF8(sanitize);
+		ret = parseJsonString(text);
+	}, cache_priority);
+	catch (Exception e) {
+		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
+	}
+	return ret;
+}
+
 
 alias RepositoryFactory = Repository delegate(Json);
 
