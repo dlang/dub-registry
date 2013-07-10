@@ -119,7 +119,7 @@ private Json readJson(string url, bool sanitize = false)
 	Json ret;
 	try downloadCached(url, (scope input){
 		auto text = input.readAllUTF8(sanitize);
-		ret = parseJson(text);
+		ret = parseJsonString(text);
 	});
 	catch (Exception e) {
 		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
