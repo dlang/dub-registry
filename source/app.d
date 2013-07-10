@@ -35,19 +35,19 @@ void startMonitoring()
 
 static this()
 {
-	setLogLevel(LogLevel.None);
-	setLogFile("log.txt", LogLevel.Debug);
+	setLogLevel(LogLevel.none);
+	setLogFile("log.txt", LogLevel.debug_);
 
 	GithubRepository.register();
 	BitbucketRepository.register();
 
-	auto router = new UrlRouter;
+	auto router = new URLRouter;
 	router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
 
 	// user management
 	auto udbsettings = new UserManSettings;
 	udbsettings.serviceName = "DUB registry";
-	udbsettings.serviceUrl = Url("http://code.dlang.org/");
+	udbsettings.serviceUrl = URL("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseName = "vpmreg";
 	auto userdb = new UserManController(udbsettings);
@@ -61,13 +61,13 @@ static this()
 	webfrontend.register(router);
 	
 	// start the web server
- 	auto settings = new HttpServerSettings;
+ 	auto settings = new HTTPServerSettings;
 	settings.hostName = "code.dlang.org";
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
 	settings.sessionStore = new MemorySessionStore;
 	
-	listenHttp(settings, router);
+	listenHTTP(settings, router);
 
 	// poll github for new project versions
 	startMonitoring();

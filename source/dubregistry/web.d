@@ -30,7 +30,7 @@ class DubRegistryWebFrontend {
 		m_usermanweb = new UserManWebInterface(userman);
 	}
 
-	void register(UrlRouter router)
+	void register(URLRouter router)
 	{
 		m_usermanweb.register(router);
 
@@ -55,12 +55,12 @@ class DubRegistryWebFrontend {
 		router.get("*", serveStaticFiles("./public"));
 	}
 
-	void showAvailable(HttpServerRequest req, HttpServerResponse res)
+	void showAvailable(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		res.writeJsonBody(m_registry.availablePackages);
 	}
 
-	void showHome(HttpServerRequest req, HttpServerResponse res)
+	void showHome(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		// collect the package list
 		auto packapp = appender!(Json[])();
@@ -77,11 +77,11 @@ class DubRegistryWebFrontend {
 		sort!((a, b) => getDate(a) > getDate(b))(packages);
 
 		res.renderCompat!("home.dt",
-			HttpServerRequest, "req",
+			HTTPServerRequest, "req",
 			Json[], "packages")(req, packages);
 	}
 
-	void showDownloads(HttpServerRequest req, HttpServerResponse res)
+	void showDownloads(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		static struct DownloadFile {
 			string fileName;
@@ -124,16 +124,16 @@ class DubRegistryWebFrontend {
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
 
 		res.renderCompat!("download.dt",
-			HttpServerRequest, "req",
+			HTTPServerRequest, "req",
 			Info*, "info")(req, &info);
 	}
 
-	void redirectViewPackage(HttpServerRequest req, HttpServerResponse res)
+	void redirectViewPackage(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		res.redirect("/packages/"~req.params["packname"]);
 	}
 
-	void showPackage(HttpServerRequest req, HttpServerResponse res)
+	void showPackage(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		bool json = false;
 		auto pname = req.params["packname"];
@@ -149,13 +149,13 @@ class DubRegistryWebFrontend {
 			res.writeJsonBody(pack);
 		} else {
 			res.renderCompat!("view_package.dt",
-				HttpServerRequest, "req", 
+				HTTPServerRequest, "req", 
 				Json, "pack",
 				string, "ver")(req, pack, "");
 		}
 	}
 
-	void showPackageVersion(HttpServerRequest req, HttpServerResponse res)
+	void showPackageVersion(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		Json pack = m_registry.getPackageInfo(req.params["packname"]);
 		if( pack == null ) return;
@@ -173,7 +173,7 @@ class DubRegistryWebFrontend {
 					res.writeJsonBody(v);
 				} else {
 					res.renderCompat!("view_package.dt",
-						HttpServerRequest, "req", 
+						HTTPServerRequest, "req", 
 						Json, "pack",
 						string, "ver")(req, pack, v["version"].get!string);
 				}
@@ -181,25 +181,25 @@ class DubRegistryWebFrontend {
 			}
 	}
 
-	void showMyPackages(HttpServerRequest req, HttpServerResponse res, User user)
+	void showMyPackages(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		res.renderCompat!("my_packages.dt",
-			HttpServerRequest, "req",
+			HTTPServerRequest, "req",
 			User, "user",
 			DubRegistry, "registry")(req, user, m_registry);
 	}
 
-	void showAddPackage(HttpServerRequest req, HttpServerResponse res, User user)
+	void showAddPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		res.renderCompat!("add_package.dt",
-			HttpServerRequest, "req",
+			HTTPServerRequest, "req",
 			User, "user",
 			DubRegistry, "registry")(req, user, m_registry);
 	}
 
-	void addPackage(HttpServerRequest req, HttpServerResponse res, User user)
+	void addPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
-		Json rep = Json.EmptyObject;
+		Json rep = Json.emptyObject;
 		rep["kind"] = req.form["kind"];
 		rep["owner"] = req.form["owner"];
 		rep["project"] = req.form["project"];
@@ -208,14 +208,14 @@ class DubRegistryWebFrontend {
 		res.redirect("/my_packages");
 	}
 
-	void showRemovePackage(HttpServerRequest req, HttpServerResponse res, User user)
+	void showRemovePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		res.renderCompat!("remove_package.dt",
-			HttpServerRequest, "req",
+			HTTPServerRequest, "req",
 			User, "user")(req, user);
 	}
 
-	void removePackage(HttpServerRequest req, HttpServerResponse res, User user)
+	void removePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		m_registry.removePackage(req.form["package"], user._id);
 		res.redirect("/my_packages");

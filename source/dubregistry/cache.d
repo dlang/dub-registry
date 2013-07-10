@@ -25,7 +25,7 @@ class UrlCache {
 		m_entries = m_db.getCollection("urlcache.entries");
 	}
 
-	void get(Url url, scope void delegate(scope InputStream str) callback)
+	void get(URL url, scope void delegate(scope InputStream str) callback)
 	{
 		auto be = m_entries.findOne(["url": url.toString()]);
 		CacheEntry entry;
@@ -37,18 +37,18 @@ class UrlCache {
 
 		InputStream result;
 
-		requestHttp(url,
+		requestHTTP(url,
 			(scope req){
 				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
 			},
 			(scope res){
-				if( res.statusCode == HttpStatus.NotModified ){
+				if( res.statusCode == HTTPStatus.NotModified ){
 					auto data = be["data"].get!BsonBinData().rawData();
 					result = new MemoryStream(cast(ubyte[])data, false);
 					return;
 				}
 
-				enforce(res.statusCode == HttpStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
+				enforce(res.statusCode == HTTPStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
 				if( auto pet = "ETag" in res.headers ){
 					auto dst = new MemoryOutputStream;
@@ -80,7 +80,7 @@ private struct CacheEntry {
 
 private UrlCache s_cache;
 
-void downloadCached(Url url, scope void delegate(scope InputStream str) callback)
+void downloadCached(URL url, scope void delegate(scope InputStream str) callback)
 {
 	if( !s_cache ) s_cache = new UrlCache;
 	s_cache.get(url, callback);
@@ -88,5 +88,5 @@ void downloadCached(Url url, scope void delegate(scope InputStream str) callback
 
 void downloadCached(string url, scope void delegate(scope InputStream str) callback)
 {
-	return downloadCached(Url.parse(url), callback);
+	return downloadCached(URL.parse(url), callback);
 }

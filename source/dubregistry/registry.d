@@ -106,7 +106,7 @@ class DubRegistry {
 			vers ~= nfo;
 		}
 
-		Json ret = Json.EmptyObject;
+		Json ret = Json.emptyObject;
 		ret.name = packname;
 		ret.versions = Json(vers);
 		ret.repository = pack.repository;
