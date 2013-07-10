@@ -41,15 +41,14 @@ class GithubRepository : Repository {
 		m_gotVersions = true;
 
 		Json tags;
-		try downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
+		try tags = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		m_versionList.length = 0;
 		foreach_reverse( tag; tags ){
 			try {
 				auto tagname = tag.name.get!string;
 				if( tagname.length >= 2 && tagname[0] == 'v' ){
-					Json commit;
-					downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
+					Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true);
 					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
 					m_versionList ~= tagname[1 .. $];
 					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
@@ -63,13 +62,11 @@ class GithubRepository : Repository {
 
 	string[] getBranches()
 	{
-		Json branches;
-		downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches", (scope input){ branches = input.readJson(); });
+		Json branches = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches");
 		m_branchList.length = 0;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
-			Json commit;
-			downloadCached("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, (scope input){ commit = input.readJson(true); });
+			Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, true);
 			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
 			m_branchList ~= "~"~branchname;
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
@@ -96,7 +93,7 @@ class GithubRepository : Repository {
 
 		PackageVersionInfo ret;
 		logInfo("Getting JSON response from %s", url);
-		downloadCached(url, (scope input){ ret.info = input.readJson(); });
+		ret.info = readJson(url);
 
 		if( auto pv = "version" in ret.info ){
 			if( *pv != ver )
@@ -115,8 +112,15 @@ class GithubRepository : Repository {
 	}
 }
 
-private Json readJson(InputStream str, bool sanitize = false)
+private Json readJson(string url, bool sanitize = false)
 {
-	auto text = str.readAllUtf8(sanitize);
-	return parseJson(text);
+	Json ret;
+	try downloadCached(url, (scope input){
+		auto text = input.readAllUTF8(sanitize);
+		ret = parseJson(text);
+	});
+	catch (Exception e) {
+		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
+	}
+	return ret;
 }

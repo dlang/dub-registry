@@ -43,7 +43,7 @@ class BitbucketRepository : Repository {
 		m_gotVersions = true;
 
 		Json tags;
-		try downloadCached("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags", (scope input){ tags = input.readJson(); });
+		try tags = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		m_versionList.length = 0;
 		foreach( string tagname, tag; tags ){
@@ -64,8 +64,7 @@ class BitbucketRepository : Repository {
 
 	string[] getBranches()
 	{
-		Json branches;
-		downloadCached("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches", (scope input){ branches = input.readJson(); });
+		Json branches = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
 		m_branchList.length = 0;
 		foreach( string branchname, branch; branches ){
 			auto commit_hash = branch.raw_node.get!string();
@@ -96,7 +95,7 @@ class BitbucketRepository : Repository {
 
 		PackageVersionInfo ret;
 		logInfo("Getting JSON response from %s", url);
-		downloadCached(url, (scope input){ ret.info = input.readJson(); });
+		ret.info = readJson(url);
 
 		if( auto pv = "version" in ret.info ){
 			if( *pv != ver )
@@ -115,10 +114,17 @@ class BitbucketRepository : Repository {
 	}
 }
 
-private Json readJson(InputStream str, bool sanitize = false)
+private Json readJson(string url, bool sanitize = false)
 {
-	auto text = str.readAllUtf8(sanitize);
-	return parseJson(text);
+	Json ret;
+	try downloadCached(url, (scope input){
+		auto text = input.readAllUTF8(sanitize);
+		ret = parseJson(text);
+	});
+	catch (Exception e) {
+		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
+	}
+	return ret;
 }
 
 private string bbToIsoDate(string bbdate)
