@@ -80,6 +80,7 @@ class BitbucketRepository : Repository {
 	{
 		string url;
 		SysTime date;
+		bool cache_priority = false;
 		if( ver.startsWith("~") ){
 			if( !m_gotBranches ) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
@@ -91,11 +92,12 @@ class BitbucketRepository : Repository {
 			enforce(pc !is null, "Invalid version identifier.");
 			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~(pc.sha)~"/package.json";
 			date = pc.date.toSysTime();
+			cache_priority = true;
 		}
 
 		PackageVersionInfo ret;
 		logInfo("Getting JSON response from %s", url);
-		ret.info = readJson(url);
+		ret.info = readJson(url, false, cache_priority);
 
 		if( auto pv = "version" in ret.info ){
 			if( *pv != ver )
@@ -114,13 +116,13 @@ class BitbucketRepository : Repository {
 	}
 }
 
-private Json readJson(string url, bool sanitize = false)
+private Json readJson(string url, bool sanitize = false, bool cache_priority = false)
 {
 	Json ret;
 	try downloadCached(url, (scope input){
 		auto text = input.readAllUTF8(sanitize);
 		ret = parseJsonString(text);
-	});
+	}, cache_priority);
 	catch (Exception e) {
 		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
 	}

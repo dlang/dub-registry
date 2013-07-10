@@ -25,12 +25,19 @@ class UrlCache {
 		m_entries = m_db.getCollection("urlcache.entries");
 	}
 
-	void get(URL url, scope void delegate(scope InputStream str) callback)
+	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 	{
 		auto be = m_entries.findOne(["url": url.toString()]);
 		CacheEntry entry;
-		if( !be.isNull() ) deserializeBson(entry, be);
-		else {
+		if( !be.isNull() ) {
+			deserializeBson(entry, be);
+			if (cache_priority) {
+				auto data = be["data"].get!BsonBinData().rawData();
+				scope result = new MemoryStream(cast(ubyte[])data, false);
+				callback(result);
+				return;
+			}
+		} else {
 			entry._id = BsonObjectID.generate();
 			entry.url = url.toString();
 		}
@@ -80,13 +87,13 @@ private struct CacheEntry {
 
 private UrlCache s_cache;
 
-void downloadCached(URL url, scope void delegate(scope InputStream str) callback)
+void downloadCached(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
 	if( !s_cache ) s_cache = new UrlCache;
-	s_cache.get(url, callback);
+	s_cache.get(url, callback, cache_priority);
 }
 
-void downloadCached(string url, scope void delegate(scope InputStream str) callback)
+void downloadCached(string url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
-	return downloadCached(URL.parse(url), callback);
+	return downloadCached(URL.parse(url), callback, cache_priority);
 }

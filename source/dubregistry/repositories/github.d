@@ -48,7 +48,7 @@ class GithubRepository : Repository {
 			try {
 				auto tagname = tag.name.get!string;
 				if( tagname.length >= 2 && tagname[0] == 'v' ){
-					Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true);
+					Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true, true);
 					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
 					m_versionList ~= tagname[1 .. $];
 					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
@@ -66,7 +66,7 @@ class GithubRepository : Repository {
 		m_branchList.length = 0;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
-			Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, true);
+			Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, true, true);
 			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
 			m_branchList ~= "~"~branchname;
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
@@ -78,6 +78,7 @@ class GithubRepository : Repository {
 	{
 		string url;
 		SysTime date;
+		bool cache_priority = false;
 		if( ver.startsWith("~") ){
 			if( !m_gotBranches ) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
@@ -89,6 +90,7 @@ class GithubRepository : Repository {
 			enforce(pc !is null, "Invalid version identifier.");
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
 			date = pc.date.toSysTime();
+			cache_priority = true;
 		}
 
 		PackageVersionInfo ret;
@@ -112,13 +114,13 @@ class GithubRepository : Repository {
 	}
 }
 
-private Json readJson(string url, bool sanitize = false)
+private Json readJson(string url, bool sanitize = false, bool cache_priority = false)
 {
 	Json ret;
 	try downloadCached(url, (scope input){
 		auto text = input.readAllUTF8(sanitize);
 		ret = parseJsonString(text);
-	});
+	}, cache_priority);
 	catch (Exception e) {
 		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
 	}
