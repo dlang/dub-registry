@@ -152,6 +152,12 @@ block body
 			td The destination path of the output binary - this field does not support platform suffixes
 
 		tr
+			td workingDirectory
+			td
+				code string
+			td The directory from which the generated executable will be run (defaults to <code>"targetPath"</code>) - this field does not support platform suffixes
+
+		tr
 			td subConfigurations
 			td
 				code string[string]
