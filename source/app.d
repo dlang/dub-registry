@@ -36,7 +36,7 @@ void startMonitoring()
 static this()
 {
 	setLogLevel(LogLevel.none);
-	setLogFile("log.txt", LogLevel.debug_);
+	setLogFile("log.txt", LogLevel.diagnostic);
 
 	GithubRepository.register();
 	BitbucketRepository.register();
