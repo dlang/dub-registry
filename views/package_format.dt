@@ -74,6 +74,18 @@ block body
 			td Defines an array of sub-packages defined in the same directory as the root project, where each entry is an object of the same format as a package.json file - see the <a href="#sub-packages">sub package section</a> for more information
 
 		tr
+			td configurations
+			td
+				code T[]
+			td Speficies an optional list of build configurations (specified using "--config=...") - see the <a href="#configurations">configurations section</a> for more details
+
+		tr
+			td buildTypes
+			td
+				code T[string]
+			td Defines additional custom build types or overrides the default ones (specified using "--build=...") - see the <a href="#build-settings">build settings section</a> for valid contents of <code>T</code>
+
+		tr
 			td -ddoxFilterArgs
 			td
 				code string[]
@@ -191,7 +203,7 @@ block body
 			td sourcePaths
 			td
 				code string[]
-			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given)
+			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
 
 		tr
 			td excludedSourceFiles
