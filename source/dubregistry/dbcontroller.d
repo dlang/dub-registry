@@ -78,7 +78,7 @@ class DbController {
 
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
-		m_packages.update(["name": packname, "versions.version_": ver.version_], ["$set": ["versions.$": ver]]);
+		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
 	}
 
 	void addBranch(string packname, DbPackageVersion ver)
@@ -89,7 +89,7 @@ class DbController {
 
 	void updateBranch(string packname, DbPackageVersion ver)
 	{
-		m_packages.update(["name": packname, "branches.version_": ver.version_], ["$set": ["versions.$": ver]]);
+		m_packages.update(["name": packname, "branches.version": ver.version_], ["$set": ["versions.$": ver]]);
 	}
 
 	bool hasVersion(string packname, string ver)
