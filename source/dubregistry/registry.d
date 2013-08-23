@@ -146,27 +146,23 @@ class DubRegistry {
 
 		try {
 			foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
-				if( !m_db.hasVersion(packname, ver) ){
-					try {
-						addVersion(packname, ver, rep.getVersionInfo(ver));
+				try {
+					if (addVersion(packname, ver, rep.getVersionInfo(ver)))
 						logInfo("Added version %s for %s", ver, packname);
-					} catch( Exception e ){
-						logDebug("version %s", sanitize(e.toString()));
-						errors ~= format("Version %s: %s", ver, e.msg);
-						// TODO: store error message for web frontend!
-					}
+				} catch( Exception e ){
+					logDebug("version %s", sanitize(e.toString()));
+					errors ~= format("Version %s: %s", ver, e.msg);
+					// TODO: store error message for web frontend!
 				}
 			}
 			foreach( ver; rep.getBranches() ){
-				if( !m_db.hasBranch(packname, ver) ){
-					try {
-						addVersion(packname, ver, rep.getVersionInfo(ver));
+				try {
+					if (addVersion(packname, ver, rep.getVersionInfo(ver)))
 						logInfo("Added branch %s for %s", ver, packname);
-					} catch( Exception e ){
-						logDebug("%s", sanitize(e.toString()));
-						// TODO: store error message for web frontend!
-						errors ~= format("Branch %s: %s", ver, e.msg);
-					}
+				} catch( Exception e ){
+					logDebug("%s", sanitize(e.toString()));
+					// TODO: store error message for web frontend!
+					errors ~= format("Branch %s: %s", ver, e.msg);
 				}
 			}
 		} catch( Exception e ){
@@ -177,7 +173,7 @@ class DubRegistry {
 		m_db.setPackageErrors(packname, errors);
 	}
 
-	protected void addVersion(string packname, string ver, PackageVersionInfo info)
+	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
 	{
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
@@ -194,12 +190,21 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		if( !ver.startsWith("~") ){
+			if (m_db.hasVersion(packname, ver)) {
+				m_db.updateVersion(packname, dbver);
+				return false;
+			}
 			enforce(!m_db.hasVersion(packname, info.version_), "Version already exists.");
 			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
 			m_db.addVersion(packname, dbver);
 		} else {
+			if (m_db.hasBranch(packname, ver)) {
+				m_db.updateBranch(packname, dbver);
+				return false;
+			}
 			m_db.addBranch(packname, dbver);
 		}
+		return true;
 	}
 }
 

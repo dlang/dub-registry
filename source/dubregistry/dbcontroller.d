@@ -76,10 +76,20 @@ class DbController {
 		m_packages.update(["name": packname], ["$push": ["versions": ver]]);
 	}
 
+	void updateVersion(string packname, DbPackageVersion ver)
+	{
+		m_packages.update(["name": packname, "versions.version_": ver.version_], ["$set": ["versions.$": ver]]);
+	}
+
 	void addBranch(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~"));
 		m_packages.update(["name": packname], ["$push": ["branches": ver]]);
+	}
+
+	void updateBranch(string packname, DbPackageVersion ver)
+	{
+		m_packages.update(["name": packname, "branches.version_": ver.version_], ["$set": ["versions.$": ver]]);
 	}
 
 	bool hasVersion(string packname, string ver)
