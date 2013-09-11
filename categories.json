@@ -13,7 +13,7 @@
 			{"name": "game", "description": "Games"},
 			{"name": "graphics", "description": "Graphics editing"},
 			{"name": "network", "description": "Network tools"},
-			{"name": "photo", "description": "Photogrphic applications"},
+			{"name": "photo", "description": "Photographic applications"},
 			{"name": "productivity", "description": "Office and productivity"},
 			{"name": "web", "description": "Web tools"}
 		]},
