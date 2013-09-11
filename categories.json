@@ -34,7 +34,7 @@
 		{"name": "data", "description": "Data storage and format support"},
 		{"name": "database", "description": "Database clients or implementations"},
 		{"name": "graphics", "description": "2D/3D graphics"},
-		{"name": "gui", "description": "Graphhical user interfaces"},
+		{"name": "gui", "description": "Graphical user interfaces"},
 		{"name": "network", "description": "General networking", "categories"},
 		{"name": "scripting", "description": "Scripting language support"},
 		{"name": "web", "description": "Web related", "categories": [
