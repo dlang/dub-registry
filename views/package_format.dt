@@ -367,6 +367,7 @@ block body
 	pre.code
 		|{
 		|	...
+		|	"name": "somepackage"
 		|	"configurations": [
 		|		{
 		|			"name": "metro-app",
@@ -390,6 +391,23 @@ block body
 		|	]
 		|}
 
+	p You can choose a specific configuration for certain dependencies by using the "subConfigurations" field:
+
+	pre.code
+		|{
+		|	...
+		|	"dependencies": {
+		|		"somepackage": ">=1.0.0"
+		|	},
+		|	"subConfigurations": {
+		|		"somepackage": "glut-app"
+		|	}
+		|}
+
+	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" field below).
+
+
+	h3#configuration-fields Configuration block specific fields
 
 	p In addition to the usual <a href="#build-settings">build settings</a>, the following fields are recognized inside of a configuration block:
 
