@@ -12,7 +12,7 @@ block body
 
 		For Arch Linux, Moritz Maxeiner maintains two AUR packages: [dub](https://aur.archlinux.org/packages/dub/) and [dub-git](https://aur.archlinux.org/packages/dub-git).
 
-		Debian packages are available as part of Jordi Sayol's [D APT repository](https://code.google.com/p/d-apt/wiki/APT_Repository). Use `apt-get install dub`.
+		Debian packages are available as part of Jordi Sayol's [D APT repository](http://d-apt.sourceforge.net/). Use `apt-get install dub`.
 
 		[Homebrew](http://mxcl.github.io/homebrew/) includes a DUB package by Chris Molozian. Use `brew install dub` or `brew install dub --HEAD`.
 
