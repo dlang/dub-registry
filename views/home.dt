@@ -15,7 +15,7 @@ block body
 			th Description
 		- foreach( pl; packages )
 			- if( pl.versions.length )
-				- auto p = pl.versions[pl.versions.length-1];
+				- auto p = getBestVersion(pl.versions);
 				tr
 					td
 						a(href="packages/#{pl.name}")= pl.name
