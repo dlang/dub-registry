@@ -74,7 +74,14 @@ class DubRegistryWebFrontend {
 			if( p.versions.length == 0 ) return null;
 			return p.versions[p.versions.length-1].date.get!string;
 		}
-		sort!((a, b) => getDate(a) > getDate(b))(packages);
+		bool compare(Json a, Json b)
+		{
+			bool a_has_ver = a.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
+			bool b_has_ver = b.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
+			if (a_has_ver != b_has_ver) return a_has_ver;
+			return getDate(a) > getDate(b);
+		}
+		sort!((a, b) => compare(a, b))(packages);
 
 		res.renderCompat!("home.dt",
 			HTTPServerRequest, "req",
