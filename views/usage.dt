@@ -8,7 +8,7 @@ block body
 
 	p DUB is a build tool for D projects with support for automatically retrieving dependencies and integrating them in the build process. The design emphasis is on maximum simplicity for simple projects, while providing the opportunity to customize things when needed.
 
-	p An important property of the build description for each project is that it only contains the minimally needed information to describe how a package is build, skipping things such as build type (debug, release, unittest etc.). What is specified can be done so in a mostly platform and compiler agnostic way using abstract fields (e.g. import paths or used libraries) and by having DUB automatically translate common DMD command line flags to GCC or LDC flags.
+	p An important property of the build description for each project is that it only contains the minimally needed information to describe how a package is built, skipping things such as build type (debug, release, unittest etc.). What is specified can be done so in a mostly platform and compiler agnostic way using abstract fields (e.g. import paths or used libraries) and by having DUB automatically translate common DMD command line flags to GCC or LDC flags.
 
 	p This kind of representation has several important advantages. It allows DUB to generate VisualD and Mono-D project files, makes most packages automatically usable with any supported compiler and finally means that all packages support the same build types and platforms. Also, by using DUB itself as a library, external build tools can access the package description to provide further functionality without requiring the packages to add explicit support to their build script.
 
