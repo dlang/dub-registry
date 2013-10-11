@@ -227,7 +227,7 @@ block body
 			td importPaths
 			td
 				code string[]
-			td Additional import paths to search for D modules (the <code>soruce/</code> folder is used by default as a source folder, if it exists)
+			td Additional import paths to search for D modules (the <code>source/</code> folder is used by default as a source folder, if it exists)
 
 		tr
 			td stringImportPaths
@@ -427,3 +427,4 @@ block body
 			td
 				code string[]
 			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies
+color: red;
