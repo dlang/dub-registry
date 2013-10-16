@@ -427,3 +427,4 @@ block body
 			td
 				code string[]
 			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies
+color: red;
