@@ -262,22 +262,27 @@ block body
 
 	
 	h3#version-specs Version specifications
-
-	p Some examples of typical simple version specifications:
+	p A version specification can either be a simple declaration or a more complex variant, alowing more control.
 
 	ul
-		li Require a certain version: <code>"==1.3.0"</code>
-		li Require a minimum version: <code>"&gt;=1.3.0"</code>
-		li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
-		li Use the GIT master branch: <code>"~master"</code>
-	
-	p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>.
-
-	p In addition to the version, additional fields can be added to further control how a dependency is being searched or used:
-	
-	ul		
-		li Use a folder to source a package from: <code>{"version": "~master", "path": "path/to/package"}</code>
-		li Indicate an optional dependency, so that it is used only if it is already installed: <code>{"version": "~master", "optional": true}</code> <span style="color: red;">[work in progress]</span>
+		li Simple variant:
+			p This is the canonical way to specify a dependency. So this is most likely what you want. The format is like this:
+			p <code>"&lt;name&gt;" : "&lt;version-string&gt;"</code>
+			p Some examples of typical simple version strings:
+			ul
+				li Require a certain version: <code>"==1.3.0"</code>
+				li Require a minimum version: <code>"&gt;=1.3.0"</code>
+				li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
+				li Use the GIT master branch: <code>"~master"</code>
+			p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>.
+		li Complex variant:
+			p Min. required: <code>"&lt;name&gt;" : { "version": "&lt;version-string&gt;" &lt;, additional-fields&gt;}</code>
+			p In addition to the version, additional fields can be added to further control how a dependency is being searched or used:
+			ul		
+				li <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from. 
+					p This is only required when the depdend package is not registered with the registry and you don't want to or cannot add the dependent package to your local dub installation. In this case dub cannot resolve this dependency unless you specify the path and it's version of the dependency directly. Another use case is patching to a local library.
+				li <code>"optional": true</code> - Indicate an optional dependency.
+					p With this specified, the dependency will only be used, if it is installed. <span style="color: red;">[work in progress]</span>.
 
 
 	h3#target-types Target types
