@@ -31,7 +31,7 @@
 		]}
 	]},
 	{"name": "library", "description": "Development library", "categories": [
-		{"name": "binding", "description": "Foreign language bindings"},
+		{"name": "binding", "description": "D language bindings"},
 		{"name": "crypto", "description": "Cryptographic libraries"},
 		{"name": "development", "description": "Development support libraries", "categories": [
 			{"name": "parsing", "description": "Parsers and lexers"}
