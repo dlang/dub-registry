@@ -45,6 +45,7 @@
 		]},
 		{"name": "scripting", "description": "Scripting language support"},
 		{"name": "vcs", "description": "Version control"},
+		{"name": "vibed", "description": "vibe.d compatible library"},
 		{"name": "web", "description": "Web related", "categories": [
 			{"name": "auth", "description": "Authentication and user management"},
 			{"name": "communication", "description": "Communication components"},
