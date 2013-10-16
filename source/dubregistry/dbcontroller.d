@@ -35,9 +35,6 @@ class DbController {
 		}
 
 		repairVersionOrder();
-
-		// temporary
-		foreach (p; getAllPackages()) updateKeywords(p);
 	}
 
 	void addPackage(ref DbPackage pack)
