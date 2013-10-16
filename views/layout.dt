@@ -25,7 +25,8 @@ html
 						a(href="#{req.rootDir}login") Log in
 		
 		nav#topnav
-			- static immutable items = ["About;about", "Packages;", "Download;download", "Development;develop"];
+			- auto items = ["About;about", "Packages;", "Download;download", "Development;develop"];
+			- if (req.session) items ~= "My packages;my_packages";
 			ul
 			- foreach(itm; items)
 				- auto parts = split(itm, ";");
@@ -35,7 +36,7 @@ html
 					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
 
 			form(method="GET", action="#{req.rootDir}search")
-				input(name="q", type="text", placeholder="enter package name or keywords", autofocus)
+				input(name="q", type="text", placeholder="enter search terms", autofocus)
 				button(type="submit") Search
 
 		#content

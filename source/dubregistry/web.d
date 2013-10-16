@@ -49,10 +49,11 @@ class DubRegistryWebFrontend {
 		router.get("/packages/:packname/:version", &showPackageVersion); // HTML or .zip or .json
 		router.get("/view_package/:packname", &redirectViewPackage);
 		router.get("/my_packages", m_usermanweb.auth(toDelegate(&showMyPackages)));
-		router.get("/my_packages/add", m_usermanweb.auth(toDelegate(&showAddPackage)));
-		router.post("/my_packages/add", m_usermanweb.auth(toDelegate(&addPackage)));
-		router.post("/my_packages/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
-		router.post("/my_packages/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
+		router.get("/my_packages/register", m_usermanweb.auth(toDelegate(&showAddPackage)));
+		router.post("/my_packages/register", m_usermanweb.auth(toDelegate(&addPackage)));
+		router.get("/my_packages/:packname", m_usermanweb.auth(toDelegate(&showMyPackagesPackage)));
+		router.post("/my_packages/:packname/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
+		router.post("/my_packages/:packname/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
 		router.get("*", serveStaticFiles("./public"));
 	}
 
@@ -205,9 +206,21 @@ class DubRegistryWebFrontend {
 			DubRegistry, "registry")(req, user, m_registry);
 	}
 
+	void showMyPackagesPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	{
+		auto packageName = req.params["packname"];
+		auto nfo = m_registry.getPackageInfo(packageName);
+		if (nfo.type == Json.Type.null_) return; // FIXME: validate package owner!
+		res.renderCompat!("my_packages.package.dt",
+			HTTPServerRequest, "req",
+			string, "packageName",
+			User, "user",
+			DubRegistry, "registry")(req, packageName, user, m_registry);
+	}
+
 	void showAddPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
-		res.renderCompat!("add_package.dt",
+		res.renderCompat!("my_packages.register.dt",
 			HTTPServerRequest, "req",
 			User, "user",
 			DubRegistry, "registry")(req, user, m_registry);
@@ -226,14 +239,19 @@ class DubRegistryWebFrontend {
 
 	void showRemovePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
-		res.renderCompat!("remove_package.dt",
+		auto packageName = req.params["packname"];
+		// FIXME: validate package owner!
+		res.renderCompat!("my_packages.remove.dt",
 			HTTPServerRequest, "req",
-			User, "user")(req, user);
+			string, "packageName",
+			User, "user")(req, packageName, user);
 	}
 
 	void removePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
-		m_registry.removePackage(req.form["package"], user._id);
+		auto pack_name = req.params["packname"];
+		// FIXME: validate package owner!
+		m_registry.removePackage(pack_name, user._id);
 		res.redirect("/my_packages");
 	}
 }

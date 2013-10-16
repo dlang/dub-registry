@@ -6,34 +6,35 @@ block title
 block body
 	- import vibe.data.json;
 	
+	form(method="GET", action="#{req.rootDir}my_packages/register")
+		button(type="submit") Register new package
+
 	table
 		tr
 			th Package
 			th Latest version
 			th Description
 			th Action
-		- foreach( p; registry.getPackages(user._id) )
+		- bool have_pack = false;
+		- foreach (p; registry.getPackages(user._id))
+			- have_pack = true;
 			- auto pack = registry.getPackageInfo(p, true);
 			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
 			tr
 				td= p
 				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 				td= latest.type == Json.Type.Object ? latest.description.opt!string : "-"
-					- if( pack.errors.length )
-						ul
-							- foreach( e; pack.errors )
-								li.error= e
+					- if (pack.errors.length)
+						- auto err = pack.errors[pack.errors.length-1].get!string;
+						span.error= err[0 .. min($, 40)]
+							- if (pack.errors.length > 1 || err.length > 40)
+								| (<a href="#{req.rootDir}my_packages/#{p}">more...</a>)
 				td
-					form(method="POST", action="#{req.rootDir}my_packages/remove")
-						input(type="hidden", name="package", value="#{p}")
-						input(type="submit", value="Remove")
-		tr
-			td
-			td
-			td
-			td
-				form(method="GET", action="#{req.rootDir}my_packages/add")
-					input(type="submit", value="Add new package")
+					form(method="GET", action="#{req.rootDir}my_packages/#{p}")
+						button(type="submit") Edit
+		- if (!have_pack)
+			tr
+				td(colspan="4") You don't have registered any packages, yet.
 
 	p Note that it can take up to 30 min until new packages and new git tags are reflected in the registry.
 	
