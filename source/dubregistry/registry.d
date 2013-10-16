@@ -115,9 +115,15 @@ class DubRegistry {
 		ret.name = packname;
 		ret.versions = Json(vers);
 		ret.repository = pack.repository;
+		ret.categories = serializeToJson(pack.categories);
 		if( include_errors ) ret.errors = serializeToJson(pack.errors);
 		else m_packageInfos[packname] = ret;
 		return ret;
+	}
+
+	void setPackageCategories(string pack_name, string[] categories)
+	{
+		m_db.setPackageCategories(pack_name, categories);
 	}
 
 	void checkForNewVersions()

@@ -11,23 +11,29 @@ import dubregistry.repositories.github;
 import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
-import std.algorithm : sort;
+import std.algorithm : sort, startsWith;
 import std.array;
 import std.file;
 import std.path;
+import std.string;
 import userman.web;
 import vibe.d;
 
 class DubRegistryWebFrontend {
 	private {
+		struct Category { string name, description, indentedDescription; }
+
 		DubRegistry m_registry;
 		UserManWebInterface m_usermanweb;
+		Category[] m_categories;
 	}
 
 	this(DubRegistry registry, UserManController userman)
 	{
 		m_registry = registry;
 		m_usermanweb = new UserManWebInterface(userman);
+
+		updateCategories();
 	}
 
 	void register(URLRouter router)
@@ -54,6 +60,7 @@ class DubRegistryWebFrontend {
 		router.get("/my_packages/:packname", m_usermanweb.auth(toDelegate(&showMyPackagesPackage)));
 		router.post("/my_packages/:packname/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
 		router.post("/my_packages/:packname/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
+		router.post("/my_packages/:packname/set_categories", m_usermanweb.auth(toDelegate(&updatePackageCategories)));
 		router.get("*", serveStaticFiles("./public"));
 	}
 
@@ -210,12 +217,14 @@ class DubRegistryWebFrontend {
 	{
 		auto packageName = req.params["packname"];
 		auto nfo = m_registry.getPackageInfo(packageName);
-		if (nfo.type == Json.Type.null_) return; // FIXME: validate package owner!
+		if (nfo.type == Json.Type.null_) return;
+		enforceUserPackage(user, packageName);
 		res.renderCompat!("my_packages.package.dt",
 			HTTPServerRequest, "req",
 			string, "packageName",
+			Category[], "categories",
 			User, "user",
-			DubRegistry, "registry")(req, packageName, user, m_registry);
+			DubRegistry, "registry")(req, packageName, m_categories, user, m_registry);
 	}
 
 	void showAddPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
@@ -240,7 +249,7 @@ class DubRegistryWebFrontend {
 	void showRemovePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		auto packageName = req.params["packname"];
-		// FIXME: validate package owner!
+		enforceUserPackage(user, packageName);
 		res.renderCompat!("my_packages.remove.dt",
 			HTTPServerRequest, "req",
 			string, "packageName",
@@ -250,8 +259,64 @@ class DubRegistryWebFrontend {
 	void removePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
 		auto pack_name = req.params["packname"];
-		// FIXME: validate package owner!
+		enforceUserPackage(user, pack_name);
 		m_registry.removePackage(pack_name, user._id);
 		res.redirect("/my_packages");
+	}
+
+	void updatePackageCategories(HTTPServerRequest req, HTTPServerResponse res, User user)
+	{
+		auto pack_name = req.params["packname"];
+		enforceUserPackage(user, pack_name);
+		string[] categories;
+		outer: foreach (i; 0 .. 100) {
+			auto pv = format("category%d", i) in req.form;
+			if (!pv) break;
+			string cat = *pv;
+			if (cat.length == 0) continue;
+			foreach (j, ec; categories) {
+				if (cat.startsWith(ec)) continue outer;
+				if (ec.startsWith(cat)) {
+					categories[j] = cat;
+					continue outer;
+				}
+			}
+			categories ~= cat;
+		}
+		m_registry.setPackageCategories(pack_name, categories);
+		res.redirect("/my_packages/"~pack_name);
+	}
+
+	private void enforceUserPackage(User user, string package_name)
+	{
+		// TODO!
+	}
+
+	private void updateCategories()
+	{
+		auto catfile = openFile("categories.json");
+		scope(exit) catfile.close();
+		auto json = parseJsonString(catfile.readAllUTF8());
+
+		Category[] cats;
+		void processNode(Json node, string[] path)
+		{
+			path ~= node.name.get!string;
+			Category cat;
+			cat.name = path.join(".");
+			cat.description = node.description.get!string;
+			if (path.length > 2)
+				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ " └ " ~ cat.description;
+			else if (path.length == 2)
+				cat.indentedDescription = " └ " ~ cat.description;
+			else cat.indentedDescription = cat.description;
+			cats ~= cat;
+			if ("categories" in node)
+				foreach (subcat; node.categories)
+					processNode(subcat, path);
+		}
+		foreach (top_level_cat; json)
+			processNode(top_level_cat, null);
+		m_categories = cats;
 	}
 }

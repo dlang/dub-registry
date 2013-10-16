@@ -18,12 +18,23 @@ block body
 		dd= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 	
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
-		button(type="submit") DELETE this package
+		button(type="submit") Remove this package
 
 
 	h2 Categories
 
-	p You will be able to choose categories for the package here in the future.	
+	p You can choose up to four categories for this package here. Please select only the categories that match most closely. If you feel like there is a category missing, please edit the <a href="https://github.com/rejectedsoftware/dub-registry/blob/master/categories.json">category file</a> and submit a pull request.
+
+	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
+		- foreach (i; 0 .. 4)
+			p Category #{i+1}:
+				- string selected;
+				- if (i < pack.categories.length) selected = pack.categories[i].get!string;
+				select(name="category#{i}", id="category#{i}", size="1")
+					option(value="")
+					- foreach (cat; categories)
+						option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
+		button(type="submit") Apply
 
 	- if (pack.errors.length)
 		h2 Errors:

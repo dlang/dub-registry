@@ -75,6 +75,11 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["errors": error]]);
 	}
 
+	void setPackageCategories(string packname, string[] categories...)
+	{
+		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
+	}
+
 	void addVersion(string packname, DbPackageVersion ver)
 	{
 		m_packages.update(["name": packname], ["$push": ["versions": ver]]);
