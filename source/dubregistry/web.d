@@ -306,9 +306,9 @@ class DubRegistryWebFrontend {
 			cat.name = path.join(".");
 			cat.description = node.description.get!string;
 			if (path.length > 2)
-				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ " └ " ~ cat.description;
+				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
 			else if (path.length == 2)
-				cat.indentedDescription = " └ " ~ cat.description;
+				cat.indentedDescription = "\u00a0└ " ~ cat.description;
 			else cat.indentedDescription = cat.description;
 			cats ~= cat;
 			if ("categories" in node)
