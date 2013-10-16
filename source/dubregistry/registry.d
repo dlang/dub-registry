@@ -228,7 +228,7 @@ private void checkPackageName(string n){
 			case 'a': .. case 'z':
 			case 'A': .. case 'Z':
 			case '0': .. case '9':
-			case '_', '-':
+			case '_', '-', ':':
 				break;
 		}
 	}
