@@ -1,0 +1,24 @@
+extends layout
+
+block title
+	- import dubregistry.viewutils;
+	- auto title = "Search results for \"" ~ queryString ~ "\"";
+	
+block body
+	p Search results for: <em>#{queryString}</em>
+	
+	table
+		tr
+			th Package
+			th Latest version
+			th Date
+			th Description
+		- foreach (pl; results)
+			- if( pl.versions.length )
+				- auto p = getBestVersion(pl.versions);
+				tr
+					td
+						a(href="packages/#{pl.name}")= pl.name
+					td= p["version"].opt!string()
+					td= formatDate(p.date)
+					td= p.description.opt!string
