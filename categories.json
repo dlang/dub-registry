@@ -24,7 +24,7 @@
 		]},
 		{"name": "web", "description": "Web applications", "categories": [
 			{"name": "communication", "description": "Blogs, chats, forums, etc."},
-			{"name": "productivity", "Office and productivity"}
+			{"name": "productivity", "description": "Office and productivity"}
 		]},
 		{"name": "website", "description": "Websites"}
 	]},
@@ -35,7 +35,7 @@
 		{"name": "database", "description": "Database clients or implementations"},
 		{"name": "graphics", "description": "2D/3D graphics"},
 		{"name": "gui", "description": "Graphical user interfaces"},
-		{"name": "network", "description": "General networking", "categories"},
+		{"name": "network", "description": "General networking"},
 		{"name": "scripting", "description": "Scripting language support"},
 		{"name": "web", "description": "Web related", "categories": [
 			{"name": "auth", "description": "Authentication and user management"},
