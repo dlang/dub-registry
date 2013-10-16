@@ -193,7 +193,8 @@ class DubRegistry {
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
-			checkPackageName(n);
+			foreach (p; n.split(":"))
+				checkPackageName(p);
 
 		DbPackageVersion dbver;
 		dbver.date = BsonDate(info.date);
