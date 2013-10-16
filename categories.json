@@ -6,6 +6,7 @@
 				{"name": "build", "description": "Build tools"},
 				{"name": "compiler", "description": "Compilers"},
 				{"name": "debugger", "description": "Debuggers"},
+				{"name": "documentation", "description": "Documentation processors"},
 				{"name": "packaging", "description": "Packaging tools"},
 				{"name": "ide", "description": "Integrated development environments"}
 			]},
@@ -20,23 +21,30 @@
 		{"name": "mobile", "description": "Mobile device applications"},
 		{"name": "server", "description": "Server software", "categories": [
 			{"name": "messaging", "description": "Chat/email servers"},
-			{"name": "database", "description": "Database servers"}
+			{"name": "database", "description": "Database servers"},
+			{"name": "web", "description": "Web servers"}
 		]},
-		{"name": "web", "description": "Web applications", "categories": [
+		{"name": "web", "description": "Web applications/sites", "categories": [
+			{"name": "development", "description": "Development tools"},
 			{"name": "communication", "description": "Blogs, chats, forums, etc."},
 			{"name": "productivity", "description": "Office and productivity"}
-		]},
-		{"name": "website", "description": "Websites"}
+		]}
 	]},
 	{"name": "library", "description": "Development library", "categories": [
 		{"name": "binding", "description": "Foreign language bindings"},
 		{"name": "crypto", "description": "Cryptographic libraries"},
+		{"name": "development", "description": "Development support libraries", "categories": [
+			{"name": "parsing", "description": "Parsers and lexers"}
+		]},
 		{"name": "data", "description": "Data storage and format support"},
 		{"name": "database", "description": "Database clients or implementations"},
 		{"name": "graphics", "description": "2D/3D graphics"},
 		{"name": "gui", "description": "Graphical user interfaces"},
-		{"name": "network", "description": "General networking"},
+		{"name": "network", "description": "Networking libraries", "categories": [
+			{"name": "messaging", "description": "Network messaging library"}
+		]},
 		{"name": "scripting", "description": "Scripting language support"},
+		{"name": "vcs", "description": "Version control"},
 		{"name": "web", "description": "Web related", "categories": [
 			{"name": "auth", "description": "Authentication and user management"},
 			{"name": "communication", "description": "Communication components"},
