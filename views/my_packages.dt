@@ -14,14 +14,14 @@ block body
 			th Package
 			th Latest version
 			th Description
-			th Action
 		- bool have_pack = false;
 		- foreach (p; registry.getPackages(user._id))
 			- have_pack = true;
 			- auto pack = registry.getPackageInfo(p, true);
 			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
 			tr
-				td= p
+				td
+					a(href="#{req.rootDir}my_packages/#{p}")= p
 				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 				td= latest.type == Json.Type.Object ? latest.description.opt!string : "-"
 					- if (pack.errors.length)
@@ -29,12 +29,9 @@ block body
 						span.error= err[0 .. min($, 40)]
 							- if (pack.errors.length > 1 || err.length > 40)
 								| (<a href="#{req.rootDir}my_packages/#{p}">more...</a>)
-				td
-					form(method="GET", action="#{req.rootDir}my_packages/#{p}")
-						button(type="submit") Edit
 		- if (!have_pack)
 			tr
-				td(colspan="4") You don't have registered any packages, yet.
+				td(colspan="3") You don't have registered any packages, yet.
 
 	p Note that it can take up to 30 min until new packages and new git tags are reflected in the registry.
 	
