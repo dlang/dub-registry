@@ -71,10 +71,30 @@ class DubRegistryWebFrontend {
 
 	void showHome(HTTPServerRequest req, HTTPServerResponse res)
 	{
+		auto browse_by = req.query.get("browse-by", "updated");
+		auto category = req.query.get("category", null);
+
+
 		// collect the package list
 		auto packapp = appender!(Json[])();
 		packapp.reserve(200);
-		foreach (pack; m_registry.availablePackages) packapp.put(m_registry.getPackageInfo(pack));
+		switch (browse_by) {
+			default:
+				foreach (pack; m_registry.availablePackages)
+					packapp.put(m_registry.getPackageInfo(pack));
+				break;
+			case "category":
+				foreach (pname; m_registry.availablePackages) {
+					auto pack = m_registry.getPackageInfo(pname);
+					foreach (c; pack.categories) {
+						if (c.get!string.startsWith(category)) {
+							packapp.put(pack);
+							break;
+						}
+					}
+				}
+				break;
+		}
 		auto packages = packapp.data;
 
 		// sort by date of last version
@@ -94,7 +114,8 @@ class DubRegistryWebFrontend {
 
 		res.renderCompat!("home.dt",
 			HTTPServerRequest, "req",
-			Json[], "packages")(req, packages);
+			Category[], "categories",
+			Json[], "packages")(req, m_categories, packages);
 	}
 
 	void showSearchResults(HTTPServerRequest req, HTTPServerResponse res)
