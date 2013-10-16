@@ -36,6 +36,7 @@ class DubRegistryWebFrontend {
 
 		// user front end
 		router.get("/", &showHome);
+		router.get("/search", &showSearchResults);
 		router.get("/about", staticTemplate!"usage.dt");
 		router.get("/usage", staticRedirect("/about"));
 		router.get("/download", &showDownloads);
@@ -86,6 +87,14 @@ class DubRegistryWebFrontend {
 		res.renderCompat!("home.dt",
 			HTTPServerRequest, "req",
 			Json[], "packages")(req, packages);
+	}
+
+	void showSearchResults(HTTPServerRequest req, HTTPServerResponse res)
+	{
+		auto queryString = req.query.get("q", "");
+		auto keywords = queryString.split();
+		auto results = m_registry.searchPackages(keywords);
+		res.render!("search_results.dt", req, queryString, results);
 	}
 
 	void showDownloads(HTTPServerRequest req, HTTPServerResponse res)

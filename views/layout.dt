@@ -25,7 +25,7 @@ html
 						a(href="#{req.rootDir}login") Log in
 		
 		nav#topnav
-			- static immutable items = ["Packages;", "Download;download", "Development;develop", "About;about"];
+			- static immutable items = ["About;about", "Packages;", "Download;download", "Development;develop"];
 			ul
 			- foreach(itm; items)
 				- auto parts = split(itm, ";");
@@ -34,15 +34,14 @@ html
 				li(class=(active ? "active" : ""))
 					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
 
+			form(method="GET", action="#{req.rootDir}search")
+				input(name="q", type="text", placeholder="enter package name or keywords", autofocus)
+				button(type="submit") Search
 
 		#content
 			block body
 
 		nav#footer
 			ul
-				li
-					a(href="#{req.rootDir}publish") Publishing packages
-				li
-					a(href="#{req.rootDir}package-format") Package format
 				li
 					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums

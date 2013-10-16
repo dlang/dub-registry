@@ -23,14 +23,14 @@ DubRegistry s_registry;
 
 void startMonitoring()
 {
-	void monitorNewVersions()
+	/*void monitorNewVersions()
 	{
 		while(true){
 			s_registry.checkForNewVersions();
 			sleep(15.minutes());
 		}
 	}
-	s_checkTask = runTask(&monitorNewVersions);
+	s_checkTask = runTask(&monitorNewVersions);*/
 }
 
 static this()
@@ -42,7 +42,7 @@ static this()
 	BitbucketRepository.register();
 
 	auto router = new URLRouter;
-	router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
+	//router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
 
 	// user management
 	auto udbsettings = new UserManSettings;
@@ -50,6 +50,7 @@ static this()
 	udbsettings.serviceUrl = URL("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseName = "vpmreg";
+	udbsettings.requireAccountValidation = false;
 	auto userdb = new UserManController(udbsettings);
 
 	// VPM registry

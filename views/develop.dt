@@ -1,12 +1,17 @@
 extends layout
 
 block title
-	- auto title = "Helping development";
+	- auto title = "Develop with DUB";
 
 block body
-	h2 Source repositories
+	h2 Publishing packages
 
-	p You can help enhancing DUB by writing bug reports or by making pull requests.
+	p To publish your own packages, just create a new package with a valid package description file (see the <a href="package-format">package format specification</a>) and follow the instructions on the <a href="publish">"publishing packages"</a> page.
+
+
+	h2 Help with DUB's development
+
+	p You can help enhancing DUB by writing bug reports or by making pull requests on GitHub.
 	
 	p The main development happens on github in the following repositories:
 
@@ -17,7 +22,7 @@ block body
 			a(href="https://github.com/rejectedsoftware/dub-registry") DUB registry website
 
 
-	h2 Development focus
+	h3 Development focus
 
 	p If you want to help out, the most important things right now are:
 

@@ -8,7 +8,7 @@ module dubregistry.registry;
 import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
-import std.algorithm : sort;
+import std.algorithm : map, sort;
 import vibe.vibe;
 
 
@@ -33,6 +33,11 @@ class DubRegistry {
 	@property auto availablePackages()
 	{
 		return m_db.getAllPackages();
+	}
+
+	auto searchPackages(string[] keywords)
+	{
+		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));
 	}
 
 	void addPackage(Json repository, BsonObjectID user)

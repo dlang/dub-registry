@@ -35,6 +35,9 @@ class DbController {
 		}
 
 		repairVersionOrder();
+
+		// temporary
+		foreach (p; getAllPackages()) updateKeywords(p);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -42,6 +45,7 @@ class DbController {
 		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 		pack._id = BsonObjectID.generate();
 		m_packages.insert(pack);
+		updateKeywords(pack.name);
 	}
 
 	DbPackage getPackage(string packname)
@@ -74,22 +78,26 @@ class DbController {
 	void addVersion(string packname, DbPackageVersion ver)
 	{
 		m_packages.update(["name": packname], ["$push": ["versions": ver]]);
+		updateKeywords(packname);
 	}
 
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
 		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
+		updateKeywords(packname);
 	}
 
 	void addBranch(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~"));
 		m_packages.update(["name": packname], ["$push": ["branches": ver]]);
+		updateKeywords(packname);
 	}
 
 	void updateBranch(string packname, DbPackageVersion ver)
 	{
 		m_packages.update(["name": packname, "branches.version": ver.version_], ["$set": ["branches.$": ver]]);
+		updateKeywords(packname);
 	}
 
 	bool hasVersion(string packname, string ver)
@@ -110,15 +118,40 @@ class DbController {
 
 	auto searchPackages(string[] keywords)
 	{
-		string[] barekeywords;
-		foreach( kw; keywords ){
+		Appender!(string[]) barekeywords;
+		foreach( kw; keywords ) {
 			kw = kw.strip();
 			//kw = kw.normalize(); // separate character from diacritics
 			string[] parts = splitAlphaNumParts(kw.toLower());
-			barekeywords ~= parts;
-			barekeywords ~= join(barekeywords);
+			barekeywords ~= parts.filter!(p => p.count > 2).map!(p => p.toLower).array;
 		}
-		return m_packages.find(["searchTerms": ["$in": keywords]]).map!(b => deserializeBson!DbPackage(b))();
+		logInfo("search for %s %s", keywords, barekeywords.data);
+		return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
+	}
+
+	private void updateKeywords(string package_name)
+	{
+		auto p = getPackage(package_name);
+		bool[string] keywords;
+		void processString(string str) {
+			if (str.length == 0) return;
+			foreach (w; splitAlphaNumParts(str))
+				if (w.count > 2)
+					keywords[w.toLower()] = true;
+		}
+		void processVer(Json info) {
+			if (auto pv = "description" in info) processString(pv.opt!string);
+			if (auto pv = "authors" in info) processString(pv.opt!string);
+			if (auto pv = "homepage" in info) processString(pv.opt!string);
+		}
+
+		processString(p.name);
+		foreach (ver; p.versions) processVer(ver.info);
+		foreach (ver; p.branches) processVer(ver.info);
+
+		Appender!(string[]) kwarray;
+		foreach (kw; keywords.byKey) kwarray ~= kw;
+		m_packages.update(["name": package_name], ["$set": ["searchTerms": kwarray.data]]);
 	}
 
 	private void repairVersionOrder()
@@ -197,13 +230,20 @@ private int[] linearizeVersion(string ver)
 private string[] splitAlphaNumParts(string str)
 {
 	string[] ret;
-	while(str.length){
-		while(!str.front.isIdentChar()) str.popFront();
-		if( !str.length ) break;
-		size_t i = 0;
-		while(i < str.length && str[i].isIdentChar()) i++;
-		ret ~= str[0 .. i];
-		str = str[i .. 0];
+	while (!str.empty) {
+		while (!str.empty && !str.front.isIdentChar()) str.popFront();
+		if (str.empty) break;
+		size_t i = str.length;
+		foreach (j, dchar ch; str)
+			if (!isIdentChar(ch)) {
+				i = j;
+				break;
+			}
+		if (i > 0) {
+			ret ~= str[0 .. i];
+			str = str[i .. $];
+		}
+		if (!str.empty) str.popFront(); // pop non-ident-char
 	}
 	return ret;
 }

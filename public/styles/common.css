@@ -125,6 +125,20 @@ nav#topnav li.active {
 	background-color: #666;
 }
 
+nav#topnav form { float: right; }
+nav#topnav form input, nav#topnav form button {
+	padding: 0;
+	margin: 0;
+	margin-top: 1pt;
+	height: 16pt;
+	-webkit-box-sizing: border-box;
+	   -moz-box-sizing: border-box;
+	     -o-box-sizing: border-box;
+	        box-sizing: border-box;
+}
+nav#topnav form button { margin-right: 12pt; }
+
+
 
 /********************/
 /* CONTENT          */
@@ -208,6 +222,7 @@ nav#footer li {
 @media (min-width: 600pt) {
 	div#header { padding: 6pt 10%; }
 	nav#topnav { padding-left: 10%; }
+	nav#topnav form { margin-right: 10%; }
 	div#content { padding: 12pt 10%; }
 	nav#footer { padding-left: 10%; }
 }

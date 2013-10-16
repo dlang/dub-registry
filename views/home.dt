@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- import dubregistry.viewutils;
-	- auto title = "Home";
+	- auto title = "Package list";
 	
 block body
 	p Welcome to the DUB registry. The following list shows the available packages:
