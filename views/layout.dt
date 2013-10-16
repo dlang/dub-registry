@@ -36,7 +36,7 @@ html
 					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
 
 			form(method="GET", action="#{req.rootDir}search")
-				input(name="q", type="text", placeholder="enter search terms", autofocus)
+				input(name="q", type="text", placeholder="search for package", autofocus)
 				button(type="submit") Search
 
 		#content

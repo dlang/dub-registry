@@ -136,7 +136,7 @@ nav#topnav form input, nav#topnav form button {
 	     -o-box-sizing: border-box;
 	        box-sizing: border-box;
 }
-nav#topnav form button { margin-right: 12pt; }
+nav#topnav form button { padding: 0 4pt; margin-right: 12pt; }
 
 
 
