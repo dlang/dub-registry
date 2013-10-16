@@ -27,6 +27,9 @@ p  {
 	margin-bottom: 6pt;
 }
 
+strong { font-weight: bold; }
+em { font-style: italic; }
+
 code {
 	font-family: 'Courier New', monospace;
 	background-color: #f8f8f8;
