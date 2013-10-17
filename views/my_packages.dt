@@ -5,6 +5,7 @@ block title
 	
 block body
 	- import vibe.data.json;
+	- import std.algorithm;
 	
 	form(method="GET", action="#{req.rootDir}my_packages/register")
 		button(type="submit") Register new package
@@ -15,7 +16,7 @@ block body
 			th Latest version
 			th Description
 		- bool have_pack = false;
-		- foreach (p; registry.getPackages(user._id))
+		- foreach (p; sort!((a, b) => a < b)(registry.getPackages(user._id).array))
 			- have_pack = true;
 			- auto pack = registry.getPackageInfo(p, true);
 			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
