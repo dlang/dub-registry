@@ -72,29 +72,26 @@ class DubRegistryWebFrontend {
 
 	void showHome(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		auto browse_by = req.query.get("browse-by", "updated");
+		auto sort_by = req.query.get("sort", "updated");
 		auto category = req.query.get("category", null);
 
 
 		// collect the package list
 		auto packapp = appender!(Json[])();
 		packapp.reserve(200);
-		switch (browse_by) {
-			default:
-				foreach (pack; m_registry.availablePackages)
-					packapp.put(m_registry.getPackageInfo(pack));
-				break;
-			case "category":
-				foreach (pname; m_registry.availablePackages) {
-					auto pack = m_registry.getPackageInfo(pname);
-					foreach (c; pack.categories) {
-						if (c.get!string.startsWith(category)) {
-							packapp.put(pack);
-							break;
-						}
+		if (category.length) {
+			foreach (pname; m_registry.availablePackages) {
+				auto pack = m_registry.getPackageInfo(pname);
+				foreach (c; pack.categories) {
+					if (c.get!string.startsWith(category)) {
+						packapp.put(pack);
+						break;
 					}
 				}
-				break;
+			}
+		} else {
+			foreach (pack; m_registry.availablePackages)
+				packapp.put(m_registry.getPackageInfo(pack));
 		}
 		auto packages = packapp.data;
 
@@ -111,7 +108,11 @@ class DubRegistryWebFrontend {
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
-		sort!((a, b) => compare(a, b))(packages);
+		if (sort_by == "name") {
+			sort!((a, b) => a.name < b.name)(packages);
+		} else {
+			sort!((a, b) => compare(a, b))(packages);
+		}
 
 		res.renderCompat!("home.dt",
 			HTTPServerRequest, "req",

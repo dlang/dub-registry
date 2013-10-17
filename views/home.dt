@@ -8,25 +8,28 @@ block body
 	p Welcome to the DUB registry. The following list shows the available packages:
 
 	p Browse by:
-		- static immutable browse_kinds = ["updated;Recently updated", "category;By category"];
-		- foreach (i, c; browse_kinds)
-			- if (i > 0)
-				| - 
-			- auto cp = c.split(";");
-			- if (req.query.get("browse-by", "updated") == cp[0])
-				strong= cp[1]
-			- else
-				a(href="?browse-by=#{cp[0]}")= cp[1]
-
-	- if (req.query.get("browse-by", null) == "category")
+		- auto category = req.query.get("category", null);
+		- auto sort_mode = req.query.get("sort", "updated");
 		form(method="GET", action="")
-			input(type="hidden", name="browse-by", value="category")
+			input(type="hidden", name="sort", value=sort_mode)
 			p Category: 
 				select(name="category", id="category", size="1")
 					option(value="") All packages
 					- foreach (cat; categories)
-						option(value=cat.name, selected=cat.name==req.query.get("category", null))= cat.indentedDescription
+						option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
 				button(type="submit") Update
+
+		- static immutable browse_kinds = ["updated;Updated", "name;Name"];
+		p Sort by:
+			- foreach (i, c; browse_kinds)
+				- if (i > 0)
+					| - 
+				- auto cp = c.split(";");
+				- if (sort_mode == cp[0])
+					strong= cp[1]
+				- else
+					a(href="?sort=#{cp[0]}&category=#{category}")= cp[1]
+
 
 	table
 		tr
