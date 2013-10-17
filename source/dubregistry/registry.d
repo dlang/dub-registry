@@ -53,16 +53,10 @@ class DubRegistry {
 
 		info.info.name = name.toLower();
 
-		DbPackageVersion vi;
-		vi.date = BsonDate(info.date);
-		vi.version_ = "~master";
-		vi.info = info.info;
-
 		DbPackage pack;
 		pack.owner = user;
 		pack.name = info.info.name.get!string.toLower();
 		pack.repository = repository;
-		pack.branches = [vi];
 		m_db.addPackage(pack);
 
 		runTask({ checkForNewVersions(pack.name); });
@@ -191,6 +185,9 @@ class DubRegistry {
 
 		info.info.name = toLower(info.info.name.get!string());
 		enforce(info.info.name == packname, "Package name must match the original package name.");
+
+		enforce("description" in info.info && "license" in info.info,
+			"Published packages must contain \"description\" and \"license\" fields.");
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			foreach (p; n.split(":"))
