@@ -75,7 +75,7 @@ block body
 	pre.code {
 		|	...
 		|	"dependencies": {
-		|		"#{versionInfo.name}": "#{expr}"
+		|		"#{packageName}": "#{expr}"
 		|	}
 		|}
 	
