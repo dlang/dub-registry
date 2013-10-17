@@ -25,7 +25,7 @@ html
 						a(href="#{req.rootDir}login") Log in
 		
 		nav#topnav
-			- auto items = ["About;about", "Packages;", "Download;download", "Development;develop"];
+			- auto items = ["Packages;", "About;about", "Download;download", "Development;develop"];
 			- if (req.session) items ~= "My packages;my_packages";
 			ul
 			- foreach(itm; items)
