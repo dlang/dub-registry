@@ -182,49 +182,96 @@ class DubRegistryWebFrontend {
 	void showPackage(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		bool json = false;
-		auto pname = req.params["packname"];
+		auto pname = req.params["packname"].urlDecode();
 		if( pname.endsWith(".json") ){
 			pname = pname[0 .. $-5];
 			json = true;
 		}
 
-		Json pack = m_registry.getPackageInfo(pname);
-		if( pack == null ) return;
+		Json packageInfo, versionInfo;
+		if (!getPackageInfo(pname, null, packageInfo, versionInfo))
+			return;
 
-		if( json ){
-			res.writeJsonBody(pack);
+		if (json) {
+			if (pname.canFind(":")) return;
+			res.writeJsonBody(packageInfo);
 		} else {
 			res.renderCompat!("view_package.dt",
 				HTTPServerRequest, "req", 
-				Json, "pack",
-				string, "ver")(req, pack, "");
+				string, "packageName",
+				Json, "packageInfo",
+				Json, "versionInfo")(req, pname, packageInfo, versionInfo);
 		}
 	}
 
 	void showPackageVersion(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		Json pack = m_registry.getPackageInfo(req.params["packname"]);
-		if( pack == null ) return;
+		auto pname = req.params["packname"].urlDecode();
 
 		auto ver = req.params["version"];
 		string ext;
 		if( ver.endsWith(".zip") ) ext = "zip", ver = ver[0 .. $-4];
 		else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
 
-		foreach( v; pack.versions )
-			if( v["version"].get!string == ver ){
-				if( ext == "zip" ){
-					res.redirect(v.downloadUrl.get!string);
-				} else if( ext == "json"){
-					res.writeJsonBody(v);
-				} else {
-					res.renderCompat!("view_package.dt",
-						HTTPServerRequest, "req", 
-						Json, "pack",
-						string, "ver")(req, pack, v["version"].get!string);
+		Json packageInfo, versionInfo;
+		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
+			return;
+
+		if (ext == "zip") {
+			if (pname.canFind(":")) return;
+			res.redirect(versionInfo.downloadUrl.get!string);
+		} else if ( ext == "json") {
+			if (pname.canFind(":")) return;
+			res.writeJsonBody(versionInfo);
+		} else {
+			res.renderCompat!("view_package.dt",
+				HTTPServerRequest, "req", 
+				string, "packageName",
+				Json, "packageInfo",
+				Json, "versionInfo")(req, pname, packageInfo, versionInfo);
+		}
+	}
+
+	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
+	{
+		auto ppath = pack_name.urlDecode().split(":");
+
+		pkg_info = m_registry.getPackageInfo(ppath[0]);
+		if (pkg_info == null) return false;
+
+		if (pack_version.length) {
+			foreach (v; pkg_info.versions) {
+				if (v["version"].get!string == pack_version) {
+					ver_info = v;
+					break;
 				}
-				return;
 			}
+			if (ver_info.type != Json.Type.Object) return false;
+		} else {
+			import dubregistry.viewutils;
+			if (pkg_info.versions.length == 0) return false;
+			ver_info = getBestVersion(pkg_info.versions);
+		}
+
+		foreach (i; 1 .. ppath.length) {
+			if ("subPackages" !in ver_info) return false;
+			bool found = false;
+			foreach (sp; ver_info.subPackages) {
+				if (sp.name == ppath[i]) {
+					Json newv = Json.emptyObject;
+					// inherit certain fields
+					foreach (field; ["version", "date", "license", "authors", "homepage"])
+						if (auto pv = field in ver_info) newv[field] = *pv;
+					// copy/overwrite the rest frmo the sub package
+					foreach (string name, value; sp) newv[name] = value;
+					ver_info = newv;
+					found = true;
+					break;
+				}
+			}
+			if (!found) return false;
+		}
+		return true;
 	}
 
 	void showMyPackages(HTTPServerRequest req, HTTPServerResponse res, User user)
