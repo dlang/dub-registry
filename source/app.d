@@ -23,14 +23,14 @@ DubRegistry s_registry;
 
 void startMonitoring()
 {
-	/*void monitorNewVersions()
+	void monitorNewVersions()
 	{
 		while(true){
 			s_registry.checkForNewVersions();
 			sleep(15.minutes());
 		}
 	}
-	s_checkTask = runTask(&monitorNewVersions);*/
+	s_checkTask = runTask(&monitorNewVersions);
 }
 
 static this()
