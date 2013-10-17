@@ -137,6 +137,7 @@ block body
 		|<code>MIT</code>, 
 		|<code>MPL-2.0</code> (Mozilla Public License 2.0), 
 		|<code>MS-PL</code> (Microsoft Public License), 
+		|<code>MS-RL</code> (Microsoft Reciprocal License), 
 		|<code>OpenSSL</code> (OpenSSL License), 
 		|<code>SSLeay</code> (SSLeay License), 
 		|<code>Zlib</code> (zlib/libpng License)
