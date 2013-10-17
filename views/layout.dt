@@ -46,3 +46,7 @@ html
 			ul
 				li
 					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums
+				li
+					a(href="https://github.com/rejectedsoftware/dub-registry/issues") Bug tracker
+				li
+					a(href="https://github.com/rejectedsoftware/dub-registry") GitHub repository
