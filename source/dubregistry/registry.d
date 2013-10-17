@@ -9,6 +9,7 @@ import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
 import std.algorithm : map, sort;
+import std.array;
 import vibe.vibe;
 
 
@@ -22,17 +23,46 @@ class DubRegistry {
 		DubRegistrySettings m_settings;
 		DbController m_db;
 		Json[string] m_packageInfos;
+
+		// list of package names to check for updates
+		string[] m_updateQueue; // TODO: use a ring buffer
+		string m_currentUpdatePackage;
+		Task m_updateQueueTask;
+		TaskMutex m_updateQueueMutex;
+		TaskCondition m_updateQueueCondition;
 	}
 
 	this(DubRegistrySettings settings)
 	{
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
+		m_updateQueueMutex = new TaskMutex;
+		m_updateQueueCondition = new TaskCondition(m_updateQueueMutex);
+		m_updateQueueTask = runTask(&processUpdateQueue);
 	}
 
 	@property auto availablePackages()
 	{
 		return m_db.getAllPackages();
+	}
+
+	void triggerPackageUpdate(string pack_name)
+	{
+		synchronized (m_updateQueueMutex) {
+			if (!m_updateQueue.canFind(pack_name))
+				m_updateQueue ~= pack_name;
+		}
+		if (!m_updateQueueTask.running)
+			m_updateQueueTask = runTask(&processUpdateQueue);
+		m_updateQueueCondition.notifyAll();
+	}
+
+	bool isPackageScheduledForUpdate(string pack_name)
+	{
+		if (m_currentUpdatePackage == pack_name) return true;
+		synchronized (m_updateQueueMutex)
+			if (m_updateQueue.canFind(pack_name)) return true;
+		return false;
 	}
 
 	auto searchPackages(string[] keywords)
@@ -59,7 +89,7 @@ class DubRegistry {
 		pack.repository = repository;
 		m_db.addPackage(pack);
 
-		runTask({ checkForNewVersions(pack.name); });
+		triggerPackageUpdate(pack.name);
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -122,13 +152,64 @@ class DubRegistry {
 
 	void checkForNewVersions()
 	{
-		logInfo("Checking for new versions...");
-		foreach( packname; this.availablePackages ){
-			checkForNewVersions(packname);
+		logInfo("Triggering check for new versions...");
+		foreach (packname; this.availablePackages)
+			triggerPackageUpdate(packname);
+	}
+
+	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
+	{
+		// clear cached Json
+		if (packname in m_packageInfos) m_packageInfos.remove(packname);
+
+		info.info.name = toLower(info.info.name.get!string());
+		enforce(info.info.name == packname, "Package name must match the original package name.");
+
+		enforce("description" in info.info && "license" in info.info,
+			"Published packages must contain \"description\" and \"license\" fields.");
+
+		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
+			foreach (p; n.split(":"))
+				checkPackageName(p);
+
+		DbPackageVersion dbver;
+		dbver.date = BsonDate(info.date);
+		dbver.version_ = ver;
+		dbver.info = info.info;
+
+		if( !ver.startsWith("~") ){
+			if (m_db.hasVersion(packname, ver)) {
+				m_db.updateVersion(packname, dbver);
+				return false;
+			}
+			enforce(!m_db.hasVersion(packname, info.version_), "Version already exists.");
+			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
+			m_db.addVersion(packname, dbver);
+		} else {
+			if (m_db.hasBranch(packname, ver)) {
+				m_db.updateBranch(packname, dbver);
+				return false;
+			}
+			m_db.addBranch(packname, dbver);
+		}
+		return true;
+	}
+
+	private void processUpdateQueue()
+	{
+		while (true) {
+			string pack;
+			synchronized (m_updateQueueMutex) {
+				while (m_updateQueue.empty)
+					m_updateQueueCondition.wait();
+				pack = m_updateQueue.front;
+				m_updateQueue.popFront();
+			}
+			checkForNewVersions(pack);
 		}
 	}
 
-	void checkForNewVersions(string packname)
+	private void checkForNewVersions(string packname)
 	{
 		import std.encoding;
 		string[] errors;
@@ -176,44 +257,6 @@ class DubRegistry {
 			errors ~= e.msg;
 		}
 		m_db.setPackageErrors(packname, errors);
-	}
-
-	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
-	{
-		// clear cached Json
-		if (packname in m_packageInfos) m_packageInfos.remove(packname);
-
-		info.info.name = toLower(info.info.name.get!string());
-		enforce(info.info.name == packname, "Package name must match the original package name.");
-
-		enforce("description" in info.info && "license" in info.info,
-			"Published packages must contain \"description\" and \"license\" fields.");
-
-		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
-			foreach (p; n.split(":"))
-				checkPackageName(p);
-
-		DbPackageVersion dbver;
-		dbver.date = BsonDate(info.date);
-		dbver.version_ = ver;
-		dbver.info = info.info;
-
-		if( !ver.startsWith("~") ){
-			if (m_db.hasVersion(packname, ver)) {
-				m_db.updateVersion(packname, dbver);
-				return false;
-			}
-			enforce(!m_db.hasVersion(packname, info.version_), "Version already exists.");
-			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
-			m_db.addVersion(packname, dbver);
-		} else {
-			if (m_db.hasBranch(packname, ver)) {
-				m_db.updateBranch(packname, dbver);
-				return false;
-			}
-			m_db.addBranch(packname, dbver);
-		}
-		return true;
 	}
 }
 
