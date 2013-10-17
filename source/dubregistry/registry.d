@@ -204,7 +204,9 @@ class DubRegistry {
 					m_updateQueueCondition.wait();
 				pack = m_updateQueue.front;
 				m_updateQueue.popFront();
+				m_currentUpdatePackage = pack;
 			}
+			scope(exit) m_currentUpdatePackage = null;
 			checkForNewVersions(pack);
 		}
 	}
