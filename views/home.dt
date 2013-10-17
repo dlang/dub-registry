@@ -10,14 +10,15 @@ block body
 	p Browse by:
 		- auto category = req.query.get("category", null);
 		- auto sort_mode = req.query.get("sort", "updated");
-		form(method="GET", action="")
+		form#category-form(method="GET", action="")
 			input(type="hidden", name="sort", value=sort_mode)
 			p Category: 
-				select(name="category", id="category", size="1")
+				select(name="category", size="1", onChange='document.getElementById("category-form").submit()')
 					option(value="") All packages
 					- foreach (cat; categories)
 						option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
-				button(type="submit") Update
+				button#category-submit(type="submit") Update
+				:javascript document.getElementById("category-submit").style.display = "none";
 
 		- static immutable browse_kinds = ["updated;Updated", "name;Name"];
 		p Sort by:
