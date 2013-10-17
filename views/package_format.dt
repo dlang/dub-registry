@@ -115,7 +115,7 @@ block body
 		|	]
 		|}
 
-	h3 License specifications
+	h3#licenses License specifications
 
 	p The license field should only contain one of the standard license identifiers if possible. At a later point in time, DUB may use this information to validate proper licensing in dependency hierarchies and output warnings when licenses don't match up. Multiple licenses can be separated using the term "or" and for versioned licenses, the postfix "or later" is allowed to also include any later version of the same license.
 
