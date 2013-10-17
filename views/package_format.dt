@@ -135,9 +135,11 @@ block body
 		|<code>LGPL-3.0</code>, 
 		|<code>MIT</code>, 
 		|<code>MPL-2.0</code> (Mozilla Public License 2.0), 
+		|<code>OpenSSL</code> (OpenSSL license), 
+		|<code>SSLeay</code> (SSLeay license), 
 		|<code>Zlib</code> (zlib/libpng license)
 
-	p Any other value is considered to be a proprietary license, which is assumed to be incompatible with any other license. If you think there is a license that should be included in this list, please file a quick <a href="https://github.com/rejectedsoftware/dub-registry/issues/new">bug report</a>.
+	p Any other value is considered to be a proprietary license, which is assumed to be incompatible with any other license. If you think there is a license that should be included in this list, please file a quick <a href="https://github.com/rejectedsoftware/dub-registry/issues/new">bug report</a>. Please also note that pure D bindings of C/C++ libraries <em>should</em> specify the same license as the original library, although a stricter but compatible license can be used, too.
 
 	p Some example license specifications:
 	pre.code
