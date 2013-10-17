@@ -58,6 +58,7 @@ class DubRegistryWebFrontend {
 		router.get("/my_packages/register", m_usermanweb.auth(toDelegate(&showAddPackage)));
 		router.post("/my_packages/register", m_usermanweb.auth(toDelegate(&addPackage)));
 		router.get("/my_packages/:packname", m_usermanweb.auth(toDelegate(&showMyPackagesPackage)));
+		router.post("/my_packages/:packname/update", m_usermanweb.auth(toDelegate(&updatePackage)));
 		router.post("/my_packages/:packname/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
 		router.post("/my_packages/:packname/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
 		router.post("/my_packages/:packname/set_categories", m_usermanweb.auth(toDelegate(&updatePackageCategories)));
@@ -265,6 +266,14 @@ class DubRegistryWebFrontend {
 		m_registry.addPackage(rep, user._id);
 
 		res.redirect("/my_packages");
+	}
+
+	void updatePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	{
+		auto pack_name = req.params["packname"];
+		enforceUserPackage(user, pack_name);
+		m_registry.triggerPackageUpdate(pack_name);
+		res.redirect("/my_packages/"~pack_name);
 	}
 
 	void showRemovePackage(HTTPServerRequest req, HTTPServerResponse res, User user)

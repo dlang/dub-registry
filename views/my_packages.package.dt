@@ -20,6 +20,12 @@ block body
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
 		button(type="submit") Remove this package
 
+	- bool update_check_active = registry.isPackageScheduledForUpdate(packageName);
+	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
+		p
+			button(type="submit", disabled=update_check_active) Trigger manual update
+			-if (update_check_active)
+				| Package is scheduled for an update check...
 
 	h2 Categories
 
