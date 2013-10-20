@@ -67,7 +67,7 @@ class DubRegistryWebFrontend {
 
 	void showAvailable(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		res.writeJsonBody(m_registry.availablePackages);
+		res.writeJsonBody(m_registry.availablePackages.array);
 	}
 
 	void showHome(HTTPServerRequest req, HTTPServerResponse res)
