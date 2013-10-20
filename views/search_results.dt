@@ -6,6 +6,10 @@ block title
 	
 block body
 	p Search results for: <em>#{queryString}</em>
+
+	- auto results_array = results.array;
+
+	p Found #{results_array.length} packages.
 	
 	table
 		tr
@@ -13,7 +17,7 @@ block body
 			th Latest version
 			th Date
 			th Description
-		- foreach (pl; results)
+		- foreach (pl; results_array)
 			- if( pl.versions.length )
 				- auto p = getBestVersion(pl.versions);
 				tr

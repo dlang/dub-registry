@@ -48,6 +48,8 @@ block body
 					td= formatDate(p.date)
 					td= p.description.opt!string
 
+	p Found #{packages.length} packages.
+
 	- if( req.session )
 		p
 			a(href="my_packages") Manage my packages
