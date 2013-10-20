@@ -8,7 +8,7 @@ html
 	body
 		#header
 			a.blind(href="http://code.dlang.org/")
-				img#logo(src="#{req.rootDir}images/logo-small.png")
+				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
 			div#title
 				| DUB registry
 				h1= title
@@ -47,6 +47,10 @@ html
 				li
 					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums
 				li
-					a(href="https://github.com/rejectedsoftware/dub-registry/issues") Bug tracker
+					a(href="https://github.com/rejectedsoftware/dub-registry/issues") Bug tracker (website)
 				li
-					a(href="https://github.com/rejectedsoftware/dub-registry") GitHub repository
+					a(href="https://github.com/rejectedsoftware/dub/issues") Bug tracker (DUB)
+				li
+					a(href="https://github.com/rejectedsoftware/dub-registry") GitHub repository (website)
+				li
+					a(href="https://github.com/rejectedsoftware/dub") GitHub repository (DUB)
