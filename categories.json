@@ -51,6 +51,17 @@
 			{"name": "auth", "description": "Authentication and user management"},
 			{"name": "communication", "description": "Communication components"},
 			{"name": "framework", "description": "Web framework"}
-		]}
+		]},
+		{"name": "general", "description": "Base libraries and code collections"},
+		{"name": "generic", "description": "Library with generic code"},
+		{"name": "encoding", "description": "String encoding and conversion"},
+		{"name": "i18n", "description": "Internationalization and localization"},
+		{"name": "scientific", "description": "Scientific", "categories": [
+			{"name": "linalg", "description": "Linear algebra"},
+			{"name": "newton", "description": "Newton physics"},
+			{"name": "bioinformatics", "description": "Bioinformatics"}
+		]},
+		{"name": "optimized_cpu", "description": "Optimized for fast execution"},
+		{"name": "optimized_mem", "description": "Optimized for low memory usage"}
 	]}
 ]
