@@ -16,7 +16,7 @@ block body
 		|	"description": "A little web service of mine.",
 		|	"authors": ["Peter Parker"],
 		|	"homepage": "http://myproject.com",
-		|	"license": "GPL v2",
+		|	"license": "GPL-2.0",
 		|	"dependencies": {
 		|		"vibe-d": ">=0.7.11"
 		|	}
@@ -245,7 +245,7 @@ block body
 			td excludedSourceFiles
 			td
 				code string[]
-			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths")
+			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths") - <a href="http://dlang.org/phobos/std_path.html#.globMatch">Glob matching</a> can be used to pattern match multiple files at once
 
 		tr
 			td copyFiles
