@@ -43,8 +43,8 @@ block body
 				tr
 					td
 						a(href="packages/#{pl.name}")= pl.name
-					td= p["version"].opt!string()
-					td= formatDate(p.date)
+					td.nobreak= p["version"].opt!string()
+					td.nobreak= formatDate(p.date)
 					td= p.description.opt!string
 
 	p Found #{packages.length} packages.
