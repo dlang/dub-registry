@@ -136,6 +136,7 @@ class DubRegistry {
 		}
 
 		Json ret = Json.emptyObject;
+		ret.dateAdded = pack._id.timeStamp.toISOExtString();
 		ret.name = packname;
 		ret.versions = Json(vers);
 		ret.repository = pack.repository;

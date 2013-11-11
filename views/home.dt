@@ -19,7 +19,7 @@ block body
 			button#category-submit(type="submit") Update
 			:javascript document.getElementById("category-submit").style.display = "none";
 
-	- static immutable browse_kinds = ["updated;Updated", "name;Name"];
+	- static immutable browse_kinds = ["updated;Updated", "name;Name", "added;Added"];
 	p Sort by:
 		- foreach (i, c; browse_kinds)
 			- if (i > 0)

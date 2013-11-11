@@ -96,22 +96,24 @@ class DubRegistryWebFrontend {
 		auto packages = packapp.data;
 
 		// sort by date of last version
-		string getDate(Json p){
+		string getDate(Json p) {
 			if( p.type != Json.Type.Object || "versions" !in p ) return null;
 			if( p.versions.length == 0 ) return null;
 			return p.versions[p.versions.length-1].date.get!string;
 		}
-		bool compare(Json a, Json b)
-		{
+		SysTime getDateAdded(Json p) {
+			return SysTime.fromISOExtString(p.dateAdded.get!string);
+		}
+		bool compare(Json a, Json b) {
 			bool a_has_ver = a.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
 			bool b_has_ver = b.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
-		if (sort_by == "name") {
-			sort!((a, b) => a.name < b.name)(packages);
-		} else {
-			sort!((a, b) => compare(a, b))(packages);
+		switch (sort_by) {
+			default: sort!((a, b) => compare(a, b))(packages); break;
+			case "name": sort!((a, b) => a.name < b.name)(packages); break;
+			case "added": sort!((a, b) => getDateAdded(a) < getDateAdded(b))(packages); break;
 		}
 
 		res.renderCompat!("home.dt",
