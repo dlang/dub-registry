@@ -38,7 +38,7 @@ block body
 			td Name of the package, used to uniquely identify the package
 
 		tr
-			td description
+			td description [required for publishing]
 			td
 				code string
 			td Brief description of the package
@@ -62,7 +62,7 @@ block body
 			td Copyright declaration string
 
 		tr
-			td license
+			td license [required for publishing]
 			td
 				code string
 			td License(s) under which the project can be used - see the <a href="#licenses">license specification</a> section for possible values
@@ -114,6 +114,9 @@ block body
 		|		}
 		|	]
 		|}
+
+	p Note, however, that it is generally recommended to use separate packages, as sub packages have a number of unclean properties, such as mixed import folders.
+	
 
 	h3#licenses License specifications
 
