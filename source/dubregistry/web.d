@@ -113,7 +113,7 @@ class DubRegistryWebFrontend {
 		switch (sort_by) {
 			default: sort!((a, b) => compare(a, b))(packages); break;
 			case "name": sort!((a, b) => a.name < b.name)(packages); break;
-			case "added": sort!((a, b) => getDateAdded(a) < getDateAdded(b))(packages); break;
+			case "added": sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
 		res.renderCompat!("home.dt",
