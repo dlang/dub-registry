@@ -73,8 +73,22 @@ class DubRegistry {
 	void addPackage(Json repository, BsonObjectID user)
 	{
 		auto rep = getRepository(repository);
-		auto info = rep.getVersionInfo("~master");
+		PackageVersionInfo info;
+		try info = rep.getVersionInfo("~master");
+		catch {
+			foreach (b; rep.getBranches()) {
+				try {
+					info = rep.getVersionInfo(b);
+					break;
+				} catch {}
+			}
+		}
+		enforce (info.info.type == Json.Type.object, "At least one branch of the repository must contain a package description file.");
+
 		auto name = info.info.name.get!string;
+
+		assert(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty.`);
+		assert(info.info.description.opt!string.length > 0, `A "description" field in the package description file is missing or empty.`);
 
 		checkPackageName(name);
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
