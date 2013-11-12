@@ -301,10 +301,12 @@ class DubRegistryWebFrontend {
 
 	void showAddPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
 	{
+		string error = req.params.get("error", null);
 		res.renderCompat!("my_packages.register.dt",
 			HTTPServerRequest, "req",
 			User, "user",
-			DubRegistry, "registry")(req, user, m_registry);
+			string, "error",
+			DubRegistry, "registry")(req, user, error, m_registry);
 	}
 
 	void addPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
@@ -313,7 +315,12 @@ class DubRegistryWebFrontend {
 		rep["kind"] = req.form["kind"];
 		rep["owner"] = req.form["owner"];
 		rep["project"] = req.form["project"];
-		m_registry.addPackage(rep, user._id);
+		try m_registry.addPackage(rep, user._id);
+		catch (Exception e) {
+			req.params["error"] = e.msg;
+			showAddPackage(req, res, user);
+			return;
+		}
 
 		res.redirect("/my_packages");
 	}

@@ -15,5 +15,7 @@ block body
 		p
 			label(for="project") Repository name:
 			input(type="text", name="project")
+		- if (error.length)
+			p.error= error
 		p
 			button(type="submit") Register package
