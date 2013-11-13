@@ -85,6 +85,12 @@ class DbController {
 		updateKeywords(packname);
 	}
 
+	void removeVersion(string packname, string ver)
+	{
+		assert(ver.isValidVersion());
+		m_packages.update(["name": packname], ["$pull": ["versions": ["version": ver]]]);
+	}
+
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.isValidVersion());
@@ -97,6 +103,12 @@ class DbController {
 		assert(ver.version_.startsWith("~"));
 		m_packages.update(["name": packname], ["$push": ["branches": ver]]);
 		updateKeywords(packname);
+	}
+
+	void removeBranch(string packname, string ver)
+	{
+		assert(ver.startsWith("~"));
+		m_packages.update(["name": packname], ["$pull": ["branches": ["version": ver]]]);
 	}
 
 	void updateBranch(string packname, DbPackageVersion ver)

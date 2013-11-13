@@ -214,6 +214,15 @@ class DubRegistry {
 		return true;
 	}
 
+	protected void removeVersion(string packname, string ver)
+	{
+		// clear cached Json
+		if (packname in m_packageInfos) m_packageInfos.remove(packname);
+
+		if (ver.startsWith("~")) m_db.removeBranch(packname, ver);
+		else m_db.removeVersion(packname, ver);
+	}
+
 	private void processUpdateQueue()
 	{
 		while (true) {
@@ -252,12 +261,14 @@ class DubRegistry {
 		}
 
 		try {
+			bool[string] existing;
 			auto versions = rep.getTags()
 				.filter!(a => a.startsWith("v") && a[1 .. $].isValidVersion)
 				.map!(a => a[1 .. $])
 				.array
 				.sort!((a, b) => compareVersions(a, b) < 0);
 			foreach (ver; versions) {
+				existing[ver] = true;
 				try {
 					if (addVersion(packname, ver, rep.getVersionInfo("v"~ver)))
 						logInfo("Added version %s for %s", ver, packname);
@@ -268,6 +279,7 @@ class DubRegistry {
 				}
 			}
 			foreach( ver; rep.getBranches() ){
+				existing[ver] = true;
 				try {
 					if (addVersion(packname, ver, rep.getVersionInfo(ver)))
 						logInfo("Added branch %s for %s", ver, packname);
@@ -275,6 +287,13 @@ class DubRegistry {
 					logDebug("%s", sanitize(e.toString()));
 					// TODO: store error message for web frontend!
 					errors ~= format("Branch %s: %s", ver, e.msg);
+				}
+			}
+			foreach (v; pack.versions) {
+				auto ver = v["version"].get!string;
+				if (ver !in existing) {
+					logInfo("Removing version %s as the branch/tag was removed.", ver);
+					removeVersion(packname, ver);
 				}
 			}
 		} catch( Exception e ){
