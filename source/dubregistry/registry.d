@@ -8,7 +8,8 @@ module dubregistry.registry;
 import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
-import std.algorithm : map, sort;
+import dub.semver;
+import std.algorithm : filter, map, sort;
 import std.array;
 import vibe.vibe;
 
@@ -144,7 +145,7 @@ class DubRegistry {
 			auto nfo = v.info;
 			nfo["version"] = v.version_;
 			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl(v.version_); // obsolete, will be removed in april 2013
+			nfo.url = rep.getDownloadUrl("v" ~ v.version_); // obsolete, will be removed in april 2013
 			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			vers ~= nfo;
 		}
@@ -174,6 +175,8 @@ class DubRegistry {
 
 	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
 	{
+		logDiagnostic("Adding new version info %s for %s", ver, packname);
+
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
@@ -192,13 +195,14 @@ class DubRegistry {
 		dbver.version_ = ver;
 		dbver.info = info.info;
 
-		if( !ver.startsWith("~") ){
+		if (!ver.startsWith("~")) {
 			if (m_db.hasVersion(packname, ver)) {
 				m_db.updateVersion(packname, dbver);
 				return false;
 			}
-			enforce(!m_db.hasVersion(packname, info.version_), "Version already exists.");
-			enforce(info.version_ == ver, "Version in package.json differs from git tag version.");
+			enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
+			if (auto pv = "version" in info.info)
+				enforce("v"~pv.get!string == ver, format("Package description contains obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
 			m_db.addVersion(packname, dbver);
 		} else {
 			if (m_db.hasBranch(packname, ver)) {
@@ -248,9 +252,14 @@ class DubRegistry {
 		}
 
 		try {
-			foreach( ver; rep.getVersions().sort!((a, b) => vcmp(a, b))() ){
+			auto versions = rep.getTags()
+				.filter!(a => a.startsWith("v") && a[1 .. $].isValidVersion)
+				.map!(a => a[1 .. $])
+				.array
+				.sort!((a, b) => compareVersions(a, b) < 0);
+			foreach (ver; versions) {
 				try {
-					if (addVersion(packname, ver, rep.getVersionInfo(ver)))
+					if (addVersion(packname, ver, rep.getVersionInfo("v"~ver)))
 						logInfo("Added version %s for %s", ver, packname);
 				} catch( Exception e ){
 					logDebug("version %s", sanitize(e.toString()));

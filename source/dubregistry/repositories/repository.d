@@ -50,15 +50,15 @@ alias RepositoryFactory = Repository delegate(Json);
 
 struct PackageVersionInfo {
 	SysTime date;
-	string version_;
+	string sha;
 	Json info;
 }
 
 interface Repository {
-	string[] getVersions();
+	string[] getTags();
 	string[] getBranches();
-	PackageVersionInfo getVersionInfo(string ver);
-	string getDownloadUrl(string ver);
+	PackageVersionInfo getVersionInfo(string tag_or_branch);
+	string getDownloadUrl(string tag_or_branch);
 }
 
 struct CommitInfo {

@@ -5,6 +5,7 @@
 */
 module dubregistry.dbcontroller;
 
+import dub.semver;
 import std.array;
 import std.algorithm;
 import std.exception;
@@ -79,12 +80,14 @@ class DbController {
 
 	void addVersion(string packname, DbPackageVersion ver)
 	{
+		assert(ver.version_.isValidVersion());
 		m_packages.update(["name": packname], ["$push": ["versions": ver]]);
 		updateKeywords(packname);
 	}
 
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
+		assert(ver.version_.isValidVersion());
 		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
 		updateKeywords(packname);
 	}
@@ -193,40 +196,8 @@ bool vcmp(DbPackageVersion a, DbPackageVersion b)
 
 bool vcmp(string va, string vb)
 {
-	try {
-		auto aparts = linearizeVersion(va);
-		auto bparts = linearizeVersion(vb);
-
-		foreach( i; 0 .. min(aparts.length, bparts.length) )
-			if( aparts[i] != bparts[i] )
-				return aparts[i] < bparts[i];
-		return aparts.length < bparts.length;
-	} catch( Exception e ) return false;
-}
-
-
-private int[] linearizeVersion(string ver)
-{
-	import std.conv;
-	static immutable suffixes = ["alpha", "beta", "rc"];
-	auto parts = ver.split(".");
-	int[] ret;
-	foreach( p; parts ){
-		ret ~= parse!int(p);
-
-		bool gotprefix = false;
-		foreach( i, suffix; suffixes ){
-			if( p.startsWith(suffix) ){
-				p = p[suffix.length .. $];
-				if( p.length ) ret ~= cast(int)i*10000 + to!int(p);
-				else ret ~= cast(int)i*10000;
-				gotprefix = true;
-				break;
-			}
-		}
-		if( !gotprefix ) ret ~= int.max;
-	}
-	return ret;
+	assert(va.isValidVersion && vb.isValidVersion);
+	return compareVersions(va, vb) < 0;
 }
 
 private string[] splitAlphaNumParts(string str)

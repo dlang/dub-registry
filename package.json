@@ -9,6 +9,10 @@
 	],
 	"dependencies": {
 		"userman": "~master",
-		"vibe-d": "~master"
+		"vibe-d": "~master",
+		"dub": "~master"
+	},
+	"subConfigurations": {
+		"dub": "library-nonet"
 	}
 }

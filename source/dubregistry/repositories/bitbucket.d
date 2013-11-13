@@ -38,7 +38,7 @@ class BitbucketRepository : Repository {
 		m_project = project;
 	}
 
-	string[] getVersions()
+	string[] getTags()
 	{
 		m_gotVersions = true;
 
@@ -48,13 +48,11 @@ class BitbucketRepository : Repository {
 		m_versionList.length = 0;
 		foreach( string tagname, tag; tags ){
 			try {
-				if( tagname.length >= 2 && tagname[0] == 'v' ){
-					auto commit_hash = tag.raw_node.get!string();
-					auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
-					m_versions[tagname[1 .. $]] = CommitInfo(commit_hash, commit_date);
-					m_versionList ~= tagname[1 .. $];
-					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
-				}
+				auto commit_hash = tag.raw_node.get!string();
+				auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
+				m_versions[tagname] = CommitInfo(commit_hash, commit_date);
+				m_versionList ~= tagname;
+				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
@@ -78,39 +76,35 @@ class BitbucketRepository : Repository {
 
 	PackageVersionInfo getVersionInfo(string ver)
 	{
+		PackageVersionInfo ret;
 		string url;
-		SysTime date;
 		bool cache_priority = false;
-		if( ver.startsWith("~") ){
-			if( !m_gotBranches ) getBranches();
+		if (ver.startsWith("~")) {
+			if (!m_gotBranches) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
 			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~ver[1 .. $]~"/package.json";
-			if( pc ) date = pc.date.toSysTime();
+			if (pc) {
+				ret.date = pc.date.toSysTime();
+				ret.sha = pc.sha;
+			}
 		} else {
-			if( !m_gotVersions ) getVersions();
+			if( !m_gotVersions ) getTags();
 			auto pc = ver in m_versions;
 			enforce(pc !is null, "Invalid version identifier.");
 			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~(pc.sha)~"/package.json";
-			date = pc.date.toSysTime();
+			ret.date = pc.date.toSysTime();
+			ret.sha = pc.sha;
 			cache_priority = true;
 		}
 
-		PackageVersionInfo ret;
 		ret.info = readJson(url, false, cache_priority);
-
-		if( auto pv = "version" in ret.info ){
-			if( *pv != ver )
-				logWarn("Package %s/%s package.json contains version and does not match tag: %s vs %s", m_owner, m_project, *pv, ver);
-		}
-		ret.version_ = ver;
-		ret.date = date;
 		return ret;
 	}
 
 	string getDownloadUrl(string ver)
 	{
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
-		else ver = "v" ~ ver;
+		else ver = ver;
 		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~ver~".zip";
 	}
 }

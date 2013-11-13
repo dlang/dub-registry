@@ -36,7 +36,7 @@ class GithubRepository : Repository {
 		m_project = project;
 	}
 
-	string[] getVersions()
+	string[] getTags()
 	{
 		m_gotVersions = true;
 
@@ -47,16 +47,15 @@ class GithubRepository : Repository {
 		foreach_reverse( tag; tags ){
 			try {
 				auto tagname = tag.name.get!string;
-				if( tagname.length >= 2 && tagname[0] == 'v' ){
-					Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true, true);
-					m_versions[tagname[1 .. $]] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
-					m_versionList ~= tagname[1 .. $];
-					logDebug("Found version for %s/%s: %s", m_owner, m_project, tagname);
-				}
+				Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true, true);
+				m_versions[tagname] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
+				m_versionList ~= tagname;
+				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
 		}
+		logInfo("tags: %s", m_versionList);
 		return m_versionList;
 	}
 
@@ -77,38 +76,35 @@ class GithubRepository : Repository {
 	PackageVersionInfo getVersionInfo(string ver)
 	{
 		string url;
+		PackageVersionInfo ret;
 		SysTime date;
 		bool cache_priority = false;
-		if( ver.startsWith("~") ){
-			if( !m_gotBranches ) getBranches();
+		if (ver.startsWith("~")) {
+			if (!m_gotBranches) getBranches();
 			auto pc = ver[1 .. $] in m_branches;
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~ver[1 .. $]~"/package.json";
-			if( pc ) date = pc.date.toSysTime();
+			if (pc) {
+				ret.date = pc.date.toSysTime();
+				ret.sha = pc.sha;
+			}
 		} else {
-			if( !m_gotVersions ) getVersions();
+			if (!m_gotVersions) getTags();
 			auto pc = ver in m_versions;
 			enforce(pc !is null, "Invalid version identifier.");
+			ret.sha = pc.sha;
 			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
-			date = pc.date.toSysTime();
+			ret.date = pc.date.toSysTime();
 			cache_priority = true;
 		}
 
-		PackageVersionInfo ret;
 		ret.info = readJson(url);
-
-		if( auto pv = "version" in ret.info ){
-			if( *pv != ver )
-				logWarn("Package %s/%s package.json contains version and does not match tag: %s vs %s", m_owner, m_project, *pv, ver);
-		}
-		ret.version_ = ver;
-		ret.date = date;
 		return ret;
 	}
 
 	string getDownloadUrl(string ver)
 	{
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
-		else ver = "v" ~ ver;
+		else ver = ver;
 		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
 	}
 }
