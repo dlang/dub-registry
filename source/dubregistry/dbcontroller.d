@@ -176,7 +176,11 @@ class DbController {
 		foreach( bp; m_packages.find() ){
 			logDebugV("pack %s", bp.toJson());
 			auto p = deserializeBson!DbPackage(bp);
-			sort!((a, b) => vcmp(a, b))(p.versions);
+			p.versions = p.versions
+				.filter!(v => v.version_.isValidVersion)
+				.array
+				.sort!((a, b) => vcmp(a, b))
+				.array;
 			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
 		}
 	}
