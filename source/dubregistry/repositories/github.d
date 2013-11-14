@@ -55,7 +55,6 @@ class GithubRepository : Repository {
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
 		}
-		logInfo("tags: %s", m_versionList);
 		return m_versionList;
 	}
 
@@ -97,7 +96,7 @@ class GithubRepository : Repository {
 			cache_priority = true;
 		}
 
-		ret.info = readJson(url);
+		ret.info = readJson(url, false, cache_priority);
 		return ret;
 	}
 
