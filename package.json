@@ -14,5 +14,6 @@
 	},
 	"subConfigurations": {
 		"dub": "library-nonet"
-	}
+	},
+	"versions": ["VibeJsonFieldNames"]
 }
