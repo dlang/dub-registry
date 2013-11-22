@@ -7,21 +7,18 @@ module dubregistry.repositories.bitbucket;
 
 import dubregistry.cache;
 import dubregistry.repositories.repository;
-import std.array;
-import std.string;
-import vibe.vibe;
+import std.string : format, startsWith;
+import std.typecons;
+import vibe.core.log;
+import vibe.core.stream;
+import vibe.data.json;
+import vibe.inet.url;
 
 
 class BitbucketRepository : Repository {
 	private {
 		string m_owner;
 		string m_project;
-		CommitInfo[string] m_versions;
-		CommitInfo[string] m_branches;
-		string[] m_versionList;
-		string[] m_branchList;
-		bool m_gotVersions = false;
-		bool m_gotBranches = false;
 	}
 
 	static void register()
@@ -38,67 +35,45 @@ class BitbucketRepository : Repository {
 		m_project = project;
 	}
 
-	string[] getTags()
+	Tuple!(string, CommitInfo)[] getTags()
 	{
-		m_gotVersions = true;
-
 		Json tags;
 		try tags = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
-		m_versionList.length = 0;
+		Tuple!(string, CommitInfo)[] ret;
 		foreach( string tagname, tag; tags ){
 			try {
 				auto commit_hash = tag.raw_node.get!string();
 				auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
-				m_versions[tagname] = CommitInfo(commit_hash, commit_date);
-				m_versionList ~= tagname;
+				ret ~= tuple(tagname, CommitInfo(commit_hash, commit_date));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
 		}
-		return m_versionList;
+		return ret;
 	}
 
-	string[] getBranches()
+	Tuple!(string, CommitInfo)[] getBranches()
 	{
 		Json branches = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
-		m_branchList.length = 0;
+		Tuple!(string, CommitInfo)[] ret;
 		foreach( string branchname, branch; branches ){
 			auto commit_hash = branch.raw_node.get!string();
 			auto commit_date = bbToIsoDate(branch.utctimestamp.get!string());
-			m_branches[branchname] = CommitInfo(commit_hash, commit_date);
-			m_branchList ~= "~"~branchname;
+			ret ~= tuple(branchname, CommitInfo(commit_hash, commit_date));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
-		return m_branchList;
+		return ret;
 	}
 
-	PackageVersionInfo getVersionInfo(string ver)
+	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
-		PackageVersionInfo ret;
-		string url;
-		bool cache_priority = false;
-		if (ver.startsWith("~")) {
-			if (!m_gotBranches) getBranches();
-			auto pc = ver[1 .. $] in m_branches;
-			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~ver[1 .. $]~"/package.json";
-			if (pc) {
-				ret.date = pc.date.toSysTime();
-				ret.sha = pc.sha;
-			}
-		} else {
-			if( !m_gotVersions ) getTags();
-			auto pc = ver in m_versions;
-			enforce(pc !is null, "Invalid version identifier.");
-			url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~(pc.sha)~"/package.json";
-			ret.date = pc.date.toSysTime();
-			ret.sha = pc.sha;
-			cache_priority = true;
-		}
-
-		ret.info = readJson(url, false, cache_priority);
-		return ret;
+		assert(path.absolute);
+		auto url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~commit_sha~path.toString();
+		downloadCached(url, (scope input) {
+			reader(input);
+		}, true);
 	}
 
 	string getDownloadUrl(string ver)
@@ -111,6 +86,7 @@ class BitbucketRepository : Repository {
 
 private string bbToIsoDate(string bbdate)
 {
+	import std.array;
 	auto ttz = bbdate.split("+");
 	if( ttz.length < 2 ) ttz ~= "00:00";
 	auto parts = ttz[0].split("-");

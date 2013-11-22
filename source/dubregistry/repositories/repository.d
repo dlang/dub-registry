@@ -9,6 +9,7 @@ import vibe.vibe;
 
 import dubregistry.cache;
 import std.digest.sha;
+import std.typecons;
 
 
 Repository getRepository(Json repinfo)
@@ -55,9 +56,9 @@ struct PackageVersionInfo {
 }
 
 interface Repository {
-	string[] getTags();
-	string[] getBranches();
-	PackageVersionInfo getVersionInfo(string tag_or_branch);
+	Tuple!(string, CommitInfo)[] getTags();
+	Tuple!(string, CommitInfo)[] getBranches();
+	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
 	string getDownloadUrl(string tag_or_branch);
 }
 

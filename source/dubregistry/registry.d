@@ -9,9 +9,16 @@ import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
 import dub.semver;
-import std.algorithm : filter, map, sort;
+import std.algorithm : countUntil, filter, map, sort;
 import std.array;
-import vibe.vibe;
+import std.encoding : sanitize;
+import std.string : format, startsWith, toLower;
+import std.typecons;
+import vibe.data.bson;
+import vibe.core.core;
+import vibe.core.log;
+import vibe.data.json;
+import vibe.stream.operations;
 
 
 /// Settings to configure the package registry.
@@ -73,19 +80,25 @@ class DubRegistry {
 
 	void addPackage(Json repository, BsonObjectID user)
 	{
-		auto rep = getRepository(repository);
+		// find the packge info of ~master or any available branch
 		PackageVersionInfo info;
-		try info = rep.getVersionInfo("~master");
-		catch {
-			foreach (b; rep.getBranches()) {
+		auto rep = getRepository(repository);
+		auto branches = rep.getBranches();
+		auto idx = branches.countUntil!(b => b[0] == "~master");
+		try {
+			if (idx >= 0)
+				info = rep.getVersionInfo(branches[idx][1]);
+		} catch {
+			foreach (b; branches) {
 				try {
-					info = rep.getVersionInfo(b);
+					info = rep.getVersionInfo(b[1]);
 					break;
 				} catch {}
 			}
 		}
 		enforce (info.info.type == Json.Type.object, "At least one branch of the repository must contain a package description file.");
 
+		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
 
 		assert(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty.`);
@@ -175,6 +188,8 @@ class DubRegistry {
 
 	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
 	{
+		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
+
 		logDiagnostic("Adding new version info %s for %s", ver, packname);
 
 		// clear cached Json
@@ -183,8 +198,11 @@ class DubRegistry {
 		info.info.name = toLower(info.info.name.get!string());
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
-		enforce("description" in info.info && "license" in info.info,
+		if ("description" !in info.info || "license" !in info.info) {
+		//enforce("description" in info.info && "license" in info.info,
+			throw new Exception(
 			"Published packages must contain \"description\" and \"license\" fields.");
+		}
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			foreach (p; n.split(":"))
@@ -216,6 +234,8 @@ class DubRegistry {
 
 	protected void removeVersion(string packname, string ver)
 	{
+		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
+
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
@@ -235,7 +255,11 @@ class DubRegistry {
 				m_currentUpdatePackage = pack;
 			}
 			scope(exit) m_currentUpdatePackage = null;
-			checkForNewVersions(pack);
+			try checkForNewVersions(pack);
+			catch (Exception e) {
+				logWarn("Failed to check versions for %s: %s", pack, e.msg);
+				logDiagnostic("Full error: %s", e.toString().sanitize);
+			}
 		}
 	}
 
@@ -260,35 +284,43 @@ class DubRegistry {
 			return;
 		}
 
+		bool[string] existing;
+		Tuple!(string, CommitInfo)[] tags, branches;
+		bool got_all_tags_and_branches = false;
 		try {
-			bool[string] existing;
-			auto versions = rep.getTags()
-				.filter!(a => a.startsWith("v") && a[1 .. $].isValidVersion)
-				.map!(a => a[1 .. $])
+			tags = rep.getTags()
+				.filter!(a => a[0].startsWith("v") && a[0][1 .. $].isValidVersion)
 				.array
-				.sort!((a, b) => compareVersions(a, b) < 0);
-			foreach (ver; versions) {
-				existing[ver] = true;
-				try {
-					if (addVersion(packname, ver, rep.getVersionInfo("v"~ver)))
-						logInfo("Added version %s for %s", ver, packname);
-				} catch( Exception e ){
-					logDebug("version %s", sanitize(e.toString()));
-					errors ~= format("Version %s: %s", ver, e.msg);
-					// TODO: store error message for web frontend!
-				}
+				.sort!((a, b) => compareVersions(a[0][1 .. $], b[0][1 .. $]) < 0)
+				.array;
+			branches = rep.getBranches();
+			got_all_tags_and_branches = true;
+		} catch (Exception e) {
+			errors ~= format("Failed to get GIT tags/branches: %s", e.msg);
+		}
+		foreach (tag; tags) {
+			auto name = tag[0][1 .. $];
+			existing[name] = true;
+			try {
+				if (addVersion(packname, name, rep.getVersionInfo(tag[1])))
+					logInfo("Added version %s for %s", name, packname);
+			} catch( Exception e ){
+				logDebug("version %s", sanitize(e.toString()));
+				errors ~= format("Version %s: %s", name, e.msg);
 			}
-			foreach( ver; rep.getBranches() ){
-				existing[ver] = true;
-				try {
-					if (addVersion(packname, ver, rep.getVersionInfo(ver)))
-						logInfo("Added branch %s for %s", ver, packname);
-				} catch( Exception e ){
-					logDebug("%s", sanitize(e.toString()));
-					// TODO: store error message for web frontend!
-					errors ~= format("Branch %s: %s", ver, e.msg);
-				}
+		}
+		foreach (branch; branches) {
+			auto name = "~" ~ branch[0];
+			existing[name] = true;
+			try {
+				if (addVersion(packname, name, rep.getVersionInfo(branch[1])))
+					logInfo("Added branch %s for %s", name, packname);
+			} catch( Exception e ){
+				logDebug("%s", sanitize(e.toString()));
+				errors ~= format("Branch %s: %s", name, e.msg);
 			}
+		}
+		if (got_all_tags_and_branches) {
 			foreach (v; pack.versions) {
 				auto ver = v["version"].get!string;
 				if (ver !in existing) {
@@ -296,13 +328,21 @@ class DubRegistry {
 					removeVersion(packname, ver);
 				}
 			}
-		} catch( Exception e ){
-			logDebug("%s", sanitize(e.toString()));
-			// TODO: store error message for web frontend!
-			errors ~= e.msg;
 		}
 		m_db.setPackageErrors(packname, errors);
 	}
+}
+
+private PackageVersionInfo getVersionInfo(Repository rep, CommitInfo commit)
+{
+	PackageVersionInfo ret;
+	ret.date = commit.date.toSysTime();
+	ret.sha = commit.sha;
+	rep.readFile(commit.sha, Path("/package.json"), (scope input) {
+		auto text = input.readAllUTF8(false);
+		ret.info = parseJsonString(text);
+	});
+	return ret;
 }
 
 private void checkPackageName(string n){

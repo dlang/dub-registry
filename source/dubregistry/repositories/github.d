@@ -7,19 +7,18 @@ module dubregistry.repositories.github;
 
 import dubregistry.cache;
 import dubregistry.repositories.repository;
-import vibe.vibe;
+import std.string : startsWith;
+import std.typecons;
+import vibe.core.log;
+import vibe.core.stream;
+import vibe.data.json;
+import vibe.inet.url;
 
 
 class GithubRepository : Repository {
 	private {
 		string m_owner;
 		string m_project;
-		CommitInfo[string] m_versions;
-		CommitInfo[string] m_branches;
-		string[] m_versionList;
-		string[] m_branchList;
-		bool m_gotVersions = false;
-		bool m_gotBranches = false;
 	}
 
 	static void register()
@@ -36,68 +35,45 @@ class GithubRepository : Repository {
 		m_project = project;
 	}
 
-	string[] getTags()
+	Tuple!(string, CommitInfo)[] getTags()
 	{
-		m_gotVersions = true;
-
 		Json tags;
 		try tags = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
-		m_versionList.length = 0;
-		foreach_reverse( tag; tags ){
+		Tuple!(string, CommitInfo)[] ret;
+		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag.name.get!string;
 				Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true, true);
-				m_versions[tagname] = CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string);
-				m_versionList ~= tagname;
+				ret ~= tuple(tagname, CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
 			}
 		}
-		return m_versionList;
+		return ret;
 	}
 
-	string[] getBranches()
+	Tuple!(string, CommitInfo)[] getBranches()
 	{
 		Json branches = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches");
-		m_branchList.length = 0;
+		Tuple!(string, CommitInfo)[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
 			Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, true, true);
-			m_branches[branchname] = CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string);
-			m_branchList ~= "~"~branchname;
+			ret ~= tuple(branchname, CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
-		return m_branchList;
+		return ret;
 	}
 
-	PackageVersionInfo getVersionInfo(string ver)
+	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
-		string url;
-		PackageVersionInfo ret;
-		SysTime date;
-		bool cache_priority = false;
-		if (ver.startsWith("~")) {
-			if (!m_gotBranches) getBranches();
-			auto pc = ver[1 .. $] in m_branches;
-			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~ver[1 .. $]~"/package.json";
-			if (pc) {
-				ret.date = pc.date.toSysTime();
-				ret.sha = pc.sha;
-			}
-		} else {
-			if (!m_gotVersions) getTags();
-			auto pc = ver in m_versions;
-			enforce(pc !is null, "Invalid version identifier.");
-			ret.sha = pc.sha;
-			url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~(pc.sha)~"/package.json";
-			ret.date = pc.date.toSysTime();
-			cache_priority = true;
-		}
-
-		ret.info = readJson(url, false, cache_priority);
-		return ret;
+		assert(path.absolute);
+		auto url = "https://raw.github.com/"~m_owner~"/"~m_project~"/"~commit_sha~path.toString();
+		downloadCached(url, (scope input) {
+			reader(input);
+		}, true);
 	}
 
 	string getDownloadUrl(string ver)
