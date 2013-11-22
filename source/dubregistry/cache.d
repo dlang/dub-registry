@@ -57,6 +57,10 @@ class UrlCache {
 					return;
 				}
 
+				if (res.statusCode == HTTPStatus.notFound) {
+					throw new FileNotFoundException("File '"~url.toString()~"' does not exist.");
+				}
+
 				enforce(res.statusCode == HTTPStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
 				if( auto pet = "ETag" in res.headers ){
@@ -79,6 +83,13 @@ class UrlCache {
 		);
 
 		if( result ) callback(result);
+	}
+}
+
+class FileNotFoundException : Exception {
+	this(string msg, string file = __FILE__, size_t line = __LINE__)
+	{
+		super(msg, file, line);
 	}
 }
 

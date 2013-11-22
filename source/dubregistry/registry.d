@@ -5,6 +5,7 @@
 */
 module dubregistry.registry;
 
+import dubregistry.cache : FileNotFoundException;
 import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
@@ -338,9 +339,18 @@ private PackageVersionInfo getVersionInfo(Repository rep, CommitInfo commit)
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
-	rep.readFile(commit.sha, Path("/package.json"), (scope input) {
+	try ret.info = rep.readCachedJsonFile(commit.sha, Path("/dub.json"));
+	catch (FileNotFoundException) try ret.info = rep.readCachedJsonFile(commit.sha, Path("/package.json"));
+	catch (FileNotFoundException) throw new Exception("Found neither dub.json, nor package.json in the repository.");
+	return ret;
+}
+
+private Json readCachedJsonFile(Repository rep, string commit_sha, Path path)
+{
+	Json ret;
+	rep.readFile(commit_sha, Path("/package.json"), (scope input) {
 		auto text = input.readAllUTF8(false);
-		ret.info = parseJsonString(text);
+		ret = parseJsonString(text);
 	});
 	return ret;
 }
@@ -360,3 +370,8 @@ private void checkPackageName(string n){
 	}
 }
 
+private struct PackageVersionInfo {
+	SysTime date;
+	string sha;
+	Json info;
+}
