@@ -1,10 +1,43 @@
 extends layout
 
 block title
+	- import dub.semver;
 	- import dubregistry.viewutils;
 	- auto title = "Download";
 	
 block body
+
+	h2 Precompiled binaries
+
+	p The following table contains a list of precompiled binaries. The platform support is rather limited here for now and will be extended over time.
+
+	p On Linux you need to have libcurl with SSL support installed.
+
+	- typeof(info.versions[0]) latest_release, latest_prerelease;
+	- foreach_reverse (v; info.versions)
+		- if (v.id.isPreReleaseVersion)
+			- if (latest_prerelease.id.empty) latest_prerelease = v;
+		- else
+			- latest_release = v;
+			- break;
+
+	- if (latest_release.id.length)
+		h3 Latest release
+		ul
+			- foreach (k; latest_release.files.keys.sort)
+				- auto fil = latest_release.files[k];
+				li
+					a(href='files/#{fil.fileName}') DUB #{latest_release.id} for #{fil.platformCaption}
+
+	- if (latest_prerelease.id.length)
+		h3 Latest preview
+		ul
+			- foreach (k; latest_prerelease.files.keys.sort)
+				- auto fil = latest_prerelease.files[k];
+				li
+					a(href='files/#{fil.fileName}') DUB #{latest_prerelease.id} for #{fil.platformCaption}
+
+
 	h2 System packages and manual build
 	
 	:markdown
@@ -17,11 +50,7 @@ block body
 		[Homebrew](http://mxcl.github.io/homebrew/) includes a DUB package by Chris Molozian. Use `brew install dub` or `brew install dub --HEAD`.
 
 
-	h2 Precompiled binaries
-
-	p The following table contains a list of precompiled binaries. The platform support is rather limited here for now and will be extended over time.
-
-	p On Linux you need to have libcurl with SSL support installed.
+	h2 Release history
 
 	table
 		tr

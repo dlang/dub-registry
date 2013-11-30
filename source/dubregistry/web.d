@@ -11,6 +11,7 @@ import dubregistry.repositories.github;
 import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
+import dub.semver;
 import std.algorithm : sort, startsWith;
 import std.array;
 import std.file;
@@ -134,6 +135,7 @@ class DubRegistryWebFrontend {
 	{
 		static struct DownloadFile {
 			string fileName;
+			string platformCaption;
 		}
 
 		static struct DownloadVersion {
@@ -146,6 +148,14 @@ class DubRegistryWebFrontend {
 			void addFile(string ver, string platform, string filename)
 			{
 				auto df = DownloadFile(filename);
+				switch (platform) {
+					default:
+						auto pts = platform.split("-");
+						df.platformCaption = format("%s%s (%s)", pts[0][0 .. 1].toUpper(), pts[0][1 .. $], pts[1].replace("_", "-").toUpper());
+						break;
+					case "osx-x86": df.platformCaption = "OS X (x86)"; break;
+					case "osx-x86_64": df.platformCaption = "OS X (x86-64)"; break;
+				}
 				foreach(ref v; versions)
 					if( v.id == ver ){
 						v.files[platform] = df;
@@ -162,12 +172,15 @@ class DubRegistryWebFrontend {
 		foreach(de; dirEntries("public/files", "*.{zip,gz,tgz,exe}", SpanMode.shallow)){
 			auto name = Path(de.name).head.toString();
 			auto basename = stripExtension(name);
-			if( basename.endsWith(".tar") ) basename = basename[0 .. $-4];
+			if (basename.endsWith(".tar")) basename = basename[0 .. $-4];
 			auto parts = basename.split("-");
-			if( parts.length < 3 ) continue;
-			if( parts[0] != "dub" ) continue;
-			if( parts[2] == "setup" ) info.addFile(parts[1], "windows-x86", name);
-			else if( parts.length == 4 ) info.addFile(parts[1], parts[2]~"-"~parts[3], name);
+			if (parts.length < 3 ) continue;
+			if (parts[0] != "dub") continue;
+			if (parts[$-1] == "setup") { parts[$-1] = "windows"; parts ~= "x86"; }
+			auto ver = parts[1 .. $-2].join("-");
+			auto plat = parts[$-2 .. $].join("-");
+			if (!ver.isValidVersion()) continue;
+			info.addFile(ver, plat, name);
 		}
 
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
