@@ -15,7 +15,7 @@ block body
 
 	- typeof(info.versions[0]) latest_release, latest_prerelease;
 	- foreach_reverse (v; info.versions)
-		- if (v.id.isPreReleaseVersion)
+		- if (isPreReleaseVersion(v.id))
 			- if (latest_prerelease.id.empty) latest_prerelease = v;
 		- else
 			- latest_release = v;
