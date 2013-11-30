@@ -36,6 +36,10 @@ class DbController {
 		}
 
 		repairVersionOrder();
+
+		// create indices
+		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
+		m_packages.ensureIndex(["searchTerms": 1]);
 	}
 
 	void addPackage(ref DbPackage pack)
