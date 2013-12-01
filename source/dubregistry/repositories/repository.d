@@ -36,20 +36,22 @@ void addRepositoryFactory(string kind, RepositoryFactory factory)
 alias RepositoryFactory = Repository delegate(Json);
 
 interface Repository {
-	Tuple!(string, CommitInfo)[] getTags();
-	Tuple!(string, CommitInfo)[] getBranches();
+	RefInfo[] getTags();
+	RefInfo[] getBranches();
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
 	string getDownloadUrl(string tag_or_branch);
 }
 
-struct CommitInfo {
+struct RefInfo {
+	string name;
 	string sha;
 	BsonDate date;
 
-	this(string sha, string date)
+	this(string name, string sha, SysTime date)
 	{
+		this.name = name;
 		this.sha = sha;
-		this.date = BsonDate(SysTime.fromISOExtString(date));
+		this.date = BsonDate(date);
 	}
 }
 

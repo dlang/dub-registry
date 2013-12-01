@@ -35,17 +35,17 @@ class GithubRepository : Repository {
 		m_project = project;
 	}
 
-	Tuple!(string, CommitInfo)[] getTags()
+	RefInfo[] getTags()
 	{
 		Json tags;
 		try tags = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
-		Tuple!(string, CommitInfo)[] ret;
+		RefInfo[] ret;
 		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag.name.get!string;
 				Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~tag.commit.sha.get!string, true, true);
-				ret ~= tuple(tagname, CommitInfo(tag.commit.sha.get!string, commit.commit.committer.date.get!string));
+				ret ~= RefInfo(tagname, tag.commit.sha.get!string, SysTime.fromISOExtString(commit.commit.committer.date.get!string));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
@@ -54,14 +54,14 @@ class GithubRepository : Repository {
 		return ret;
 	}
 
-	Tuple!(string, CommitInfo)[] getBranches()
+	RefInfo[] getBranches()
 	{
 		Json branches = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/branches");
-		Tuple!(string, CommitInfo)[] ret;
+		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch.name.get!string;
 			Json commit = readJson("https://api.github.com/repos/"~m_owner~"/"~m_project~"/commits/"~branch.commit.sha.get!string, true, true);
-			ret ~= tuple(branchname, CommitInfo(branch.commit.sha.get!string, commit.commit.committer.date.get!string));
+			ret ~= RefInfo(branchname, branch.commit.sha.get!string, SysTime.fromISOExtString(commit.commit.committer.date.get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
 		return ret;

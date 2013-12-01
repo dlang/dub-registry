@@ -35,17 +35,17 @@ class BitbucketRepository : Repository {
 		m_project = project;
 	}
 
-	Tuple!(string, CommitInfo)[] getTags()
+	RefInfo[] getTags()
 	{
 		Json tags;
 		try tags = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
-		Tuple!(string, CommitInfo)[] ret;
+		RefInfo[] ret;
 		foreach( string tagname, tag; tags ){
 			try {
 				auto commit_hash = tag.raw_node.get!string();
 				auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
-				ret ~= tuple(tagname, CommitInfo(commit_hash, commit_date));
+				ret ~= RefInfo(tagname, commit_hash, commit_date);
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
@@ -54,14 +54,14 @@ class BitbucketRepository : Repository {
 		return ret;
 	}
 
-	Tuple!(string, CommitInfo)[] getBranches()
+	RefInfo[] getBranches()
 	{
 		Json branches = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
-		Tuple!(string, CommitInfo)[] ret;
+		RefInfo[] ret;
 		foreach( string branchname, branch; branches ){
 			auto commit_hash = branch.raw_node.get!string();
 			auto commit_date = bbToIsoDate(branch.utctimestamp.get!string());
-			ret ~= tuple(branchname, CommitInfo(commit_hash, commit_date));
+			ret ~= RefInfo(branchname, commit_hash, commit_date);
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
 		return ret;
@@ -84,7 +84,7 @@ class BitbucketRepository : Repository {
 	}
 }
 
-private string bbToIsoDate(string bbdate)
+private SysTime bbToIsoDate(string bbdate)
 {
 	import std.array;
 	auto ttz = bbdate.split("+");
@@ -93,5 +93,5 @@ private string bbToIsoDate(string bbdate)
 	parts = parts[0 .. $-1] ~ parts[$-1].split(" ");
 	parts = parts[0 .. $-1] ~ parts[$-1].split(":");
 
-	return SysTime.fromISOString(format("%s%s%sT%s%s%s+%s", parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], ttz[1])).toISOExtString();
+	return SysTime.fromISOString(format("%s%s%sT%s%s%s+%s", parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], ttz[1]));
 }

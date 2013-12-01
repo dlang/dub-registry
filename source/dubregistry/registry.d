@@ -85,14 +85,15 @@ class DubRegistry {
 		PackageVersionInfo info;
 		auto rep = getRepository(repository);
 		auto branches = rep.getBranches();
-		auto idx = branches.countUntil!(b => b[0] == "~master");
+		auto idx = branches.countUntil!(b => b.name == "master");
 		try {
 			if (idx >= 0)
-				info = rep.getVersionInfo(branches[idx][1]);
-		} catch {
+				info = rep.getVersionInfo(branches[idx]);
+		} catch {}
+		if (info.info.type != Json.Type.object) {
 			foreach (b; branches) {
 				try {
-					info = rep.getVersionInfo(b[1]);
+					info = rep.getVersionInfo(b);
 					break;
 				} catch {}
 			}
@@ -286,13 +287,13 @@ class DubRegistry {
 		}
 
 		bool[string] existing;
-		Tuple!(string, CommitInfo)[] tags, branches;
+		RefInfo[] tags, branches;
 		bool got_all_tags_and_branches = false;
 		try {
 			tags = rep.getTags()
-				.filter!(a => a[0].startsWith("v") && a[0][1 .. $].isValidVersion)
+				.filter!(a => a.name.startsWith("v") && a.name[1 .. $].isValidVersion)
 				.array
-				.sort!((a, b) => compareVersions(a[0][1 .. $], b[0][1 .. $]) < 0)
+				.sort!((a, b) => compareVersions(a.name[1 .. $], b.name[1 .. $]) < 0)
 				.array;
 			branches = rep.getBranches();
 			got_all_tags_and_branches = true;
@@ -300,10 +301,10 @@ class DubRegistry {
 			errors ~= format("Failed to get GIT tags/branches: %s", e.msg);
 		}
 		foreach (tag; tags) {
-			auto name = tag[0][1 .. $];
+			auto name = tag.name[1 .. $];
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep.getVersionInfo(tag[1])))
+				if (addVersion(packname, name, rep.getVersionInfo(tag)))
 					logInfo("Added version %s for %s", name, packname);
 			} catch( Exception e ){
 				logDebug("version %s", sanitize(e.toString()));
@@ -311,10 +312,10 @@ class DubRegistry {
 			}
 		}
 		foreach (branch; branches) {
-			auto name = "~" ~ branch[0];
+			auto name = "~" ~ branch.name;
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep.getVersionInfo(branch[1])))
+				if (addVersion(packname, name, rep.getVersionInfo(branch)))
 					logInfo("Added branch %s for %s", name, packname);
 			} catch( Exception e ){
 				logDebug("%s", sanitize(e.toString()));
@@ -334,7 +335,7 @@ class DubRegistry {
 	}
 }
 
-private PackageVersionInfo getVersionInfo(Repository rep, CommitInfo commit)
+private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit)
 {
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
