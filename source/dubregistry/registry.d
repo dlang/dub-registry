@@ -10,7 +10,7 @@ import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
 import dub.semver;
-import std.algorithm : countUntil, filter, map, sort;
+import std.algorithm : countUntil, filter, map, sort, swap;
 import std.array;
 import std.encoding : sanitize;
 import std.string : format, startsWith, toLower;
@@ -86,17 +86,12 @@ class DubRegistry {
 		auto rep = getRepository(repository);
 		auto branches = rep.getBranches();
 		auto idx = branches.countUntil!(b => b.name == "master");
-		try {
-			if (idx >= 0)
-				info = rep.getVersionInfo(branches[idx]);
-		} catch {}
-		if (info.info.type != Json.Type.object) {
-			foreach (b; branches) {
-				try {
-					info = rep.getVersionInfo(b);
-					break;
-				} catch {}
-			}
+		if (idx > 0) swap(branches[0], branches[idx]);
+		foreach (b; branches) {
+			try {
+				info = rep.getVersionInfo(b);
+				break;
+			} catch {}
 		}
 		enforce (info.info.type == Json.Type.object, "At least one branch of the repository must contain a package description file.");
 
