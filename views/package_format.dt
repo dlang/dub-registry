@@ -245,7 +245,7 @@ block body
 			td subConfigurations
 			td
 				code string[string]
-			td Locks the dependencies to specific configurations; a map from package name to configuration name - this field does not support platform suffixes
+			td Locks the dependencies to specific configurations; a map from package name to configuration name, see also the <a href="#configurations">configurations section</a> - this field does not support platform suffixes
 
 		tr
 			td buildRequirements
