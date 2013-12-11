@@ -22,8 +22,41 @@ block body
 		|	}
 		|}
 
+	h2 Contents
+
+	nav
+		ul
+			li
+				a(href="#standard-fields") Global Fields
+				ul
+					li
+						a(href="#sub-packages") Sub packages
+					li
+						a(href="#licenses") License specifications
+			li
+				a(href="#build-settings") Build settings
+				ul
+					li
+						a(href="#version-specs") Version specifications
+					li
+						a(href="#target-types") Target types
+					li
+						a(href="#build-requirements") Build requirements
+					li
+						a(href="#build-options") Build options
+			li
+				a(href="#configurations") Configurations
+				ul
+					li
+						a(href="#configuration-fields") Specific fields
+			li
+				a(href="#build-types") Build types
+
+
 
 	h2#standard-fields Global fields
+
+	p In addition to the fields listed here, all <a href="#build-settings">build settings fields</a> are allowed at the global scope.
 
 	table
 		tr
@@ -83,7 +116,7 @@ block body
 			td buildTypes
 			td
 				code T[string]
-			td Defines additional custom build types or overrides the default ones (specified using "--build=...") - see the <a href="#build-settings">build settings section</a> for valid contents of <code>T</code>
+			td Defines additional custom build types or overrides the default ones (specified using "--build=...") - see the <a href="#build-types">build types section</a> for an example
 
 		tr
 			td -ddoxFilterArgs
@@ -215,16 +248,16 @@ block body
 			td Locks the dependencies to specific configurations; a map from package name to configuration name - this field does not support platform suffixes
 
 		tr
-			td dflags
+			td buildRequirements
 			td
 				code string[]
-			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
+			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
 
 		tr
-			td lflags
+			td buildOptions
 			td
 				code string[]
-			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
+			td List of build option identifiers (corresponding to compiler flags) - see the <a href="#build-options">build options section</a> for details.
 
 		tr
 			td libs
@@ -293,11 +326,20 @@ block body
 			td
 				code string[]
 			td A list of shell commands that is executed always after the project is built
+
 		tr
-			td buildRequirements
+			td dflags
 			td
 				code string[]
-			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
+			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
+
+		tr
+			td lflags
+			td
+				code string[]
+			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
+
+	p 
 
 	
 	h3#version-specs Version specifications
@@ -399,6 +441,100 @@ block body
 			td "noDefaultFlags"
 			td Does not emit build type specific flags (e.g. -debug, -cov or -unittest). <span style="color: red;">Note that this flag should never be used for released packages and is indended purely as a development/debugging tool. Using "-build=plain" may also be a more appropriate alternative.</span>
 
+	h3#build-options Build options
+
+	p The "buildOptions" field provides a compiler agnostic way to specify common compiler options/flags. Note that many of these options are implicitly managed by the <a href="#build-requirements">"buildRequirements"</a> field and most others usually only occur in <a href="#custom-build-types">"buildTypes"</a> blocks. It supports the following values:
+
+	table
+		tr
+			th Value
+			th Description
+			th Corresponding DMD flag
+		tr
+			td "debugMode"
+			td Compile in debug mode (enables contracts)
+			td -debug
+		tr
+			td "releaseMode"
+			td Compile in release mode (disables assertions and bounds checks)
+			td -release
+		tr
+			td "coverage"
+			td Enable code coverage analysis
+			td -cov
+		tr
+			td "debugInfo"
+			td Enable symbolic debug information
+			td -g
+		tr
+			td "debugInfoC"
+			td Enable symbolic debug information in C compatible form
+			td -gc
+		tr
+			td "alwaysStackFrame"
+			td Always generate a stack frame
+			td -gs
+		tr
+			td "stackStomping"
+			td Perform stack stomping
+			td -gx
+		tr
+			td "inline"
+			td Perform function inlining
+			td -inline
+		tr
+			td "noBoundsChecks"
+			td Disable all bounds checking
+			td -noboundscheck
+		tr
+			td "optimize"
+			td Enable optimizations
+			td -O
+		tr
+			td "profile"
+			td Emit profiling code
+			td -profile
+		tr
+			td "unittests"
+			td Compile unit tests
+			td -unittest
+		tr
+			td "verbose"
+			td Verbose compiler output
+			td -v
+		tr
+			td "ignoreUnknownPragmas"
+			td Ignores unknown pragmas during compilation
+			td -ignore
+		tr
+			td "syntaxOnly"
+			td Don't generate object files
+			td -o-
+		tr
+			td "warnings"
+			td Enable warnings, enabled by default (use "buildRequirements" to control this setting)
+			td -wi
+		tr
+			td "warningsAsErrors"
+			td Treat warnings as errors (use "buildRequirements" to control this setting)
+			td -w
+		tr
+			td "ignoreDeprecations"
+			td Do not warn about using deprecated features (use "buildRequirements" to control this setting)
+			td -d
+		tr
+			td "deprecationWarnings"
+			td Warn about using deprecated features, enabled by default (use "buildRequirements" to control this setting)
+			td -dw
+		tr
+			td "deprecationErrors"
+			td Stop compilation upon usage of deprecated features (use "buildRequirements" to control this setting)
+			td -de
+		tr
+			td "property"
+			td Enforce property syntax - <span style="color: red;">deprecated</span>
+			td -property
+
 
 	h2#configurations Configurations
 
@@ -471,3 +607,56 @@ block body
 			td
 				code string[]
 			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies
+
+	h2#build-types Build types
+
+	p By default, a set of predefined build types is already provided by DUB and can be specified using <code>dub build --build=&lt;name&gt;</code>:
+
+	table
+		tr
+			th Name
+			th Build options
+		tr
+			td plain
+			td <code>[]</code>
+		tr
+			td debug
+			td <code>["debugMode", "debugInfo"]</code>
+		tr
+			td release
+			td <code>["releaseMode", "optimize", "inline"]</code>
+		tr
+			td unittest
+			td <code>["unittests", "debugMode", "debugInfo"]</code>
+		tr
+			td docs
+			td <code>["syntaxOnly"]</code>, plus <code>"dflags": ["-c", "-Dddocs"]</code>
+		tr
+			td ddox
+			td <code>["syntaxOnly"]</code>, plus <code>"dflags": ["-c", "-Df__dummy.html", "-Xfdocs.json"]</code>
+		tr
+			td profile
+			td <code>["profile", "optimize", "inline", "debugInfo"]</code>
+		tr
+			td cov
+			td <code>["coverage", "debugInfo"]</code>
+		tr
+			td unittest-cov
+			td <code>["unittests", "coverage", "debugMode", "debugInfo"]</code>
+
+	p The existing build types can be customized and new build types can be added using the global <code>"buildTypes"</code> field. Each entry in <code>"buildTypes"</code> can use any of the <a href="#build-settings">build settings fields</a>. The build settings specified here will later be modified by the package/configuration specific settings.
+
+	p An example that overrides the "debug" build type and defines a new "debug-profile" type:
+
+	pre.code
+		|{
+		|	"name": "my-package",
+		|	"buildTypes": {
+		|		"debug": {
+		|			"buildOptions": ["debug", "debugInfo", "optimize"]
+		|		},
+		|		"debug-profile": {
+		|			"buildOptions": ["debug", "debugInfo", "profile"]
+		|		}
+		|	}
+		|}
