@@ -644,7 +644,7 @@ block body
 			td unittest-cov
 			td <code>["unittests", "coverage", "debugMode", "debugInfo"]</code>
 
-	p The existing build types can be customized and new build types can be added using the global <code>"buildTypes"</code> field. Each entry in <code>"buildTypes"</code> can use any of the <a href="#build-settings">build settings fields</a>. The build settings specified here will later be modified by the package/configuration specific settings.
+	p The existing build types can be customized and new build types can be added using the global <code>"buildTypes"</code> field. Each entry in <code>"buildTypes"</code> can use any of the low level <a href="#build-settings">build settings fields</a> (excluding "dependencies", "targetType", "targetName", "targetPath", "workingDirectory", "subConfigurations"). The build settings specified here will later be modified by the package/configuration specific settings.
 
 	p An example that overrides the "debug" build type and defines a new "debug-profile" type:
 
