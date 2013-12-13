@@ -33,7 +33,7 @@ void startMonitoring()
 	s_checkTask = runTask(&monitorNewVersions);
 }
 
-static this()
+shared static this()
 {
 	setLogLevel(LogLevel.none);
 	setLogFile("log.txt", LogLevel.diagnostic);
