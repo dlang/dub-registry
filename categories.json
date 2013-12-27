@@ -22,6 +22,7 @@
 		{"name": "server", "description": "Server software", "categories": [
 			{"name": "messaging", "description": "Chat/email servers"},
 			{"name": "database", "description": "Database servers"},
+			{"name": "game", "description": "Game servers"},
 			{"name": "web", "description": "Web servers"}
 		]},
 		{"name": "web", "description": "Web applications/sites", "categories": [
