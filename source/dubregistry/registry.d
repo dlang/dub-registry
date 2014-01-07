@@ -10,6 +10,7 @@ import dubregistry.dbcontroller;
 import dubregistry.repositories.repository;
 
 import dub.semver;
+import dub.package_ : packageInfoFilenames;
 import std.algorithm : countUntil, filter, map, sort, swap;
 import std.array;
 import std.encoding : sanitize;
@@ -335,16 +336,19 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit)
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
-	try ret.info = rep.readCachedJsonFile(commit.sha, Path("/dub.json"));
-	catch (FileNotFoundException) try ret.info = rep.readCachedJsonFile(commit.sha, Path("/package.json"));
-	catch (FileNotFoundException) throw new Exception("Found neither dub.json, nor package.json in the repository.");
+	foreach (filename; packageInfoFilenames) {
+		try ret.info = rep.readCachedJsonFile(commit.sha, Path(filename));
+		catch (FileNotFoundException) { /* try another filename */ }
+	}
+	if (ret.info == Json.undefined)
+		 throw new Exception("Found no package information file in the repository.");
 	return ret;
 }
 
 private Json readCachedJsonFile(Repository rep, string commit_sha, Path path)
 {
 	Json ret;
-	rep.readFile(commit_sha, Path("/package.json"), (scope input) {
+	rep.readFile(commit_sha, path, (scope input) {
 		auto text = input.readAllUTF8(false);
 		ret = parseJsonString(text);
 	});
