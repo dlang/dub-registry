@@ -92,7 +92,9 @@ class DubRegistry {
 			try {
 				info = rep.getVersionInfo(b);
 				break;
-			} catch {}
+			} catch (Exception e) {
+				logDiagnostic("Error getting package info for %s", b);
+			}
 		}
 		enforce (info.info.type == Json.Type.object, "At least one branch of the repository must contain a package description file.");
 
@@ -337,7 +339,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit)
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
 	foreach (filename; packageInfoFilenames) {
-		try ret.info = rep.readCachedJsonFile(commit.sha, Path(filename));
+		try ret.info = rep.readCachedJsonFile(commit.sha, Path("/" ~ filename));
 		catch (FileNotFoundException) { /* try another filename */ }
 	}
 	if (ret.info == Json.undefined)
