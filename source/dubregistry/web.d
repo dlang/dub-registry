@@ -106,8 +106,8 @@ class DubRegistryWebFrontend {
 			return SysTime.fromISOExtString(p.dateAdded.get!string);
 		}
 		bool compare(Json a, Json b) {
-			bool a_has_ver = a.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
-			bool b_has_ver = b.versions.get!(Json[]).canFind!(v => !v["version"].get!string.startsWith("~"));
+			bool a_has_ver = a.versions.get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
+			bool b_has_ver = b.versions.get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
@@ -224,7 +224,7 @@ class DubRegistryWebFrontend {
 	{
 		auto pname = req.params["packname"].urlDecode();
 
-		auto ver = req.params["version"];
+		auto ver = req.params["version"].replace(" ", "+");
 		string ext;
 		if( ver.endsWith(".zip") ) ext = "zip", ver = ver[0 .. $-4];
 		else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
