@@ -13,6 +13,7 @@ import dub.semver;
 import dub.package_ : packageInfoFilenames;
 import std.algorithm : countUntil, filter, map, sort, swap;
 import std.array;
+import std.datetime : Clock, UTC, hours;
 import std.encoding : sanitize;
 import std.string : format, startsWith, toLower;
 import std.typecons;
@@ -40,6 +41,7 @@ class DubRegistry {
 		Task m_updateQueueTask;
 		TaskMutex m_updateQueueMutex;
 		TaskCondition m_updateQueueCondition;
+		SysTime m_lastSignOfLifeOfUpdateTask;
 	}
 
 	this(DubRegistrySettings settings)
@@ -62,6 +64,13 @@ class DubRegistry {
 			if (!m_updateQueue.canFind(pack_name))
 				m_updateQueue ~= pack_name;
 		}
+
+		// watchdog for update task
+		if (Clock.currTime(UTC()) - m_lastSignOfLifeOfUpdateTask > 2.hours) {
+			logError("Update task has hung. Trying to interrupt.");
+			m_updateQueueTask.interrupt();
+		}
+
 		if (!m_updateQueueTask.running)
 			m_updateQueueTask = runTask(&processUpdateQueue);
 		m_updateQueueCondition.notifyAll();
@@ -247,6 +256,7 @@ class DubRegistry {
 	{
 		scope (exit) logWarn("Update task was killed!");
 		while (true) {
+			m_lastSignOfLifeOfUpdateTask = Clock.currTime(UTC());
 			logDiagnostic("Getting new package to be updated...");
 			string pack;
 			synchronized (m_updateQueueMutex) {
