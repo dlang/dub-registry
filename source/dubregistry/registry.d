@@ -245,16 +245,21 @@ class DubRegistry {
 
 	private void processUpdateQueue()
 	{
+		scope (exit) logWarn("Update task was killed!");
 		while (true) {
+			logDiagnostic("Getting new package to be updated...");
 			string pack;
 			synchronized (m_updateQueueMutex) {
-				while (m_updateQueue.empty)
+				while (m_updateQueue.empty) {
+					logDiagnostic("Waiting for package to be updated...");
 					m_updateQueueCondition.wait();
+				}
 				pack = m_updateQueue.front;
 				m_updateQueue.popFront();
 				m_currentUpdatePackage = pack;
 			}
 			scope(exit) m_currentUpdatePackage = null;
+			logDiagnostic("Updating package %s.", pack);
 			try checkForNewVersions(pack);
 			catch (Exception e) {
 				logWarn("Failed to check versions for %s: %s", pack, e.msg);

@@ -35,14 +35,13 @@ void startMonitoring()
 
 shared static this()
 {
-	setLogLevel(LogLevel.none);
 	setLogFile("log.txt", LogLevel.diagnostic);
 
 	GithubRepository.register();
 	BitbucketRepository.register();
 
 	auto router = new URLRouter;
-	//router.get("*", (req, res){ if( !s_checkTask.running ) startMonitoring(); });
+	router.get("*", (req, res) { if (!s_checkTask.running) startMonitoring(); });
 
 	// user management
 	auto udbsettings = new UserManSettings;
