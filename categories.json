@@ -34,7 +34,9 @@
 	{"name": "library", "description": "Development library", "categories": [
 		{"name": "std_aspirant", "description": "Candidate for inclusion in the D standard library"},
 		{"name": "audio", "description": "Audio libraries"},
-		{"name": "binding", "description": "D language bindings"},
+		{"name": "binding", "description": "D language bindings", "categories": [
+			{"name": "deimos", "description": "Deimos header-only binding"}
+		]},
 		{"name": "crypto", "description": "Cryptographic libraries"},
 		{"name": "development", "description": "Development support libraries", "categories": [
 			{"name": "parsing", "description": "Parsers and lexers"}
