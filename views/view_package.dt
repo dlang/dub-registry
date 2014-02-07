@@ -8,6 +8,8 @@ block title
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 	
 block body
+	h2 Description
+
 	p= versionInfo.description.opt!string
 	
 	h2 Package Information
