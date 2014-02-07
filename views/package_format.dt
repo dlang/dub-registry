@@ -68,7 +68,7 @@ block body
 			td name [required]
 			td
 				code string
-			td Name of the package, used to uniquely identify the package
+			td Name of the package, used to uniquely identify the package. Must be comprised of only lower case ASCII alpha-numeric characters, "-" or "_".
 
 		tr
 			td description [required for publishing]
