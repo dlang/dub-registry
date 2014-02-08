@@ -209,7 +209,8 @@ class DubRegistry {
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
-		assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
+		//assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
+		info.info.name = info.info.name.get!string.toLower();
 		enforce(info.info.name == packname, "Package name must match the original package name.");
 
 		if ("description" !in info.info || "license" !in info.info) {
