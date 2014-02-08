@@ -16,6 +16,9 @@ block body
 			label(for="project") Repository name:
 			input(type="text", name="project")
 		- if (error.length)
-			p.error= error
+			p.error
+				- foreach (ln; error.splitLines)
+					|= ln
+					br
 		p
 			button(type="submit") Register package

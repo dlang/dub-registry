@@ -95,17 +95,21 @@ class DubRegistry {
 		PackageVersionInfo info;
 		auto rep = getRepository(repository);
 		auto branches = rep.getBranches();
+		enforce(branches.length > 0, "The repository contains no branches.");
 		auto idx = branches.countUntil!(b => b.name == "master");
 		if (idx > 0) swap(branches[0], branches[idx]);
+		string branch_errors;
 		foreach (b; branches) {
 			try {
 				info = rep.getVersionInfo(b);
 				break;
 			} catch (Exception e) {
 				logDiagnostic("Error getting package info for %s", b);
+				branch_errors ~= format("\n%s: %s", b.name, e.msg);
 			}
 		}
-		enforce (info.info.type == Json.Type.object, "At least one branch of the repository must contain a package description file.");
+		enforce (info.info.type == Json.Type.object,
+			"Failed to find a branch containing a valid package description file:" ~ branch_errors);
 
 		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
