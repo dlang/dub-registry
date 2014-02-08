@@ -102,6 +102,8 @@ class DubRegistry {
 		foreach (b; branches) {
 			try {
 				info = rep.getVersionInfo(b);
+				enforce (info.info.type == Json.Type.object,
+					"JSON package description must be a JSON object.");
 				break;
 			} catch (Exception e) {
 				logDiagnostic("Error getting package info for %s", b);
