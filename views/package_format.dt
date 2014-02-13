@@ -284,6 +284,12 @@ block body
 			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths") - <a href="http://dlang.org/phobos/std_path.html#.globMatch">Glob matching</a> can be used to pattern match multiple files at once
 
 		tr
+			td mainSourceFile
+			td
+				code string
+			td Determines the file that contains the <code>main()</code> function. This field can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this field does not support platform suffixes
+
+		tr
 			td copyFiles
 			td
 				code string[]
