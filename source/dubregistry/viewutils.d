@@ -23,14 +23,20 @@ string formatDate(Json date)
 
 Json getBestVersion(Json versions)
 {
+	import dub.semver;
 	Json ret;
 	foreach (v; versions) {
 		auto vstr = v["version"].get!string;
 		if (ret.type == Json.Type.undefined) ret = v;
-		else if (ret["version"].get!string.startsWith("~")) {
-			if (vstr == "~master" || !vstr.startsWith("~"))
+		else {
+			auto curvstr = ret["version"].get!string;
+			if (curvstr.startsWith("~")) {
+				if (vstr == "~master" || !vstr.startsWith("~"))
+					ret = v;
+			} else if (!vstr.startsWith("~") && compareVersions(vstr, curvstr) > 0) {
 				ret = v;
-		} else if (!vstr.startsWith("~")) ret = v; // assume that the latest tag is also the last in the array
+			}
+		}
 	}
 	return ret;
 }
