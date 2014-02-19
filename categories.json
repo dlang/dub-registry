@@ -49,6 +49,7 @@
 		{"name": "network", "description": "Networking libraries", "categories": [
 			{"name": "messaging", "description": "Network messaging library"}
 		]},
+		{"name": "hooking", "description": "API hooking / code injection"},
 		{"name": "scripting", "description": "Scripting language support"},
 		{"name": "vcs", "description": "Version control"},
 		{"name": "vibed", "description": "vibe.d compatible library"},
