@@ -202,7 +202,7 @@ class DubRegistryWebFrontend {
 
 			foreach (platform, rexes; platformPatterns) {
 				foreach (rex; rexes) {
-					auto match = matchFirst(name, rex);
+					auto match = match(name, rex).captures;//matchFirst(name, rex);
 					if (match.empty) continue;
 					auto ver = match["version"] ~ (match["prerelease"].length ? "-" ~ match["prerelease"] : "");
 					if (!ver.isValidVersion()) continue;
