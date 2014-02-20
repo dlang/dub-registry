@@ -25,17 +25,21 @@ block body
 		h3 Latest release
 		ul
 			- foreach (k; latest_release.files.keys.sort)
-				- auto fil = latest_release.files[k];
-				li
-					a(href='files/#{fil.fileName}') DUB #{latest_release.id} for #{fil.platformCaption}
+				- foreach (fil; latest_release.files[k])
+					li
+						a(href='files/#{fil.fileName}') DUB #{latest_release.id} #{fil.typeCaption} for #{fil.platformCaption}
+			li
+				a(href="https://github.com/rejectedsoftware/dub/archive/v#{latest_release.id}.tar.gz") DUB #{latest_release.id} source tarball
 
 	- if (latest_prerelease.id.length)
 		h3 Latest preview
 		ul
 			- foreach (k; latest_prerelease.files.keys.sort)
-				- auto fil = latest_prerelease.files[k];
-				li
-					a(href='files/#{fil.fileName}') DUB #{latest_prerelease.id} for #{fil.platformCaption}
+				- foreach (fil; latest_prerelease.files[k])
+					li
+						a(href='files/#{fil.fileName}') DUB #{latest_prerelease.id} #{fil.typeCaption} for #{fil.platformCaption}
+			li
+				a(href="https://github.com/rejectedsoftware/dub/archive/v#{latest_prerelease.id}.tar.gz") DUB #{latest_prerelease.id} source tarball
 
 
 	h2 System packages and manual build
@@ -66,7 +70,10 @@ block body
 				- foreach(p; ["linux-x86", "linux-x86_64", "windows-x86", "osx-x86_64"])
 					td
 						- if( auto pf = p in v.files )
-							a(href="files/#{pf.fileName}")= pf.fileName
+							- foreach (i, f; *pf)
+								- if (i > 0)
+									br
+								a(href="files/#{f.fileName}")= f.fileName
 				td
 					a(href="https://github.com/rejectedsoftware/dub/archive/v#{v.id}.tar.gz") dub-#{v.id}.tar.gz
 

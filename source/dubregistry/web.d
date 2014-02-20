@@ -136,51 +136,79 @@ class DubRegistryWebFrontend {
 		static struct DownloadFile {
 			string fileName;
 			string platformCaption;
+			string typeCaption;
 		}
 
 		static struct DownloadVersion {
 			string id;
-			DownloadFile[string] files;
+			DownloadFile[][string] files;
 		}
 
 		static struct Info {
 			DownloadVersion[] versions;
 			void addFile(string ver, string platform, string filename)
 			{
+
 				auto df = DownloadFile(filename);
 				switch (platform) {
 					default:
 						auto pts = platform.split("-");
 						df.platformCaption = format("%s%s (%s)", pts[0][0 .. 1].toUpper(), pts[0][1 .. $], pts[1].replace("_", "-").toUpper());
 						break;
-					case "osx-x86": df.platformCaption = "OS X (x86)"; break;
-					case "osx-x86_64": df.platformCaption = "OS X (x86-64)"; break;
+					case "osx-x86": df.platformCaption = "OS X (X86)"; break;
+					case "osx-x86_64": df.platformCaption = "OS X (X86-64)"; break;
 				}
+
+				if (filename.endsWith(".tar.gz")) df.typeCaption = "binary tarball";
+				else if (filename.endsWith(".zip")) df.typeCaption = "zipped binaries";
+				else if (filename.endsWith(".rpm")) df.typeCaption = "binary RPM package";
+				else if (filename.endsWith("setup.exe")) df.typeCaption = "installer";
+				else df.typeCaption = "Unknown";
+
 				foreach(ref v; versions)
 					if( v.id == ver ){
-						v.files[platform] = df;
+						v.files[platform] ~= df;
 						return;
 					}
 				DownloadVersion dv = DownloadVersion(ver);
-				dv.files[platform] = df;
+				dv.files[platform] = [df];
 				versions ~= dv;
 			}
 		}
 
 		Info info;
 
-		foreach(de; dirEntries("public/files", "*.{zip,gz,tgz,exe}", SpanMode.shallow)){
+		import std.regex;
+		static Regex!char[][string] platformPatterns;
+		if (platformPatterns.length == 0) {
+			platformPatterns["windows-x86"] = [
+				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.*))?(?:-setup\\.exe|-windows-x86\\.zip)$")
+			];
+			platformPatterns["linux-x86_64"] = [
+				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86_64\\.tar\\.gz$"),
+				regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86_64\\.rpm$")
+			];
+			platformPatterns["linux-x86"] = [
+				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
+				regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
+			];
+			platformPatterns["osx-x86_64"] = [
+				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
+			];
+		}
+
+		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)){
 			auto name = Path(de.name).head.toString();
-			auto basename = stripExtension(name);
-			if (basename.endsWith(".tar")) basename = basename[0 .. $-4];
-			auto parts = basename.split("-");
-			if (parts.length < 3 ) continue;
-			if (parts[0] != "dub") continue;
-			if (parts[$-1] == "setup") { parts[$-1] = "windows"; parts ~= "x86"; }
-			auto ver = parts[1 .. $-2].join("-");
-			auto plat = parts[$-2 .. $].join("-");
-			if (!ver.isValidVersion()) continue;
-			info.addFile(ver, plat, name);
+
+			foreach (platform, rexes; platformPatterns) {
+				foreach (rex; rexes) {
+					auto match = matchFirst(name, rex);
+					if (match.empty) continue;
+					auto ver = match["version"] ~ (match["prerelease"].length ? "-" ~ match["prerelease"] : "");
+					if (!ver.isValidVersion()) continue;
+					info.addFile(ver, platform, name);
+				}
+			}
 		}
 
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
