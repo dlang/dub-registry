@@ -6,7 +6,7 @@ block title
 block body
 	h2 Introduction
 
-	p Every DUB package <em>should</em> contain a <code>package.json</code> file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized fields and their meaning. Note that any unknown fields are ignored for backwards compatibility reasons.
+	p Every DUB package <em>should</em> contain a <code>dub.json</code> (was <code>package.json</code> in earlier versions) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized fields and their meaning. Note that any unknown fields are ignored for backwards compatibility reasons.
 
 	p A typical example of a simple application that requires no platform specific setup:
 
@@ -104,7 +104,7 @@ block body
 			td subPackages
 			td
 				code T[]
-			td Defines an array of sub-packages defined in the same directory as the root project, where each entry is an object of the same format as a package.json file - see the <a href="#sub-packages">sub package section</a> for more information
+			td Defines an array of sub-packages defined in the same directory as the root project, where each entry is either a path of a sub folder or an object of the same formatas a dub.json file - see the <a href="#sub-packages">sub package section</a> for more information
 
 		tr
 			td configurations
@@ -127,9 +127,35 @@ block body
 
 	h3#sub-packages Sub packages
 
-	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined in the <code>"subPackages"</code> field of the main package.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
+	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined in the <code>"subPackages"</code> field of the main dub.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
 
 	p The typical use for this feature is to split up a library into a number of parts without breaking it up into different code repositories:
+
+	pre.code
+		|{
+		|	"name": "mylib",
+		|	"targetType": "none",
+		|	"dependencies": {
+		|		"mylib:component1": "~master",
+		|		"mylib:component2": "~master"
+		|	},
+		|	"subPackages": [
+		|		"./component1/",
+		|		"./component2/"
+		|	]
+		|}
+	p <code>/dub.json</code>
+
+	pre.code
+		|{
+		|	"name": "component1",
+		|	"targetType": "library"
+		|}
+	p <code>/component1/dub.json</code>
+
+	p The sub directories /component1 and /component2 then contain normal packages and can be referred to as "mylib:component1" and "mylib:component2" from outside projects.
+
+	p It is also possible to define the sub packages in the root package file, but note that it's discouraged to put the source code of multiple sub packages into the same source folder. Doing so can lead to hidden dependencies to sub packages that haven't been explicitly stated in the "dependencies" section. These hidden dependencies can then result in build errors in conjunction with certain build modes or dependency trees that may be hard to understand.
 
 	pre.code
 		|{
@@ -143,13 +169,13 @@ block body
 		|		{
 		|			"name": "component1",
 		|			"targetType": "library",
-		|			"sourcePaths": ["source/component1"]
+		|			"sourcePaths": ["component1/source"],
+		|			"importPaths": ["component1/source"]
 		|		}
 		|	]
 		|}
+	p <code>/dub.json</code>
 
-	p Note, however, that it is generally recommended to use separate packages, as sub packages have a number of unclean properties, such as mixed import folders.
-	
 
 	h3#licenses License specifications
 
@@ -360,8 +386,10 @@ block body
 				li Require a certain version: <code>"==1.3.0"</code>
 				li Require a minimum version: <code>"&gt;=1.3.0"</code>
 				li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
-				li Use the GIT master branch: <code>"~master"</code>
-			p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>.
+				li Use a GIT branch (deprecated): <code>"~master"</code>
+				li Restrict to a certain major version: <code>"~&gt;2.2"</code>, equivalent to <code>"&gt;=2.2.0 &lt;3.0.0"</code>
+				li Restrict to a certain minor version: <code>"~&gt;2.2.13"</code>, equivalent to <code>"&gt;=2.2.13 &lt;2.3.0"</code>
+			p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>. The recommended way to specify versions is using the <code>~&gt;</code> operator as a way to balance between flexible upgrades and reducing the risk of code breakage.
 		li Complex variant:
 			p Min. required: <code>"&lt;name&gt;" : { "version": "&lt;version-string&gt;" &lt;, additional-fields&gt;}</code>
 			p In addition to the version, additional fields can be added to further control how a dependency is being searched or used:
