@@ -8,6 +8,7 @@
 				{"name": "debugger", "description": "Debuggers"},
 				{"name": "documentation", "description": "Documentation processors"},
 				{"name": "packaging", "description": "Packaging tools"},
+				{"name": "plugin", "description": "Plugin/modification"},
 				{"name": "ide", "description": "Integrated development environments"}
 			]},
 			{"name": "editor", "description": "Text editors"},
