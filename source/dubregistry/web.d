@@ -425,7 +425,7 @@ class DubRegistryWebFrontend {
 
 	private void enforceUserPackage(User user, string package_name)
 	{
-		// TODO!
+		enforceHTTP(m_registry.isUserPackage(user._id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
 	}
 
 	private void updateCategories()

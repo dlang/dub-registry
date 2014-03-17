@@ -67,6 +67,11 @@ class DbController {
 		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p.name.get!string)();
 	}
 
+	bool isUserPackage(BsonObjectID user_id, string package_name)
+	{
+		return !m_packages.findOne(["owner": Bson(user_id), "name": Bson(package_name)]).isNull();
+	}
+
 	void removePackage(string packname, BsonObjectID user)
 	{
 		m_packages.remove(["name": Bson(packname), "owner": Bson(user)]);

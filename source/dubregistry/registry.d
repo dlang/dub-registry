@@ -148,6 +148,11 @@ class DubRegistry {
 		return m_db.getUserPackages(user);
 	}
 
+	bool isUserPackage(BsonObjectID user, string package_name)
+	{
+		return m_db.isUserPackage(user, package_name);
+	}
+
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
 		if (!include_errors) {
