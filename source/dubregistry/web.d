@@ -25,6 +25,7 @@ class DubRegistryWebFrontend {
 		struct Category { string name, description, indentedDescription; }
 
 		DubRegistry m_registry;
+		UserManController m_userman;
 		UserManWebInterface m_usermanweb;
 		Category[] m_categories;
 	}
@@ -32,6 +33,7 @@ class DubRegistryWebFrontend {
 	this(DubRegistry registry, UserManController userman)
 	{
 		m_registry = registry;
+		m_userman = userman;
 		m_usermanweb = new UserManWebInterface(userman);
 
 		updateCategories();
@@ -236,6 +238,8 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, null, packageInfo, versionInfo))
 			return;
 
+		auto user = m_userman.getUser(BsonObjectID.fromHexString(packageInfo.owner.get!string));
+
 		if (json) {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(packageInfo);
@@ -243,8 +247,9 @@ class DubRegistryWebFrontend {
 			res.renderCompat!("view_package.dt",
 				HTTPServerRequest, "req", 
 				string, "packageName",
+				User, "user",
 				Json, "packageInfo",
-				Json, "versionInfo")(req, pname, packageInfo, versionInfo);
+				Json, "versionInfo")(req, pname, user, packageInfo, versionInfo);
 		}
 	}
 
@@ -261,6 +266,8 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
 			return;
 
+		auto user = m_userman.getUser(BsonObjectID.fromHexString(packageInfo.owner.get!string));
+
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
 			res.redirect(versionInfo.downloadUrl.get!string);
@@ -271,8 +278,9 @@ class DubRegistryWebFrontend {
 			res.renderCompat!("view_package.dt",
 				HTTPServerRequest, "req", 
 				string, "packageName",
+				User, "user",
 				Json, "packageInfo",
-				Json, "versionInfo")(req, pname, packageInfo, versionInfo);
+				Json, "versionInfo")(req, pname, user, packageInfo, versionInfo);
 		}
 	}
 

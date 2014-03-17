@@ -59,6 +59,10 @@ block body
 				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
 
 		tr
+			td Registered by
+			td= user.fullName.length ? user.fullName : user.name
+
+		tr
 			td Dependencies
 				- auto pd = "dependencies" in versionInfo;
 				- if (pd && pd.length)
