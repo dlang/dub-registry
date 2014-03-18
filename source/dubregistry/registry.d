@@ -113,6 +113,13 @@ class DubRegistry {
 		enforce (info.info.type == Json.Type.object,
 			"Failed to find a branch containing a valid package description file:" ~ branch_errors);
 
+		// ensure that at least one tagged version is present
+		auto tags = rep.getTags();
+		enforce(tags.canFind!(t => t.name.startsWith("v") && t.name[1 .. $].isValidVersion),
+			`The repository must have at least one tagged version (SemVer format, e.g. `
+			~ `v1.0.0) to be published on the registry. Please add a proper tag using `
+			~ `"git tag" or similar means.`);
+
 		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
 
