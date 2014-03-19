@@ -75,7 +75,7 @@ block body
 
 	h2 Installation
 	
-	p To use this package, put the following dependency into your project's package.json into the dependencies section:
+	p To use this package, put the following dependency into your project's dub.json into the dependencies section:
 	- string expr = versionInfo["version"].get!string;
 	- if( !expr.startsWith("~") ) expr = ">=" ~ expr;
 	pre.code {
