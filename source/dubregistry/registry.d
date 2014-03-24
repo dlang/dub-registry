@@ -11,7 +11,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : countUntil, filter, map, sort, swap;
+import std.algorithm : chain, countUntil, filter, map, sort, swap;
 import std.array;
 import std.datetime : Clock, UTC, hours;
 import std.encoding : sanitize;
@@ -101,7 +101,7 @@ class DubRegistry {
 		string branch_errors;
 		foreach (b; branches) {
 			try {
-				info = rep.getVersionInfo(b);
+				info = rep.getVersionInfo(b, null);
 				enforce (info.info.type == Json.Type.object,
 					"JSON package description must be a JSON object.");
 				break;
@@ -213,6 +213,27 @@ class DubRegistry {
 		logInfo("Triggering check for new versions...");
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
+	}
+
+	protected bool addVersion(string packname, string ver, Repository rep, RefInfo reference)
+	{
+		auto dbpack = m_db.getPackage(packname);
+		string deffile;
+		if (ver.startsWith("~")) {
+			foreach (b; dbpack.branches)
+				if (b.version_ == ver) {
+					deffile = b.info.packageDescriptionFile.opt!string;
+					break;
+				}
+		} else {
+			foreach (t; dbpack.versions)
+				if (t.version_ == ver) {
+					deffile = t.info.packageDescriptionFile.opt!string;
+					break;
+				}
+		}
+		auto verinfo = getVersionInfo(rep, reference, deffile);
+		return addVersion(packname, ver, verinfo);
 	}
 
 	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
@@ -338,7 +359,7 @@ class DubRegistry {
 			auto name = tag.name[1 .. $];
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep.getVersionInfo(tag)))
+				if (addVersion(packname, name, rep, tag))
 					logInfo("Added version %s for %s", name, packname);
 			} catch( Exception e ){
 				logDebug("version %s", sanitize(e.toString()));
@@ -349,7 +370,7 @@ class DubRegistry {
 			auto name = "~" ~ branch.name;
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep.getVersionInfo(branch)))
+				if (addVersion(packname, name, rep, branch))
 					logInfo("Added branch %s for %s", name, packname);
 			} catch( Exception e ){
 				logDebug("%s", sanitize(e.toString()));
@@ -369,14 +390,17 @@ class DubRegistry {
 	}
 }
 
-private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit)
+private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try)
 {
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
-	foreach (filename; packageInfoFilenames) {
-		try ret.info = rep.readCachedJsonFile(commit.sha, Path("/" ~ filename));
-		catch (FileNotFoundException) { /* try another filename */ }
+	foreach (filename; chain((&first_filename_try)[0 .. 1], packageInfoFilenames.filter!(f => f != first_filename_try))) {
+		if (!filename.length) continue;
+		try {
+			ret.info = rep.readCachedJsonFile(commit.sha, Path("/" ~ filename));
+			ret.info.packageDescriptionFile = filename;
+		} catch (FileNotFoundException) { /* try another filename */ }
 	}
 	if (ret.info == Json.undefined)
 		 throw new Exception("Found no package information file in the repository.");
