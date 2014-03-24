@@ -27,7 +27,7 @@ class URLCache {
 
 	void clearEntry(URL url)
 	{
-		m_entries.remove(["url": url]);
+		m_entries.remove(["url": url.toString()]);
 	}
 
 	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
