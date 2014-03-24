@@ -10,8 +10,9 @@ block body
 	h2 General information
 
 	dl
-		dt Name
-		dd= packageName
+		dt Package
+		dd
+			a(href="#{req.rootDir}packages/#{packageName}")= packageName
 
 		- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
 		dt Latest version
