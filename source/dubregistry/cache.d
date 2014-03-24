@@ -13,7 +13,7 @@ import vibe.stream.memory;
 import std.exception;
 
 
-class UrlCache {
+class URLCache {
 	private {
 		MongoClient m_db;
 		MongoCollection m_entries;
@@ -23,6 +23,11 @@ class UrlCache {
 	{
 		m_db = connectMongoDB("127.0.0.1");
 		m_entries = m_db.getCollection("urlcache.entries");
+	}
+
+	void clearEntry(URL url)
+	{
+		m_entries.remove(["url": url]);
 	}
 
 	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
@@ -63,7 +68,7 @@ class UrlCache {
 
 				enforce(res.statusCode == HTTPStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 
-				if( auto pet = "ETag" in res.headers ){
+				if (auto pet = "ETag" in res.headers) {
 					logDiagnostic("Cache MISS: %s", url.toString());
 					auto dst = new MemoryOutputStream;
 					dst.write(res.bodyReader);
@@ -100,15 +105,26 @@ private struct CacheEntry {
 	BsonBinData data;
 }
 
-private UrlCache s_cache;
+private URLCache s_cache;
 
 void downloadCached(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
-	if( !s_cache ) s_cache = new UrlCache;
+	if (!s_cache) s_cache = new URLCache;
 	s_cache.get(url, callback, cache_priority);
 }
 
 void downloadCached(string url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
 	return downloadCached(URL.parse(url), callback, cache_priority);
+}
+
+void clearCacheEntry(URL url)
+{
+	if (!s_cache) s_cache = new URLCache;
+	s_cache.clearEntry(url);
+}
+
+void clearCacheEntry(string url)
+{
+	clearCacheEntry(URL(url));
 }
