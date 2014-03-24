@@ -59,14 +59,21 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 {
 	Json ret;
 	logDiagnostic("Getting JSON response from %s", url);
-	try downloadCached(url, (scope input){
-		auto text = input.readAllUTF8(sanitize);
-		ret = parseJsonString(text);
-	}, cache_priority);
-	catch (Exception e) {
-		throw new Exception(format("Failed to read JSON from %s: %s", url, e.msg), __FILE__, __LINE__, e);
+	Exception ex;
+	foreach (i; 0 .. 2) {
+		try {
+			downloadCached(url, (scope input){
+				scope (failure) clearCacheEntry(url);
+				auto text = input.readAllUTF8(sanitize);
+				ret = parseJsonString(text);
+			}, cache_priority);
+			return ret;
+		} catch (Exception e) {
+			logDiagnostic("Failed to parse downloaded JSON document (attempt #%s): %s", i+1, e.msg);
+			ex = e;
+		}
 	}
-	return ret;
+	throw new Exception(format("Failed to read JSON from %s: %s", url, ex.msg), __FILE__, __LINE__, ex);
 }
 
 private {
