@@ -22,7 +22,7 @@ html
 					p
 						a(href="#{req.rootDir}register") Register
 					p
-						a(href="#{req.rootDir}login") Log in
+						a(href='#{req.rootDir}login?redirect=#{req.requestURL == "/" ? "/my_packages" : req.requestURL}') Log in
 		
 		nav#topnav
 			- auto items = ["Packages;", "About;about", "Development;develop", "Package format;package-format", "Download;download"];
