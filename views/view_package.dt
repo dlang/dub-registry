@@ -8,6 +8,11 @@ block title
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 	
 block body
+
+	- import vibe.data.bson;
+	- if (user && req.session && user._id == BsonObjectID.fromString(req.session["userID"]))
+		a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
+
 	h2 Description
 
 	p= versionInfo.description.opt!string
