@@ -7,11 +7,6 @@ html
 		title= title ~ " - DUB registry"
 	body
 		#header
-			a.blind(href="http://code.dlang.org/")
-				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
-			div#title
-				| DUB registry
-				h1= title
 			#profile
 				- if( req.session )
 					p
@@ -23,8 +18,17 @@ html
 						a(href="#{req.rootDir}register") Register
 					p
 						a(href='#{req.rootDir}login?redirect=#{req.requestURL == "/" ? "/my_packages" : req.requestURL}') Log in
+			a.blind(href="http://code.dlang.org/")
+				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
+			div#title
+				| DUB registry
+				h1= title
 		
 		nav#topnav
+			form(method="GET", action="#{req.rootDir}search")
+				input(name="q", type="text", placeholder="search for package", autofocus)
+				button(type="submit") Search
+
 			- auto items = ["Packages;", "About;about", "Development;develop", "Package format;package-format", "Download;download"];
 			- if (req.session) items ~= "My packages;my_packages";
 			ul
@@ -34,10 +38,6 @@ html
 				- if( parts[1].empty ) active = req.path == "/";
 				li(class=(active ? "active" : ""))
 					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
-
-			form(method="GET", action="#{req.rootDir}search")
-				input(name="q", type="text", placeholder="search for package", autofocus)
-				button(type="submit") Search
 
 		#content
 			block body
