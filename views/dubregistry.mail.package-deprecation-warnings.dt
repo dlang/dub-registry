@@ -1,0 +1,17 @@
+extends userman.mail.layout
+
+block title
+	- auto title = "Weekly deprecation reminder";
+
+block body
+	- import vibe.textfilter.urlencode;
+
+	p The following packages are using deprecated features and will need to get updated at some point:
+
+	dl
+		- foreach (pack, warnings; deprecations)
+			dt= pack
+			dd
+				ul
+					- foreach (w; warnings)
+						li(style="color: f80")= w

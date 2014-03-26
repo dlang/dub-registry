@@ -1,0 +1,16 @@
+extends userman.mail.layout
+
+block title
+	- auto title = "Errors in package "~package_name~", version "~branch_or_version;
+
+block body
+	- import vibe.textfilter.urlencode;
+
+	p The following errors have been detected for the recently added/updated version <strong>#{branch_or_version}</strong> of package <strong>#{package_name}</strong>:
+
+	ul
+		- foreach (e; errors)
+			li(style="color: red")= e
+
+	- if (!branch_or_version.startsWith("~"))
+		p Please fix the errors and update the tag, or, preferably, add a new version tag.
