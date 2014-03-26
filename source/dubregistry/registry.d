@@ -172,19 +172,11 @@ class DubRegistry {
 		auto rep = getRepository(pack.repository);
 
 		Json[] vers;
-		foreach( v; pack.branches ){
+		foreach (v; pack.versions) {
 			auto nfo = v.info;
 			nfo["version"] = v.version_;
 			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl(v.version_); // obsolete, will be removed in april 2013
-			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
-			vers ~= nfo;
-		}
-		foreach( v; pack.versions ){
-			auto nfo = v.info;
-			nfo["version"] = v.version_;
-			nfo.date = v.date.toSysTime().toISOExtString();
-			nfo.url = rep.getDownloadUrl("v" ~ v.version_); // obsolete, will be removed in april 2013
+			nfo.url = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
 			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			vers ~= nfo;
 		}
@@ -217,19 +209,11 @@ class DubRegistry {
 	{
 		auto dbpack = m_db.getPackage(packname);
 		string deffile;
-		if (ver.startsWith("~")) {
-			foreach (b; dbpack.branches)
-				if (b.version_ == ver) {
-					deffile = b.info.packageDescriptionFile.opt!string;
-					break;
-				}
-		} else {
-			foreach (t; dbpack.versions)
-				if (t.version_ == ver) {
-					deffile = t.info.packageDescriptionFile.opt!string;
-					break;
-				}
-		}
+		foreach (t; dbpack.versions)
+			if (t.version_ == ver) {
+				deffile = t.info.packageDescriptionFile.opt!string;
+				break;
+			}
 		auto verinfo = getVersionInfo(rep, reference, deffile);
 		return addVersion(packname, ver, verinfo);
 	}
@@ -262,22 +246,15 @@ class DubRegistry {
 		dbver.version_ = ver;
 		dbver.info = info.info;
 
-		if (!ver.startsWith("~")) {
-			if (m_db.hasVersion(packname, ver)) {
-				m_db.updateVersion(packname, dbver);
-				return false;
-			}
-			enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
-			if (auto pv = "version" in info.info)
-				enforce("v"~pv.get!string == ver, format("Package description contains obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
-			m_db.addVersion(packname, dbver);
-		} else {
-			if (m_db.hasBranch(packname, ver)) {
-				m_db.updateBranch(packname, dbver);
-				return false;
-			}
-			m_db.addBranch(packname, dbver);
+		if (m_db.hasVersion(packname, ver)) {
+			m_db.updateVersion(packname, dbver);
+			return false;
 		}
+
+		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
+		if (auto pv = "version" in info.info)
+			enforce(pv.get!string == ver, format("Package description contains obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
+		m_db.addVersion(packname, dbver);
 		return true;
 	}
 
@@ -288,8 +265,7 @@ class DubRegistry {
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
-		if (ver.startsWith("~")) m_db.removeBranch(packname, ver);
-		else m_db.removeVersion(packname, ver);
+		m_db.removeVersion(packname, ver);
 	}
 
 	private void processUpdateQueue()

@@ -26,11 +26,17 @@ class DbController {
 
 		// update package format
 		foreach(p; m_packages.find()){
-			if( p.branches.type == Bson.Type.Object ){
+			if (p.branches.type == Bson.Type.object) {
 				Bson[] branches;
 				foreach( b; p.branches )
 					branches ~= b;
 				p.branches = branches;
+			}
+			if (p.branches.type == Bson.Type.array) {
+				auto versions = p.versions.get!(Bson[]);
+				foreach (b; p.branches) versions ~= b;
+				p.branches = Bson(null);
+				p.versions = Bson(versions);
 			}
 			m_packages.update(["_id": p._id], p);
 		}
@@ -89,40 +95,30 @@ class DbController {
 
 	void addVersion(string packname, DbPackageVersion ver)
 	{
-		assert(ver.version_.isValidVersion());
-		m_packages.update(["name": packname], ["$push": ["versions": ver]]);
+		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
+
+		while (true) {
+			auto versions = deserializeBson!(DbPackageVersion[])(m_packages.findOne(["name": packname], ["versions": true]).versions);
+			auto new_versions = versions ~ ver;
+			new_versions.sort!((a, b) => vcmp(a, b));
+
+			auto res = m_packages.findAndModify(["name": Bson(packname), "versions": serializeToBson(versions)], ["$set": ["versions": new_versions]], ["_id": true]);
+			if (!res.isNull) break;
+		}
+
 		updateKeywords(packname);
 	}
 
 	void removeVersion(string packname, string ver)
 	{
-		assert(ver.isValidVersion());
+		assert(ver.startsWith("~") || ver.isValidVersion());
 		m_packages.update(["name": packname], ["$pull": ["versions": ["version": ver]]]);
 	}
 
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
-		assert(ver.version_.isValidVersion());
+		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
 		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
-		updateKeywords(packname);
-	}
-
-	void addBranch(string packname, DbPackageVersion ver)
-	{
-		assert(ver.version_.startsWith("~"));
-		m_packages.update(["name": packname], ["$push": ["branches": ver]]);
-		updateKeywords(packname);
-	}
-
-	void removeBranch(string packname, string ver)
-	{
-		assert(ver.startsWith("~"));
-		m_packages.update(["name": packname], ["$pull": ["branches": ["version": ver]]]);
-	}
-
-	void updateBranch(string packname, DbPackageVersion ver)
-	{
-		m_packages.update(["name": packname, "branches.version": ver.version_], ["$set": ["branches.$": ver]]);
 		updateKeywords(packname);
 	}
 
@@ -131,14 +127,6 @@ class DbController {
 		auto packbson = Bson(packname);
 		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
 		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson], ["_id": true]);
-		return !ret.isNull();
-	}
-
-	bool hasBranch(string packname, string ver)
-	{
-		auto packbson = Bson(packname);
-		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
-		auto ret = m_packages.findOne(["name": packbson, "branches" : verbson], ["_id": true]);
 		return !ret.isNull();
 	}
 
@@ -173,7 +161,6 @@ class DbController {
 
 		processString(p.name);
 		foreach (ver; p.versions) processVer(ver.info);
-		foreach (ver; p.branches) processVer(ver.info);
 
 		Appender!(string[]) kwarray;
 		foreach (kw; keywords.byKey) kwarray ~= kw;
@@ -186,7 +173,7 @@ class DbController {
 			logDebugV("pack %s", bp.toJson());
 			auto p = deserializeBson!DbPackage(bp);
 			p.versions = p.versions
-				.filter!(v => v.version_.isValidVersion)
+				.filter!(v => v.version_.startsWith("~") || v.version_.isValidVersion)
 				.array
 				.sort!((a, b) => vcmp(a, b))
 				.array;
@@ -201,7 +188,6 @@ struct DbPackage {
 	string name;
 	Json repository;
 	DbPackageVersion[] versions;
-	DbPackageVersion[] branches;
 	string[] errors;
 	string[] categories;
 	string[] searchTerms;
@@ -221,8 +207,8 @@ bool vcmp(DbPackageVersion a, DbPackageVersion b)
 
 bool vcmp(string va, string vb)
 {
-	assert(va.isValidVersion && vb.isValidVersion);
-	return compareVersions(va, vb) < 0;
+	import dub.dependency;
+	return Version(va) < Version(vb);
 }
 
 private string[] splitAlphaNumParts(string str)
