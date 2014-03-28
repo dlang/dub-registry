@@ -244,6 +244,7 @@ class DubRegistry {
 		DbPackageVersion dbver;
 		dbver.date = BsonDate(info.date);
 		dbver.version_ = ver;
+		dbver.commitID = info.sha;
 		dbver.info = info.info;
 
 		if (m_db.hasVersion(packname, ver)) {

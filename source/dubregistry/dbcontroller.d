@@ -196,6 +196,7 @@ struct DbPackage {
 struct DbPackageVersion {
 	BsonDate date;
 	string version_;
+	@optional string commitID;
 	Json info;
 }
 
