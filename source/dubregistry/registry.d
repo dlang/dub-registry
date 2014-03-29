@@ -127,8 +127,8 @@ class DubRegistry {
 		auto tags = rep.getTags();
 		enforce(tags.canFind!(t => t.name.startsWith("v") && t.name[1 .. $].isValidVersion),
 			`The repository must have at least one tagged version (SemVer format, e.g. `
-			~ `"v1.0.0") to be published on the registry. Please add a proper tag using `
-			~ `"git tag" or similar means.`);
+			~ `"v1.0.0" or "v0.0.1") to be published on the registry. Please add a proper tag using `
+			~ `"git tag" or equivalent means and see http://semver.org for more information.`);
 
 		info.info.name = name.toLower();
 
