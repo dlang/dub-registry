@@ -270,6 +270,9 @@ class DubRegistryWebFrontend {
 
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
+			// add download to statistic
+			m_registry.addDownload(BsonObjectID.fromString(packageInfo.id.get!string), ver, req.headers.get("User-agent", null));
+			// redirect to hosting service specific URL
 			res.redirect(versionInfo.downloadUrl.get!string);
 		} else if ( ext == "json") {
 			if (pname.canFind(":")) return;

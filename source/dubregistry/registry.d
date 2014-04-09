@@ -141,6 +141,11 @@ class DubRegistry {
 		triggerPackageUpdate(pack.name);
 	}
 
+	void addDownload(BsonObjectID pack_id, string ver, string agent)
+	{
+		m_db.addDownload(pack_id, ver, agent);
+	}
+
 	void removePackage(string packname, BsonObjectID user)
 	{
 		logInfo("Removing package %s of %s", packname, user);
@@ -182,6 +187,7 @@ class DubRegistry {
 		}
 
 		Json ret = Json.emptyObject;
+		ret.id = pack._id.toString();
 		ret.dateAdded = pack._id.timeStamp.toISOExtString();
 		ret.owner = pack.owner.toString();
 		ret.name = packname;

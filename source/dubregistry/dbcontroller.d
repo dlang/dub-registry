@@ -17,12 +17,14 @@ import vibe.vibe;
 class DbController {
 	private {
 		MongoCollection m_packages;
+		MongoCollection m_downloads;
 	}
 
 	this(string dbname)
 	{
 		auto db = connectMongoDB("127.0.0.1").getDatabase(dbname);
 		m_packages = db["packages"];
+		m_downloads = db["downloads"];
 
 		// update package format
 		foreach(p; m_packages.find()){
@@ -46,6 +48,7 @@ class DbController {
 		// create indices
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
 		m_packages.ensureIndex(["searchTerms": 1]);
+
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -143,6 +146,18 @@ class DbController {
 		return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
 	}
 
+	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)
+	{
+		DbPackageDownload download;
+		download._id = BsonObjectID.generate();
+		download.package_ = pack;
+		download.version_ = ver;
+		download.time = Clock.currTime(UTC());
+		download.userAgent = user_agent;
+		m_downloads.insert(download);
+		return download._id;
+	}
+
 	private void updateKeywords(string package_name)
 	{
 		auto p = getPackage(package_name);
@@ -198,6 +213,14 @@ struct DbPackageVersion {
 	string version_;
 	@optional string commitID;
 	Json info;
+}
+
+struct DbPackageDownload {
+	BsonObjectID _id;
+	BsonObjectID package_;
+	string version_;
+	SysTime time;
+	string userAgent;
 }
 
 
