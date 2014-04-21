@@ -265,7 +265,7 @@ block body
 			td workingDirectory
 			td
 				code string
-			td The directory from which the generated executable will be run (defaults to <code>"targetPath"</code>) - this field does not support platform suffixes
+			td A fixed working directory from which the generated executable will be run - this field does not support platform suffixes
 
 		tr
 			td subConfigurations
