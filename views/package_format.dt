@@ -687,10 +687,10 @@ block body
 		|	"name": "my-package",
 		|	"buildTypes": {
 		|		"debug": {
-		|			"buildOptions": ["debug", "debugInfo", "optimize"]
+		|			"buildOptions": ["debugMode", "debugInfo", "optimize"]
 		|		},
 		|		"debug-profile": {
-		|			"buildOptions": ["debug", "debugInfo", "profile"]
+		|			"buildOptions": ["debugMode", "debugInfo", "profile"]
 		|		}
 		|	}
 		|}
