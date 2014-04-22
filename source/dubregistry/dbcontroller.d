@@ -96,6 +96,11 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
 	}
 
+	void setPackageRepository(string packname, Json repo)
+	{
+		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
+	}
+
 	void addVersion(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());

@@ -65,6 +65,7 @@ class DubRegistryWebFrontend {
 		router.post("/my_packages/:packname/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
 		router.post("/my_packages/:packname/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
 		router.post("/my_packages/:packname/set_categories", m_usermanweb.auth(toDelegate(&updatePackageCategories)));
+		router.post("/my_packages/:packname/set_repository", m_usermanweb.auth(toDelegate(&updatePackageRepository)));
 		router.get("*", serveStaticFiles("./public"));
 	}
 
@@ -423,6 +424,26 @@ class DubRegistryWebFrontend {
 			categories ~= cat;
 		}
 		m_registry.setPackageCategories(pack_name, categories);
+		res.redirect("/my_packages/"~pack_name);
+	}
+
+	void updatePackageRepository(HTTPServerRequest req, HTTPServerResponse res, User user)
+	{
+		auto pack_name = req.params["packname"];
+		enforceUserPackage(user, pack_name);
+
+		Json rep = Json.emptyObject;
+		rep["kind"] = req.form["kind"];
+		rep["owner"] = req.form["owner"];
+		rep["project"] = req.form["project"];
+
+		try m_registry.setPackageRepository(pack_name, rep);
+		catch (Exception e) {
+			req.params["updateRepositoryError"] = e.msg;
+			showMyPackagesPackage(req, res, user);
+			return;
+		}
+
 		res.redirect("/my_packages/"~pack_name);
 	}
 

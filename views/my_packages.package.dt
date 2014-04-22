@@ -44,11 +44,25 @@ block body
 		button(type="submit") Apply
 
 	- if (pack.errors.length)
-		h2 Errors:
+		h2 Package errors:
 		ul
 			- foreach (e; pack.errors)
 				li.error= e
 
 	h2 Repository
 
-	p You will be able to view/change repository information here in the future.
+	- if (auto pe = "updateRepositoryError" in req.params)
+		p.error= *pe
+
+	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
+		select(name="kind", size="1")
+			option(value="github", selected=pack.repository.kind == "github") GitHub project
+			option(value="bitbucket", selected=pack.repository.kind == "bitbucket") Bitbucket project
+		p
+			label(for="owner") Repository owner:
+			input(type="text", name="owner", value=pack.repository.owner.get!string)
+		p
+			label(for="project") Repository name:
+			input(type="text", name="project", value=pack.repository.project.get!string)
+		p
+			button(type="submit") Apply

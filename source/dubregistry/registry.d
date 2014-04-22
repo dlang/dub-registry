@@ -91,50 +91,11 @@ class DubRegistry {
 
 	void addPackage(Json repository, BsonObjectID user)
 	{
-		// find the packge info of ~master or any available branch
-		PackageVersionInfo info;
-		auto rep = getRepository(repository);
-		auto branches = rep.getBranches();
-		enforce(branches.length > 0, "The repository contains no branches.");
-		auto idx = branches.countUntil!(b => b.name == "master");
-		if (idx > 0) swap(branches[0], branches[idx]);
-		string branch_errors;
-		foreach (b; branches) {
-			try {
-				info = rep.getVersionInfo(b, null);
-				enforce (info.info.type == Json.Type.object,
-					"JSON package description must be a JSON object.");
-				break;
-			} catch (Exception e) {
-				logDiagnostic("Error getting package info for %s", b);
-				branch_errors ~= format("\n%s: %s", b.name, e.msg);
-			}
-		}
-		enforce (info.info.type == Json.Type.object,
-			"Failed to find a branch containing a valid package description file:" ~ branch_errors);
-
-		// derive package name and perform various sanity checks
-		auto name = info.info.name.get!string;
-		enforce(name == name.toLower(), "Package names must be all lower case.");
-		enforce(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty.`);
-		enforce(info.info.description.opt!string.length > 0, `A "description" field in the package description file is missing or empty.`);
-		checkPackageName(name);
-		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
-			foreach (p; n.split(":"))
-				checkPackageName(p);
-
-		// ensure that at least one tagged version is present
-		auto tags = rep.getTags();
-		enforce(tags.canFind!(t => t.name.startsWith("v") && t.name[1 .. $].isValidVersion),
-			`The repository must have at least one tagged version (SemVer format, e.g. `
-			~ `"v1.0.0" or "v0.0.1") to be published on the registry. Please add a proper tag using `
-			~ `"git tag" or equivalent means and see http://semver.org for more information.`);
-
-		info.info.name = name.toLower();
+		auto pack_name = validateRepository(repository);
 
 		DbPackage pack;
 		pack.owner = user;
-		pack.name = info.info.name.get!string.toLower();
+		pack.name = pack_name;
 		pack.repository = repository;
 		m_db.addPackage(pack);
 
@@ -204,11 +165,62 @@ class DubRegistry {
 		m_db.setPackageCategories(pack_name, categories);
 	}
 
+	void setPackageRepository(string pack_name, Json repository)
+	{
+		auto new_name = validateRepository(repository);
+		enforce(pack_name == new_name, "The package name of the new repository doesn't match the existing one: "~new_name);
+		m_db.setPackageRepository(pack_name, repository);
+	}
+
 	void checkForNewVersions()
 	{
 		logInfo("Triggering check for new versions...");
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
+	}
+
+	protected string validateRepository(Json repository)
+	{
+		// find the packge info of ~master or any available branch
+		PackageVersionInfo info;
+		auto rep = getRepository(repository);
+		auto branches = rep.getBranches();
+		enforce(branches.length > 0, "The repository contains no branches.");
+		auto idx = branches.countUntil!(b => b.name == "master");
+		if (idx > 0) swap(branches[0], branches[idx]);
+		string branch_errors;
+		foreach (b; branches) {
+			try {
+				info = rep.getVersionInfo(b, null);
+				enforce (info.info.type == Json.Type.object,
+					"JSON package description must be a JSON object.");
+				break;
+			} catch (Exception e) {
+				logDiagnostic("Error getting package info for %s", b);
+				branch_errors ~= format("\n%s: %s", b.name, e.msg);
+			}
+		}
+		enforce (info.info.type == Json.Type.object,
+			"Failed to find a branch containing a valid package description file:" ~ branch_errors);
+
+		// derive package name and perform various sanity checks
+		auto name = info.info.name.get!string;
+		enforce(name == name.toLower(), "Package names must be all lower case.");
+		enforce(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty.`);
+		enforce(info.info.description.opt!string.length > 0, `A "description" field in the package description file is missing or empty.`);
+		checkPackageName(name);
+		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
+			foreach (p; n.split(":"))
+				checkPackageName(p);
+
+		// ensure that at least one tagged version is present
+		auto tags = rep.getTags();
+		enforce(tags.canFind!(t => t.name.startsWith("v") && t.name[1 .. $].isValidVersion),
+			`The repository must have at least one tagged version (SemVer format, e.g. `
+			~ `"v1.0.0" or "v0.0.1") to be published on the registry. Please add a proper tag using `
+			~ `"git tag" or equivalent means and see http://semver.org for more information.`);
+
+		return name;
 	}
 
 	protected bool addVersion(string packname, string ver, Repository rep, RefInfo reference)
