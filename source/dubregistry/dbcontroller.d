@@ -68,7 +68,7 @@ class DbController {
 
 	auto getAllPackages()
 	{
-		return m_packages.find(Bson.EmptyObject, ["name": 1]).map!(p => p.name.get!string)();
+		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p.name.get!string)();
 	}
 
 	auto getUserPackages(BsonObjectID user_id)
