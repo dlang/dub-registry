@@ -5,7 +5,12 @@ block title
 	
 block body
 
-	p.warn Warning: removing a package will break all projects that depend on it! If you want to rename the project, please consider to create a new repository instead and leave the old one here.
+	p.warn <strong>Warning:</strong> Removing a package will break all projects that depend on it! This will also cause all download statistics about the package to get lost.
+
+	ul
+		li If you want to <strong>rename the project</strong>, please consider to create a new repository instead and keep the old one with a note in the description.
+		li If you want to <strong>migrate to a different repository location</strong>, use the appropriate function on the package management page.
+		li If you want to <strong>transfer the ownership of the package</strong>, please open a ticket on GitHub.
 
 	p
 		form(method="POST", action='#{req.rootDir}my_packages/#{packageName}/remove_confirm')
