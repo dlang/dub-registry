@@ -1,5 +1,5 @@
 /**
-	Copyright: © 2013 rejectedsoftware e.K.
+	Copyright: © 2013-2014 rejectedsoftware e.K.
 	License: Subject to the terms of the GNU GPLv3 license, as written in the included LICENSE.txt file.
 	Authors: Sönke Ludwig
 */
@@ -10,6 +10,7 @@ import vibe.db.mongo.mongo;
 import vibe.http.client;
 import vibe.stream.memory;
 
+import std.array : startsWith;
 import std.exception;
 
 
@@ -50,44 +51,59 @@ class URLCache {
 
 		InputStream result;
 
-		requestHTTP(url,
-			(scope req){
-				if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
-			},
-			(scope res){
-				if( res.statusCode == HTTPStatus.NotModified ){
-					logDiagnostic("Cache HIT: %s", url.toString());
-					auto data = be["data"].get!BsonBinData().rawData();
-					result = new MemoryStream(cast(ubyte[])data, false);
-					return;
+		foreach (i; 0 .. 10) { // follow max 10 redirects
+			requestHTTP(url,
+				(scope req){
+					if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
+				},
+				(scope res){
+					switch (res.statusCode) {
+						default:
+							throw new Exception("Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
+						case HTTPStatus.notModified:
+							logDiagnostic("Cache HIT: %s", url.toString());
+							auto data = be["data"].get!BsonBinData().rawData();
+							result = new MemoryStream(cast(ubyte[])data, false);
+							break;
+						case HTTPStatus.notFound:
+							throw new FileNotFoundException("File '"~url.toString()~"' does not exist.");
+						case HTTPStatus.movedPermanently, HTTPStatus.found, HTTPStatus.temporaryRedirect:
+							auto pv = "Location" in res.headers;
+							enforce(pv !is null, "Server responded with redirect but did not specify the redirect location for "~url.toString());
+							logDebug("Redirect to '%s'", *pv);
+							if (startsWith((*pv), "http:") || startsWith((*pv), "https:")) {
+								url = URL(*pv);
+							} else url.localURI = *pv;
+							break;
+						case HTTPStatus.ok:
+							if (auto pet = "ETag" in res.headers) {
+								logDiagnostic("Cache MISS: %s", url.toString());
+								auto dst = new MemoryOutputStream;
+								dst.write(res.bodyReader);
+								auto rawdata = dst.data;
+								entry.etag = *pet;
+								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
+								m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
+								result = new MemoryStream(rawdata, false);
+								break;
+							}
+
+							logDebug("Response without etag.. not caching: "~url.toString());
+
+							logDiagnostic("Cache MISS (no etag): %s", url.toString());
+							callback(res.bodyReader);
+							break;
+					}
 				}
+			);
 
-				if (res.statusCode == HTTPStatus.notFound) {
-					throw new FileNotFoundException("File '"~url.toString()~"' does not exist.");
-				}
-
-				enforce(res.statusCode == HTTPStatus.OK, "Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
-
-				if (auto pet = "ETag" in res.headers) {
-					logDiagnostic("Cache MISS: %s", url.toString());
-					auto dst = new MemoryOutputStream;
-					dst.write(res.bodyReader);
-					auto rawdata = dst.data;
-					entry.etag = *pet;
-					entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
-					m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
-					result = new MemoryStream(rawdata, false);
-					return;
-				}
-
-				logDebug("Response without etag.. not caching: "~url.toString());
-
-				logDiagnostic("Cache MISS (no etag): %s", url.toString());
-				callback(res.bodyReader);
+			if (result) {
+				callback(result);
+				return;
 			}
-		);
+		}
 
-		if( result ) callback(result);
+		throw new Exception("Too many redirects for "~url.toString());
 	}
 }
 
