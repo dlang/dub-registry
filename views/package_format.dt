@@ -328,6 +328,12 @@ block body
 			td A list of D versions to be defined during compilation
 
 		tr
+			td debugVersions
+			td
+				code string[]
+			td A list of D debug identifiers to be defined during compilation
+
+		tr
 			td importPaths
 			td
 				code string[]
