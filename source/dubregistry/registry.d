@@ -205,6 +205,7 @@ class DubRegistry {
 
 		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
+		enforce(name.length <= 60, "Package names must not be longer than 60 characters.");
 		enforce(name == name.toLower(), "Package names must be all lower case.");
 		enforce(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty.`);
 		enforce(info.info.description.opt!string.length > 0, `A "description" field in the package description file is missing or empty.`);
