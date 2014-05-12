@@ -40,12 +40,16 @@ block body
 		- foreach( pl; packages )
 			- if( pl.versions.length )
 				- auto p = getBestVersion(pl.versions);
+				- auto desc = p.description.opt!string;
 				tr
 					td
 						a(href="packages/#{pl.name}")= pl.name
 					td.nobreak= p["version"].opt!string()
 					td.nobreak= formatDate(p.date)
-					td= p.description.opt!string
+					- if (desc.length <= 100)
+						td= desc
+					- else
+						td #{desc[0 .. 100]}&hellip;
 
 	p Found #{packages.length} packages.
 
