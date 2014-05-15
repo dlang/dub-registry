@@ -170,6 +170,7 @@ class DubRegistry {
 		auto new_name = validateRepository(repository);
 		enforce(pack_name == new_name, "The package name of the new repository doesn't match the existing one: "~new_name);
 		m_db.setPackageRepository(pack_name, repository);
+		if (pack_name in m_packageInfos) m_packageInfos.remove(pack_name);
 	}
 
 	void checkForNewVersions()
