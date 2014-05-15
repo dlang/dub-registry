@@ -33,6 +33,13 @@ class URLCache {
 
 	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 	{
+		import vibe.http.auth.basic_auth;
+
+		auto user = url.username;
+		auto password = url.password;
+		url.username = null;
+		url.password = null;
+
 		auto be = m_entries.findOne(["url": url.toString()]);
 		CacheEntry entry;
 		if( !be.isNull() ) {
@@ -54,7 +61,8 @@ class URLCache {
 		foreach (i; 0 .. 10) { // follow max 10 redirects
 			requestHTTP(url,
 				(scope req){
-					if( entry.etag.length ) req.headers["If-None-Match"] = entry.etag;
+					if (entry.etag.length) req.headers["If-None-Match"] = entry.etag;
+					if (user.length) addBasicAuth(req, user, password);
 				},
 				(scope res){
 					switch (res.statusCode) {

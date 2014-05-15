@@ -37,7 +37,12 @@ shared static this()
 {
 	setLogFile("log.txt", LogLevel.diagnostic);
 
-	GithubRepository.register();
+	import dub.internal.utils : jsonFromFile;
+	auto regsettingsjson = jsonFromFile(Path("settings.json"), true);
+	auto ghuser = regsettingsjson["github-user"].opt!string;
+	auto ghpassword = regsettingsjson["github-password"].opt!string;
+
+	GithubRepository.register(ghuser, ghpassword);
 	BitbucketRepository.register();
 
 	auto router = new URLRouter;
