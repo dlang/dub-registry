@@ -37,8 +37,10 @@ code {
 	padding: 0 2pt;
 }
 
-pre.code {
+pre.code, pre > code {
+	display: block;
 	border: 1px solid #bbb;
+	margin: 6pt 0;
 	padding: 3pt;
 	background-color: #F0F0F0;
 	font-family: 'Courier New', monospace;

@@ -144,6 +144,7 @@ class DubRegistry {
 			nfo.date = v.date.toSysTime().toISOExtString();
 			nfo.url = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
 			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
+			nfo.readme = v.readme;
 			vers ~= nfo;
 		}
 
@@ -227,6 +228,9 @@ class DubRegistry {
 
 	protected bool addVersion(string packname, string ver, Repository rep, RefInfo reference)
 	{
+		logDiagnostic("Adding new version info %s for %s", ver, packname);
+		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
+
 		auto dbpack = m_db.getPackage(packname);
 		string deffile;
 		foreach (t; dbpack.versions)
@@ -234,15 +238,7 @@ class DubRegistry {
 				deffile = t.info.packageDescriptionFile.opt!string;
 				break;
 			}
-		auto verinfo = getVersionInfo(rep, reference, deffile);
-		return addVersion(packname, ver, verinfo);
-	}
-
-	protected bool addVersion(string packname, string ver, PackageVersionInfo info)
-	{
-		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
-
-		logDiagnostic("Adding new version info %s for %s", ver, packname);
+		auto info = getVersionInfo(rep, reference, deffile);
 
 		// clear cached Json
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
@@ -266,6 +262,9 @@ class DubRegistry {
 		dbver.version_ = ver;
 		dbver.commitID = info.sha;
 		dbver.info = info.info;
+
+		try rep.readFile(reference.sha, Path("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
+		catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
 
 		if (m_db.hasVersion(packname, ver)) {
 			m_db.updateVersion(packname, dbver);

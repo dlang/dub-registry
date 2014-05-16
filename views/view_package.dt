@@ -90,6 +90,17 @@ block body
 		|	}
 		|}
 	
+	- if (versionInfo.readme.opt!string.length)
+		hr
+
+		- import vibe.textfilter.markdown;
+		- scope msettings = new MarkdownSettings;
+		- msettings.flags = MarkdownFlags.none;
+		- msettings.headingBaseLevel = 2;
+		!= filterMarkdown(versionInfo.readme.get!string, msettings)
+
+		hr
+
 	h2 Available versions
 
 	- foreach_reverse (v; packageInfo.versions)
@@ -98,3 +109,4 @@ block body
 			em= vs
 		- else
 			a(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')= vs
+
