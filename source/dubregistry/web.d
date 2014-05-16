@@ -22,12 +22,13 @@ import vibe.d;
 
 class DubRegistryWebFrontend {
 	private {
-		struct Category { string name, description, indentedDescription; }
+		struct Category { string name, description, indentedDescription, imageName; }
 
 		DubRegistry m_registry;
 		UserManController m_userman;
 		UserManWebInterface m_usermanweb;
 		Category[] m_categories;
+		Category[string] m_categoryMap;
 	}
 
 	this(DubRegistry registry, UserManController userman)
@@ -123,7 +124,8 @@ class DubRegistryWebFrontend {
 		res.renderCompat!("home.dt",
 			HTTPServerRequest, "req",
 			Category[], "categories",
-			Json[], "packages")(req, m_categories, packages);
+			Category[string], "categoryMap",
+			Json[], "packages")(req, m_categories, m_categoryMap, packages);
 	}
 
 	void showSearchResults(HTTPServerRequest req, HTTPServerResponse res)
@@ -470,6 +472,11 @@ class DubRegistryWebFrontend {
 			else if (path.length == 2)
 				cat.indentedDescription = "\u00a0└ " ~ cat.description;
 			else cat.indentedDescription = cat.description;
+			foreach_reverse (i; 0 .. path.length)
+				if (existsFile("public/images/categories/"~path[0 .. i].join(".")~".png")) {
+					cat.imageName = path[0 .. i].join(".");
+					break;
+				}
 			cats ~= cat;
 			if ("categories" in node)
 				foreach (subcat; node.categories)
@@ -478,5 +485,8 @@ class DubRegistryWebFrontend {
 		foreach (top_level_cat; json)
 			processNode(top_level_cat, null);
 		m_categories = cats;
+
+		m_categoryMap = null;
+		foreach (c; m_categories) m_categoryMap[c.name] = c;
 	}
 }

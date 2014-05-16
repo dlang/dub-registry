@@ -43,6 +43,12 @@ block body
 				- auto desc = p.description.opt!string;
 				tr
 					td
+						- string image;
+						- if (pl.categories.length)
+							- if (auto pc = pl.categories[0].get!string in categoryMap)
+								- image = pc.imageName;
+						- if (!image.length) image = "unknown";
+						img.category-icon(src="images/categories/#{image}.png")
 						a(href="packages/#{pl.name}")= pl.name
 					td.nobreak= p["version"].opt!string()
 					td.nobreak= formatDate(p.date)

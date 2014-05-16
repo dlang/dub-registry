@@ -46,7 +46,7 @@ block body
 	- if (pack.errors.length)
 		h2 Package errors:
 		ul
-			- foreach (e; pack.errors)
+			- foreach_reverse (e; pack.errors)
 				li.error= e
 
 	h2 Repository

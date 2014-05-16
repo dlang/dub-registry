@@ -199,6 +199,8 @@ h3 {
 #content table.form th { border: none; background: none; }
 #content table.form td { border: none; }
 
+.category-icon { width: 16px; height: 16px; vertical-align: middle; }
+
 
 /********************/
 /* FOOTER           */
