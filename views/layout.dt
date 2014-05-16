@@ -26,7 +26,7 @@ html
 		
 		nav#topnav
 			form(method="GET", action="#{req.rootDir}search")
-				input(name="q", type="text", placeholder="search for package", autofocus)
+				input(name="q", type="text", placeholder="search for package")
 				button(type="submit") Search
 
 			- auto items = ["Packages;", "About;about", "Development;develop", "Package format;package-format", "Download;download"];
