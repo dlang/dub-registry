@@ -91,15 +91,11 @@ block body
 		|}
 	
 	- if (versionInfo.readme.opt!string.length)
-		hr
-
 		- import vibe.textfilter.markdown;
 		- scope msettings = new MarkdownSettings;
-		- msettings.flags = MarkdownFlags.none;
+		- msettings.flags = MarkdownFlags.backtickCodeBlocks;
 		- msettings.headingBaseLevel = 2;
 		!= filterMarkdown(versionInfo.readme.get!string, msettings)
-
-		hr
 
 	h2 Available versions
 
