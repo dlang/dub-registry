@@ -96,11 +96,12 @@ block body
 		|}
 	
 	- if (versionInfo.readme.opt!string.length)
-		- import vibe.textfilter.markdown;
-		- scope msettings = new MarkdownSettings;
-		- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
-		- msettings.headingBaseLevel = 2;
-		!= filterMarkdown(versionInfo.readme.get!string, msettings)
+		section.repositoryReadme
+			- import vibe.textfilter.markdown;
+			- scope msettings = new MarkdownSettings;
+			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
+			- msettings.headingBaseLevel = 2;
+			!= filterMarkdown(versionInfo.readme.get!string, msettings)
 
 	h2 Available versions
 
