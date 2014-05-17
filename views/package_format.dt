@@ -245,6 +245,12 @@ block body
 			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see <a href="#version-specs">next section</a> for how version specifications look like
 
 		tr
+			td systemDependencies
+			td
+				code string
+			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors.
+
+		tr
 			td targetType
 			td
 				code string

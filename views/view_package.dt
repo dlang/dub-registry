@@ -77,6 +77,11 @@ block body
 								a(href="#{req.rootDir}packages/#{urlEncode(dep)}")= dep
 				- else
 					td none
+		
+		- if (auto ps = "systemDependencies" in versionInfo)
+			tr
+				td System dependencies
+				td= *ps
 
 	h2 Installation
 	
@@ -93,7 +98,7 @@ block body
 	- if (versionInfo.readme.opt!string.length)
 		- import vibe.textfilter.markdown;
 		- scope msettings = new MarkdownSettings;
-		- msettings.flags = MarkdownFlags.backtickCodeBlocks;
+		- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
 		- msettings.headingBaseLevel = 2;
 		!= filterMarkdown(versionInfo.readme.get!string, msettings)
 

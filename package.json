@@ -9,7 +9,7 @@
 	],
 	"dependencies": {
 		"userman": ">=0.0.10",
-		"vibe-d": ">=0.7.18",
+		"vibe-d": ">=0.7.20-beta.3",
 		"dub": ">=0.9.21"
 	},
 	"subConfigurations": {
