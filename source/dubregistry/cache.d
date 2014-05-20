@@ -75,6 +75,7 @@ class URLCache {
 							result = new MemoryStream(cast(ubyte[])data, false);
 							break;
 						case HTTPStatus.notFound:
+							res.dropBody();
 							throw new FileNotFoundException("File '"~url.toString()~"' does not exist.");
 						case HTTPStatus.movedPermanently, HTTPStatus.found, HTTPStatus.temporaryRedirect:
 							auto pv = "Location" in res.headers;
@@ -85,12 +86,13 @@ class URLCache {
 							} else url.localURI = *pv;
 							break;
 						case HTTPStatus.ok:
-							if (auto pet = "ETag" in res.headers) {
+							auto pet = "ETag" in res.headers;
+							if (pet || cache_priority) {
 								logDiagnostic("Cache MISS: %s", url.toString());
 								auto dst = new MemoryOutputStream;
 								dst.write(res.bodyReader);
 								auto rawdata = dst.data;
-								entry.etag = *pet;
+								if (pet) entry.etag = *pet;
 								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
 								m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
 								result = new MemoryStream(rawdata, false);
