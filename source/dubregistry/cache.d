@@ -57,6 +57,7 @@ class URLCache {
 		}
 
 		InputStream result;
+		bool handled_uncached = false;
 
 		foreach (i; 0 .. 10) { // follow max 10 redirects
 			requestHTTP(url,
@@ -99,11 +100,14 @@ class URLCache {
 							logDebug("Response without etag.. not caching: "~url.toString());
 
 							logDiagnostic("Cache MISS (no etag): %s", url.toString());
+							handled_uncached = true;
 							callback(res.bodyReader);
-							return;
+							break;
 					}
 				}
 			);
+
+			if (handled_uncached) return;
 
 			if (result) {
 				callback(result);
