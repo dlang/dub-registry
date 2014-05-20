@@ -100,7 +100,7 @@ class URLCache {
 
 							logDiagnostic("Cache MISS (no etag): %s", url.toString());
 							callback(res.bodyReader);
-							break;
+							return;
 					}
 				}
 			);
