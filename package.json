@@ -9,8 +9,8 @@
 	],
 	"dependencies": {
 		"userman": ">=0.0.10",
-		"vibe-d": ">=0.7.20-beta.3",
-		"dub": ">=0.9.21"
+		"vibe-d": ">=0.7.20-rc.2",
+		"dub": ">=0.9.22-beta.2"
 	},
 	"subConfigurations": {
 		"dub": "library-nonet"
