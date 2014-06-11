@@ -32,7 +32,7 @@ block body
 								| (<a href="#{req.rootDir}my_packages/#{p}">more...</a>)
 		- if (!have_pack)
 			tr
-				td(colspan="3") You don't have registered any packages, yet.
+				td(colspan="3") You have not registered any packages yet.
 
 	p Note that it can take up to 30 min until new packages and new git tags are automatically reflected in the registry. You can force a manual update of individual packages on their details page.
 	
