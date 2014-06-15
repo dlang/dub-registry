@@ -207,14 +207,19 @@ class DubRegistry {
 
 		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
-		enforce(name.length <= 60, "Package names must not be longer than 60 characters: \""~name[0 .. 60]~"...\" Check package.json file.");
-		enforce(name == name.toLower(), "Package names must be all lower case, not \""~name~"\". Check package.json file.");
-		enforce(info.info.license.opt!string.length > 0, `A "license" field in the package description file is missing or empty. Check package.json file.`);
-		enforce(info.info.description.opt!string.length > 0, `A "description" field in the package description file is missing or empty. Check package.json file.`);
-		checkPackageName(name);
+		string package_check_string = "Check "~info.info.packageDescriptionFile.get!string~".";
+		enforce(name.length <= 60,
+			"Package names must not be longer than 60 characters: \""~name[0 .. 60]~"...\" - "~package_check_string);
+		enforce(name == name.toLower(),
+			"Package names must be all lower case, not \""~name~"\". "~package_check_string);
+		enforce(info.info.license.opt!string.length > 0,
+			`A "license" field in the package description file is missing or empty. `~package_check_string);
+		enforce(info.info.description.opt!string.length > 0,
+			`A "description" field in the package description file is missing or empty. `~package_check_string);
+		checkPackageName(name, package_check_string);
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			foreach (p; n.split(":"))
-				checkPackageName(p);
+				checkPackageName(p, package_check_string);
 
 		// ensure that at least one tagged version is present
 		auto tags = rep.getTags();
@@ -255,7 +260,7 @@ class DubRegistry {
 
 		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
 			foreach (p; n.split(":"))
-				checkPackageName(p);
+				checkPackageName(p, "Check "~info.info.packageDescriptionFile.get!string~".");
 
 		DbPackageVersion dbver;
 		dbver.date = BsonDate(info.date);
@@ -411,12 +416,13 @@ private Json readCachedJsonFile(Repository rep, string commit_sha, Path path)
 	return ret;
 }
 
-private void checkPackageName(string n){
-	enforce(n.length > 0, "Package names may not be empty.");
+private void checkPackageName(string n, string error_suffix)
+{
+	enforce(n.length > 0, "Package names may not be empty. "~error_suffix);
 	foreach( ch; n ){
 		switch(ch){
 			default:
-				throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-': "~n);
+				throw new Exception("Package names may only contain ASCII letters and numbers, as well as '_' and '-': "~n~" - "~error_suffix);
 			case 'a': .. case 'z':
 			case 'A': .. case 'Z':
 			case '0': .. case '9':
