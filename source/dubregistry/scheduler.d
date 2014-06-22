@@ -200,7 +200,10 @@ private Json readJsonFile(Path path)
 
 private void writeJsonFile(Path path, Json data)
 {
+	import vibe.stream.wrapper;
 	auto fil = openFile(path, FileMode.createTrunc);
 	scope (exit) fil.close();
-	fil.writePrettyJsonString(data);
+	auto rng = StreamOutputRange(fil);
+	auto prng = &rng;
+	writePrettyJsonString(prng, data);
 }
