@@ -29,7 +29,7 @@ function updateCategorySelector(i, parentcat)
 function setCategoryFromSelector(selidx)
 {
 	var cat = getSel(selidx).value;
-	if (selidx > 0 && cat == "") cat = getSel(selidx-1);
+	if (selidx > 0 && cat == "") cat = getSel(selidx-1).value;
 	setCategory(cat);
 }
 
