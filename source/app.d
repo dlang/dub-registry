@@ -62,8 +62,7 @@ shared static this()
 	s_registry = new DubRegistry(regsettings);
 
 	// web front end
-	auto webfrontend = new DubRegistryWebFrontend(s_registry, userdb);
-	webfrontend.register(router);
+	router.registerDubRegistryWebFrontend(s_registry, userdb);
 	
 	// start the web server
  	auto settings = new HTTPServerSettings;

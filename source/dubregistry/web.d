@@ -20,6 +20,16 @@ import std.string;
 import userman.web;
 import vibe.d;
 
+
+DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
+{
+	auto webfrontend = new DubRegistryWebFrontend(registry, userman);
+	webfrontend.m_usermanweb.register(router);
+	router.registerWebInterface(webfrontend);
+	router.get("*", serveStaticFiles("./public"));
+	return webfrontend;
+}
+
 class DubRegistryWebFrontend {
 	private {
 		struct Category { string name, description, indentedDescription, imageName; }
@@ -40,47 +50,21 @@ class DubRegistryWebFrontend {
 		updateCategories();
 	}
 
-	void register(URLRouter router)
-	{
-		m_usermanweb.register(router);
-
-		// user front end
-		router.get("/", &showHome);
-		router.get("/search", &showSearchResults);
-		router.get("/about", staticTemplate!"usage.dt");
-		router.get("/usage", staticRedirect("/about"));
-		router.get("/download", &showDownloads);
-		router.get("/publish", staticTemplate!"publish.dt");
-		router.get("/develop", staticTemplate!"develop.dt");
-		router.get("/package-format", staticTemplate!"package_format.dt");
-		router.get("/available", &showAvailable);
-		router.get("/packages/index.json", &showAvailable);
-		router.get("/packages/:packname", &showPackage); // HTML or .json
-		router.get("/packages/:packname/:version", &showPackageVersion); // HTML or .zip or .json
-		router.get("/view_package/:packname", &redirectViewPackage);
-		router.get("/my_packages", m_usermanweb.auth(toDelegate(&showMyPackages)));
-		router.get("/my_packages/register", m_usermanweb.auth(toDelegate(&showAddPackage)));
-		router.post("/my_packages/register", m_usermanweb.auth(toDelegate(&addPackage)));
-		router.get("/my_packages/:packname", m_usermanweb.auth(toDelegate(&showMyPackagesPackage)));
-		router.post("/my_packages/:packname/update", m_usermanweb.auth(toDelegate(&updatePackage)));
-		router.post("/my_packages/:packname/remove", m_usermanweb.auth(toDelegate(&showRemovePackage)));
-		router.post("/my_packages/:packname/remove_confirm", m_usermanweb.auth(toDelegate(&removePackage)));
-		router.post("/my_packages/:packname/set_categories", m_usermanweb.auth(toDelegate(&updatePackageCategories)));
-		router.post("/my_packages/:packname/set_repository", m_usermanweb.auth(toDelegate(&updatePackageRepository)));
-		router.get("*", serveStaticFiles("./public"));
-	}
-
-	void showAvailable(HTTPServerRequest req, HTTPServerResponse res)
+	// compatibility route
+	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		res.writeJsonBody(m_registry.availablePackages.array);
 	}
 
-	void showHome(HTTPServerRequest req, HTTPServerResponse res)
+	@path("/packages/index.json")
+	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		auto sort_by = req.query.get("sort", "updated");
-		auto category = req.query.get("category", null);
+		res.writeJsonBody(m_registry.availablePackages.array);
+	}
 
-
+	@path("/")
+	void getHome(string sort = "updated", string category = null)
+	{
 		// collect the package list
 		auto packapp = appender!(Json[])();
 		packapp.reserve(200);
@@ -115,28 +99,34 @@ class DubRegistryWebFrontend {
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
-		switch (sort_by) {
-			default: sort!((a, b) => compare(a, b))(packages); break;
-			case "name": sort!((a, b) => a.name < b.name)(packages); break;
-			case "added": sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
+		switch (sort) {
+			default: std.algorithm.sort!((a, b) => compare(a, b))(packages); break;
+			case "name": std.algorithm.sort!((a, b) => a.name < b.name)(packages); break;
+			case "added": std.algorithm.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
-		res.renderCompat!("home.dt",
-			HTTPServerRequest, "req",
-			Category[], "categories",
-			Category[string], "categoryMap",
-			Json[], "packages")(req, m_categories, m_categoryMap, packages);
+		auto categories = m_categories;
+		auto categoryMap = m_categoryMap;
+		render!("home.dt", categories, categoryMap, packages);
 	}
 
-	void showSearchResults(HTTPServerRequest req, HTTPServerResponse res)
+
+	void querySearch(string q = "")
 	{
-		auto queryString = req.query.get("q", "");
+		auto queryString = q;
 		auto keywords = queryString.split();
 		auto results = m_registry.searchPackages(keywords);
-		res.render!("search_results.dt", req, queryString, results);
+		render!("search_results.dt", queryString, results);
 	}
 
-	void showDownloads(HTTPServerRequest req, HTTPServerResponse res)
+	void getAbout() { render!("usage.dt"); }
+	void getUsage() { redirect("/about"); }
+	void getPublish() { render!("publish.dt"); }
+	void getDevelop() { render!("develop.dt"); }
+	@path("/package-format")
+	void getPackageFormat() { render!("package_format.dt"); }
+
+	void getDownload()
 	{
 		static struct DownloadFile {
 			string fileName;
@@ -218,20 +208,20 @@ class DubRegistryWebFrontend {
 
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
 
-		res.renderCompat!("download.dt",
-			HTTPServerRequest, "req",
-			Info*, "info")(req, &info);
+		render!("download.dt", info);
 	}
 
-	void redirectViewPackage(HTTPServerRequest req, HTTPServerResponse res)
+	@path("/view_package/:packname")
+	void getRedirectViewPackage(string _packname)
 	{
-		res.redirect("/packages/"~req.params["packname"]);
+		redirect("/packages/"~_packname);
 	}
 
-	void showPackage(HTTPServerRequest req, HTTPServerResponse res)
+	@path("/packages/:packname")
+	void getPackage(HTTPServerResponse res, string _packname)
 	{
 		bool json = false;
-		auto pname = req.params["packname"].urlDecode();
+		auto pname = _packname;
 		if( pname.endsWith(".json") ){
 			pname = pname[0 .. $-5];
 			json = true;
@@ -247,18 +237,15 @@ class DubRegistryWebFrontend {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(packageInfo);
 		} else {
-			res.renderCompat!("view_package.dt",
-				HTTPServerRequest, "req", 
-				string, "packageName",
-				User, "user",
-				Json, "packageInfo",
-				Json, "versionInfo")(req, pname, user, packageInfo, versionInfo);
+			string packageName = pname;
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo);
 		}
 	}
 
-	void showPackageVersion(HTTPServerRequest req, HTTPServerResponse res)
+	@path("/packages/:packname/:version")
+	void getPackageVersion(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
 	{
-		auto pname = req.params["packname"].urlDecode();
+		auto pname = _packname;
 
 		auto ver = req.params["version"].replace(" ", "+");
 		string ext;
@@ -276,17 +263,13 @@ class DubRegistryWebFrontend {
 			// add download to statistic
 			m_registry.addDownload(BsonObjectID.fromString(packageInfo.id.get!string), ver, req.headers.get("User-agent", null));
 			// redirect to hosting service specific URL
-			res.redirect(versionInfo.downloadUrl.get!string);
+			redirect(versionInfo.downloadUrl.get!string);
 		} else if ( ext == "json") {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(versionInfo);
 		} else {
-			res.renderCompat!("view_package.dt",
-				HTTPServerRequest, "req", 
-				string, "packageName",
-				User, "user",
-				Json, "packageInfo",
-				Json, "versionInfo")(req, pname, user, packageInfo, versionInfo);
+			auto packageName = pname;
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo);
 		}
 	}
 
@@ -332,121 +315,106 @@ class DubRegistryWebFrontend {
 		return true;
 	}
 
-	void showMyPackages(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth
+	void getMyPackages(User _user)
 	{
-		res.renderCompat!("my_packages.dt",
-			HTTPServerRequest, "req",
-			User, "user",
-			DubRegistry, "registry")(req, user, m_registry);
+		auto user = _user;
+		auto registry = m_registry;
+		render!("my_packages.dt", user, registry);
 	}
 
-	void showMyPackagesPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname")
+	void getMyPackagesPackage(string _packname, User _user, string _error = null)
 	{
-		auto packageName = req.params["packname"];
+		enforceUserPackage(_user, _packname);
+		auto packageName = _packname;
 		auto nfo = m_registry.getPackageInfo(packageName);
 		if (nfo.type == Json.Type.null_) return;
-		enforceUserPackage(user, packageName);
-		res.renderCompat!("my_packages.package.dt",
-			HTTPServerRequest, "req",
-			string, "packageName",
-			Category[], "categories",
-			User, "user",
-			DubRegistry, "registry")(req, packageName, m_categories, user, m_registry);
+		auto categories = m_categories;
+		auto registry = m_registry;
+		auto user = _user;
+		auto error = _error;
+		render!("my_packages.package.dt", packageName, categories, user, registry, error);
 	}
 
-	void showAddPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/register")
+	void getRegisterPackage(User _user, string _error = null)
 	{
-		string error = req.params.get("error", null);
-		res.renderCompat!("my_packages.register.dt",
-			HTTPServerRequest, "req",
-			User, "user",
-			string, "error",
-			DubRegistry, "registry")(req, user, error, m_registry);
+		auto user = _user;
+		string error = _error;
+		auto registry = m_registry;
+		render!("my_packages.register.dt", user, error, registry);
 	}
 
-	void addPackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/register") @errorDisplay!getRegisterPackage
+	void postRegisterPackage(string kind, string owner, string project, User _user)
 	{
 		Json rep = Json.emptyObject;
-		rep["kind"] = req.form["kind"];
-		rep["owner"] = req.form["owner"];
-		rep["project"] = req.form["project"];
-		try m_registry.addPackage(rep, user._id);
-		catch (Exception e) {
-			req.params["error"] = e.msg;
-			showAddPackage(req, res, user);
-			return;
-		}
-
-		res.redirect("/my_packages");
+		rep["kind"] = kind;
+		rep["owner"] = owner;
+		rep["project"] = project;
+		m_registry.addPackage(rep, _user._id);
+		redirect("/my_packages");
 	}
 
-	void updatePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname/update")
+	void postUpdatePackage(string _packname, User _user)
 	{
-		auto pack_name = req.params["packname"];
-		enforceUserPackage(user, pack_name);
-		m_registry.triggerPackageUpdate(pack_name);
-		res.redirect("/my_packages/"~pack_name);
+		enforceUserPackage(_user, _packname);
+		m_registry.triggerPackageUpdate(_packname);
+		redirect("/my_packages/"~_packname);
 	}
 
-	void showRemovePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname/remove")
+	void postShowRemovePackage(string _packname, User _user)
 	{
-		auto packageName = req.params["packname"];
+		auto packageName = _packname;
+		auto user = _user;
 		enforceUserPackage(user, packageName);
-		res.renderCompat!("my_packages.remove.dt",
-			HTTPServerRequest, "req",
-			string, "packageName",
-			User, "user")(req, packageName, user);
+		render!("my_packages.remove.dt", packageName, user);
 	}
 
-	void removePackage(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname/remove_confirm")
+	void postRemovePackage(string _packname, User _user)
 	{
-		auto pack_name = req.params["packname"];
-		enforceUserPackage(user, pack_name);
-		m_registry.removePackage(pack_name, user._id);
-		res.redirect("/my_packages");
+		enforceUserPackage(_user, _packname);
+		m_registry.removePackage(_packname, _user._id);
+		redirect("/my_packages");
 	}
 
-	void updatePackageCategories(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname/set_categories")
+	void postSetPackageCategories(string[] categories, string _packname, User _user)
 	{
-		auto pack_name = req.params["packname"];
-		enforceUserPackage(user, pack_name);
-		string[] categories;
-		outer: foreach (i; 0 .. 100) {
-			auto pv = format("category%d", i) in req.form;
-			if (!pv) break;
-			string cat = *pv;
-			if (cat.length == 0) continue;
-			foreach (j, ec; categories) {
+		enforceUserPackage(_user, _packname);
+		string[] uniquecategories;
+		outer: foreach (cat; categories) {
+			if (!cat.length) continue;
+			foreach (j, ec; uniquecategories) {
 				if (cat.startsWith(ec)) continue outer;
 				if (ec.startsWith(cat)) {
-					categories[j] = cat;
+					uniquecategories[j] = cat;
 					continue outer;
 				}
 			}
-			categories ~= cat;
+			uniquecategories ~= cat;
 		}
-		m_registry.setPackageCategories(pack_name, categories);
-		res.redirect("/my_packages/"~pack_name);
+		m_registry.setPackageCategories(_packname, uniquecategories);
+
+		redirect("/my_packages/"~_packname);
 	}
 
-	void updatePackageRepository(HTTPServerRequest req, HTTPServerResponse res, User user)
+	@auth @path("/my_packages/:packname/set_repository") @errorDisplay!getMyPackagesPackage
+	void postSetPackageRepository(string kind, string owner, string project, string _packname, User _user)
 	{
-		auto pack_name = req.params["packname"];
-		enforceUserPackage(user, pack_name);
+		enforceUserPackage(_user, _packname);
 
 		Json rep = Json.emptyObject;
-		rep["kind"] = req.form["kind"];
-		rep["owner"] = req.form["owner"];
-		rep["project"] = req.form["project"];
+		rep["kind"] = kind;
+		rep["owner"] = owner;
+		rep["project"] = project;
+		m_registry.setPackageRepository(_packname, rep);
 
-		try m_registry.setPackageRepository(pack_name, rep);
-		catch (Exception e) {
-			req.params["updateRepositoryError"] = e.msg;
-			showMyPackagesPackage(req, res, user);
-			return;
-		}
-
-		res.redirect("/my_packages/"~pack_name);
+		redirect("/my_packages/"~_packname);
 	}
 
 	private void enforceUserPackage(User user, string package_name)
@@ -489,4 +457,14 @@ class DubRegistryWebFrontend {
 		m_categoryMap = null;
 		foreach (c; m_categories) m_categoryMap[c.name] = c;
 	}
+
+	// Attribute for authenticated routes
+	private enum auth = before!performAuth("_user");
+	mixin PrivateAccessProxy;
+
+	private User performAuth(HTTPServerRequest req, HTTPServerResponse res)
+	{
+		return m_usermanweb.performAuth(req, res);
+	}
+
 }

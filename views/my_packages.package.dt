@@ -37,7 +37,7 @@ block body
 			p Category #{i+1}:
 				- string selected;
 				- if (i < pack.categories.length) selected = pack.categories[i].get!string;
-				select(name="category#{i}", id="category#{i}", size="1")
+				select(name="categories_#{i}", id="category#{i}", size="1")
 					option(value="")
 					- foreach (cat; categories)
 						option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
@@ -51,8 +51,8 @@ block body
 
 	h2 Repository
 
-	- if (auto pe = "updateRepositoryError" in req.params)
-		p.error= *pe
+	- if (error.length)
+		p.error= error
 
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
 		select(name="kind", size="1")
