@@ -1,7 +1,7 @@
 function setupCategoryForm()
 {
-	el("category-submit").style.display = "none";
-	el("category").style.display = "none";
+	el("category-form").style.display = "none";
+	el("category-dynamic-form").style.display = "block";
 	selected_cats = el("category").value.split(".");
 	var parentcat = null;
 	setCategory(el("category").value);

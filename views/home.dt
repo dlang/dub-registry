@@ -27,10 +27,12 @@ block body
 						- foreach (c; cat ? cat.subCategories : categories)
 							- outputCat(c);
 				- outputCat(null);
-			- foreach (i; 0 .. 6)
-				select(id="categories_#{i}", name="categories_#{i}", style="display: none", onChange='setCategoryFromSelector(#{i})')
 			button#category-submit(type="submit") Update
-			:javascript setupCategoryForm();
+	#category-dynamic-form(style="display: none")
+		p Category: 
+			- foreach (i; 0 .. 6)
+				select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
+		:javascript setupCategoryForm();
 
 	- static immutable browse_kinds = ["updated;Updated", "name;Name", "added;Added"];
 	p Sort by:
