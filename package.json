@@ -8,9 +8,9 @@
 		"Matthias Dondorff"
 	],
 	"dependencies": {
-		"userman": ">=0.0.10",
-		"vibe-d": ">=0.7.20-rc.2",
-		"dub": ">=0.9.22-beta.2"
+		"userman": "~>0.0.11",
+		"vibe-d": "~>0.7.21-alpha.1",
+		"dub": "~>0.9.22-beta.2"
 	},
 	"subConfigurations": {
 		"dub": "library-nonet"
