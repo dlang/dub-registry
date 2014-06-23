@@ -164,6 +164,7 @@ class DubRegistry {
 	void setPackageCategories(string pack_name, string[] categories)
 	{
 		m_db.setPackageCategories(pack_name, categories);
+		if (pack_name in m_packageInfos) m_packageInfos.remove(pack_name);
 	}
 
 	void setPackageRepository(string pack_name, Json repository)
