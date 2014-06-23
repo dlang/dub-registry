@@ -321,20 +321,6 @@ class DubRegistryWebFrontend {
 		render!("my_packages.dt", user, registry);
 	}
 
-	@auth @path("/my_packages/:packname")
-	void getMyPackagesPackage(string _packname, User _user, string _error = null)
-	{
-		enforceUserPackage(_user, _packname);
-		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName);
-		if (nfo.type == Json.Type.null_) return;
-		auto categories = m_categories;
-		auto registry = m_registry;
-		auto user = _user;
-		auto error = _error;
-		render!("my_packages.package.dt", packageName, categories, user, registry, error);
-	}
-
 	@auth @path("/my_packages/register")
 	void getRegisterPackage(User _user, string _error = null)
 	{
@@ -353,6 +339,20 @@ class DubRegistryWebFrontend {
 		rep["project"] = project;
 		m_registry.addPackage(rep, _user._id);
 		redirect("/my_packages");
+	}
+
+	@auth @path("/my_packages/:packname")
+	void getMyPackagesPackage(string _packname, User _user, string _error = null)
+	{
+		enforceUserPackage(_user, _packname);
+		auto packageName = _packname;
+		auto nfo = m_registry.getPackageInfo(packageName);
+		if (nfo.type == Json.Type.null_) return;
+		auto categories = m_categories;
+		auto registry = m_registry;
+		auto user = _user;
+		auto error = _error;
+		render!("my_packages.package.dt", packageName, categories, user, registry, error);
 	}
 
 	@auth @path("/my_packages/:packname/update")
