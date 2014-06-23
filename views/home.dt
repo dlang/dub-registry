@@ -2,7 +2,12 @@ extends layout
 
 block title
 	- import dubregistry.viewutils;
+	- import dubregistry.web;
+	- import vibe.data.json;
 	- auto title = "Package list";
+	script(type="application/javascript", src="scripts/home.js")
+	script(type="application/javascript").
+		window.categories = #{serializeToJson(categories).toString()};
 	
 block body
 	p Welcome to the DUB registry. The following list shows the available packages:
@@ -12,12 +17,20 @@ block body
 	form#category-form(method="GET", action="")
 		input(type="hidden", name="sort", value=sort_mode)
 		p Category: 
-			select(name="category", size="1", onChange='document.getElementById("category-form").submit()')
-				option(value="") All packages
-				- foreach (cat; categories)
-					option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
+			select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
+				- void outputCat(Category cat)
+					- if (!cat)
+						option(value="") All packages
+					- else
+						option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
+					- if (!cat || cat.subCategories.length)
+						- foreach (c; cat ? cat.subCategories : categories)
+							- outputCat(c);
+				- outputCat(null);
+			- foreach (i; 0 .. 6)
+				select(id="categories_#{i}", name="categories_#{i}", style="display: none", onChange='setCategoryFromSelector(#{i})')
 			button#category-submit(type="submit") Update
-			:javascript document.getElementById("category-submit").style.display = "none";
+			:javascript setupCategoryForm();
 
 	- static immutable browse_kinds = ["updated;Updated", "name;Name", "added;Added"];
 	p Sort by:

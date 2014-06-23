@@ -5,6 +5,7 @@ block title
 	
 block body
 	- import vibe.data.json;
+	- import dubregistry.web : Category;
 	- auto pack = registry.getPackageInfo(packageName, true);
 
 	h2 General information
@@ -38,9 +39,15 @@ block body
 				- string selected;
 				- if (i < pack.categories.length) selected = pack.categories[i].get!string;
 				select(name="categories_#{i}", id="category#{i}", size="1")
-					option(value="")
-					- foreach (cat; categories)
-						option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
+					- void outputCat(Category cat)
+						- if (!cat)
+							option(value="")
+						- else
+							option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
+						- if (!cat || cat.subCategories.length)
+							- foreach (c; cat ? cat.subCategories : categories)
+								- outputCat(c);
+					- outputCat(null);
 		button(type="submit") Apply
 
 	- if (pack.errors.length)

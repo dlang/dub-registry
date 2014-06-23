@@ -32,8 +32,6 @@ DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegis
 
 class DubRegistryWebFrontend {
 	private {
-		struct Category { string name, description, indentedDescription, imageName; }
-
 		DubRegistry m_registry;
 		UserManController m_userman;
 		UserManWebInterface m_usermanweb;
@@ -428,11 +426,12 @@ class DubRegistryWebFrontend {
 		scope(exit) catfile.close();
 		auto json = parseJsonString(catfile.readAllUTF8());
 
-		Category[] cats;
-		void processNode(Json node, string[] path)
+		Category[string] catmap;
+
+		Category processNode(Json node, string[] path)
 		{
 			path ~= node.name.get!string;
-			Category cat;
+			auto cat = new Category;
 			cat.name = path.join(".");
 			cat.description = node.description.get!string;
 			if (path.length > 2)
@@ -445,17 +444,22 @@ class DubRegistryWebFrontend {
 					cat.imageName = path[0 .. i].join(".");
 					break;
 				}
-			cats ~= cat;
+
+			catmap[cat.name] = cat;
+
 			if ("categories" in node)
 				foreach (subcat; node.categories)
-					processNode(subcat, path);
-		}
-		foreach (top_level_cat; json)
-			processNode(top_level_cat, null);
-		m_categories = cats;
+					cat.subCategories ~= processNode(subcat, path);
 
-		m_categoryMap = null;
-		foreach (c; m_categories) m_categoryMap[c.name] = c;
+			return cat;
+		}
+		
+		Category[] cats;
+		foreach (top_level_cat; json)
+			cats ~= processNode(top_level_cat, null);
+		
+		m_categories = cats;
+		m_categoryMap = catmap;
 	}
 
 	// Attribute for authenticated routes
@@ -467,4 +471,9 @@ class DubRegistryWebFrontend {
 		return m_usermanweb.performAuth(req, res);
 	}
 
+}
+
+final class Category {
+	string name, description, indentedDescription, imageName;
+	Category[] subCategories;
 }
