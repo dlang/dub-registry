@@ -392,26 +392,30 @@ block body
 
 	ul
 		li Simple variant:
-			p This is the canonical way to specify a dependency. So this is most likely what you want. The format is like this:
 			p <code>"&lt;name&gt;" : "&lt;version-string&gt;"</code>
-			p Some examples of typical simple version strings:
+			p This is the usual way to specify a dependency. Typical examples of typical simple version strings:
 			ul
+				li Restrict to a certain minor version: <code>"~&gt;2.2.13"</code>, equivalent to <code>"&gt;=2.2.13 &lt;2.3.0"</code>
+				li Restrict to a certain major version: <code>"~&gt;2.2"</code>, equivalent to <code>"&gt;=2.2.0 &lt;3.0.0"</code>
 				li Require a certain version: <code>"==1.3.0"</code>
 				li Require a minimum version: <code>"&gt;=1.3.0"</code>
 				li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
 				li Use a GIT branch (deprecated): <code>"~master"</code>
-				li Restrict to a certain major version: <code>"~&gt;2.2"</code>, equivalent to <code>"&gt;=2.2.0 &lt;3.0.0"</code>
-				li Restrict to a certain minor version: <code>"~&gt;2.2.13"</code>, equivalent to <code>"&gt;=2.2.13 &lt;2.3.0"</code>
 			p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>. The recommended way to specify versions is using the <code>~&gt;</code> operator as a way to balance between flexible upgrades and reducing the risk of code breakage.
-		li Complex variant:
-			p Min. required: <code>"&lt;name&gt;" : { "version": "&lt;version-string&gt;" &lt;, additional-fields&gt;}</code>
-			p In addition to the version, additional fields can be added to further control how a dependency is being searched or used:
-			ul		
-				li <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from. 
-					p This is only required when the depdend package is not registered with the registry and you don't want to or cannot add the dependent package to your local dub installation. In this case dub cannot resolve this dependency unless you specify the path and it's version of the dependency directly. Another use case is patching to a local library.
-				li <code>"optional": true</code> - Indicate an optional dependency.
-					p With this specified, the dependency will only be used, if it is installed. <span style="color: red;">[work in progress]</span>.
 
+		li Complex variant:
+			p <code>"&lt;name&gt;" : { "&lt;field&gt;": "&lt;value&gt;"[, ...] }</code>
+			p The following fields can be used to to control how a dependency is resolved:
+			ul
+				li
+					p <code>"version": "&lt;version-string&gt;"</code> - The version specification as used for the simple form
+					p A version specification should only be specified when no <code>"path"</code> field is present, or when compatibility with older versions of DUB (&lt; 0.9.22) is desired.
+				li
+					p <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from. 
+					p References a package in a specific path. This can be used in situations where a specific copy of a package needs to be used. Examples of this include packages that are included as GIT submodules, or packages in sub folders of the main package, such as example projects.
+				li
+					p <code>"optional": true</code> - Indicate an optional dependency.
+					p With this specified, the dependency will only be used, if it is already available on the local machine.
 
 	h3#target-types Target types
 
