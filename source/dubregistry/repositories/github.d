@@ -41,6 +41,8 @@ class GithubRepository : Repository {
 
 	RefInfo[] getTags()
 	{
+		import std.datetime : SysTime;
+
 		Json tags;
 		try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
@@ -60,6 +62,8 @@ class GithubRepository : Repository {
 
 	RefInfo[] getBranches()
 	{
+		import std.datetime : SysTime;
+
 		Json branches = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/branches");
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
