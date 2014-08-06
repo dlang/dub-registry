@@ -84,9 +84,9 @@ class BitbucketRepository : Repository {
 	}
 }
 
-private SysTime bbToIsoDate(string bbdate)
+private auto bbToIsoDate(string bbdate)
 {
-	import std.array;
+	import std.array, std.datetime : SysTime;
 	auto ttz = bbdate.split("+");
 	if( ttz.length < 2 ) ttz ~= "00:00";
 	auto parts = ttz[0].split("-");
