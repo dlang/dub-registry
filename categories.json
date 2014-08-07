@@ -45,6 +45,8 @@
 		{"name": "data", "description": "Data storage and format support"},
 		{"name": "data_structures", "description": "Data Structures and Containers"},
 		{"name": "database", "description": "Database clients or implementations"},
+		{"name": "filesystem", "description": "File system libraries"},
+		{"name": "gamedev", "description": "Libraries aimed at game development"},
 		{"name": "graphics", "description": "2D/3D graphics"},
 		{"name": "gui", "description": "Graphical user interfaces"},
 		{"name": "network", "description": "Networking libraries", "categories": [
