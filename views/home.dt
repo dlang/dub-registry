@@ -64,7 +64,7 @@ block body
 								- image = pc.imageName;
 						- if (!image.length) image = "unknown";
 						img.category-icon(src="images/categories/#{image}.png")
-						a(href="packages/#{pl.name}")= pl.name
+						a(href="packages/#{pl.name.get!string}")= pl.name.get!string
 					td.nobreak= p["version"].opt!string()
 					td.nobreak= formatDate(p.date)
 					- if (desc.length <= 100)

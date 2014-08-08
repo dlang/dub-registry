@@ -24,17 +24,17 @@ block body
 			tr
 				td Root package
 				td
-					a(href="#{req.rootDir}packages/#{urlEncode(packageInfo.name.get!string)}")= packageInfo.name
+					a(href="#{req.rootDir}packages/#{urlEncode(packageInfo.name.get!string)}")= packageInfo.name.get!string
 
 		tr
 			td Version
-			td #{versionInfo["version"]} (#{formatDate(versionInfo.date)})
+			td #{versionInfo["version"].get!string} (#{formatDate(versionInfo.date)})
 		
 		- if( auto ph = "homepage" in versionInfo )
 			tr
 				td Homepage
 				td
-					a(href="#{versionInfo.homepage}")= *ph
+					a(href="#{ph.get!string}")= ph.get!string
 
 		- if( auto pr = "repository" in packageInfo )
 			- string url;
@@ -51,12 +51,12 @@ block body
 		- if( auto pl = "license" in versionInfo )
 			tr
 				td License
-				td= *pl
+				td= pl.get!string
 
 		- if( auto pl = "copyright" in versionInfo )
 			tr
 				td Copyright
-				td= *pl
+				td= pl.get!string
 
 		- if( auto pa = "authors" in versionInfo )
 			tr
@@ -81,7 +81,7 @@ block body
 		- if (auto ps = "systemDependencies" in versionInfo)
 			tr
 				td System dependencies
-				td= *ps
+				td= ps.get!string
 
 	h2 Installation
 	
@@ -106,7 +106,7 @@ block body
 	h2 Available versions
 
 	- foreach_reverse (v; packageInfo.versions)
-		- auto vs = v["version"];
+		- auto vs = v["version"].get!string;
 		- if (vs == versionInfo["version"])
 			em= vs
 		- else

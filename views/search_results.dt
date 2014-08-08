@@ -23,7 +23,7 @@ block body
 				- auto desc = p.description.opt!string;
 				tr
 					td
-						a(href="packages/#{pl.name}")= pl.name
+						a(href="packages/#{pl.name.get!string}")= pl.name.get!string
 					td= p["version"].opt!string()
 					td= formatDate(p.date)
 					- if (desc.length <= 100)
