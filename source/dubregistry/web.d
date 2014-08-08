@@ -24,7 +24,7 @@ import vibe.d;
 DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
 {
 	auto webfrontend = new DubRegistryWebFrontend(registry, userman);
-	webfrontend.m_usermanweb.register(router);
+	router.registerUserManWebInterface(userman);
 	router.registerWebInterface(webfrontend);
 	router.get("*", serveStaticFiles("./public"));
 	return webfrontend;
@@ -34,7 +34,7 @@ class DubRegistryWebFrontend {
 	private {
 		DubRegistry m_registry;
 		UserManController m_userman;
-		UserManWebInterface m_usermanweb;
+		UserManWebAuthenticator m_usermanauth;
 		Category[] m_categories;
 		Category[string] m_categoryMap;
 	}
@@ -43,7 +43,7 @@ class DubRegistryWebFrontend {
 	{
 		m_registry = registry;
 		m_userman = userman;
-		m_usermanweb = new UserManWebInterface(userman);
+		m_usermanauth = new UserManWebAuthenticator(userman);
 
 		updateCategories();
 	}
@@ -468,9 +468,8 @@ class DubRegistryWebFrontend {
 
 	private User performAuth(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		return m_usermanweb.performAuth(req, res);
+		return m_usermanauth.performAuth(req, res);
 	}
-
 }
 
 final class Category {
