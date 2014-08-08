@@ -279,7 +279,7 @@ class DubRegistry {
 
 		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
 		if (auto pv = "version" in info.info)
-			enforce(pv.get!string == ver, format("Package description contains obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
+			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
 		m_db.addVersion(packname, dbver);
 		return true;
 	}
