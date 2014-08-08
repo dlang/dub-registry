@@ -13,7 +13,7 @@ import dub.semver;
 import dub.package_ : packageInfoFilenames;
 import std.algorithm : chain, countUntil, filter, map, sort, swap;
 import std.array;
-import std.datetime : Clock, UTC, hours;
+import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
 import std.string : format, startsWith, toLower;
 import std.typecons;
