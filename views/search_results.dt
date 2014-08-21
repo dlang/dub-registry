@@ -21,12 +21,17 @@ block body
 			- if (pl.versions.length)
 				- auto p = getBestVersion(pl.versions);
 				- auto desc = p.description.opt!string;
+				- auto ver = p["version"].opt!string();
 				tr
 					td
 						a(href="packages/#{pl.name.get!string}")= pl.name.get!string
-					td= p["version"].opt!string()
-					td= formatDate(p.date)
+					td.nobreak
+						- if (ver.length <= 20)
+							|= ver
+						- else
+							| #{ver[0 .. 18]}&hellip;
+					td.nobreak= formatDate(p.date)
 					- if (desc.length <= 100)
 						td= desc
 					- else
-						td #{desc[0 .. 100]}&hellip;
+						td #{desc[0 .. 98]}&hellip;
