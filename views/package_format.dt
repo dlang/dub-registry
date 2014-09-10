@@ -534,7 +534,7 @@ block body
 			td Perform function inlining
 			td -inline
 		tr
-			td "noBoundsChecks"
+			td "noBoundsCheck"
 			td Disable all bounds checking
 			td -noboundscheck
 		tr
