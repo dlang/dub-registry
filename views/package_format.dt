@@ -22,6 +22,8 @@ block body
 		|	}
 		|}
 
+	p Please keep the description concise and don't include obvious things like the fact that the package is for the D language.
+
 	h2 Contents
 
 	nav
