@@ -593,6 +593,8 @@ block body
 
 	p If no configurations are specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/main.d</code>, <code>source/&lt;package name&gt;/app.d</code>, <code>source/&lt;package name&gt;/main.d</code>, <code>src/app.d</code>, <code>src/main.d</code>, <code>src/&lt;package name&gt;/app.d</code>, <code>src/&lt;package name&gt;/main.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
 
+	p When defining a configuration's platform, any of the suffixes described in <a href="#build-settings">build settings</a> may be combined to make the configuration as specific as necessary.
+
 	p The following example defines "metro-app" and "desktop-app" configurations that are only available on Windows and a "glut-app" configuration that is available on all platforms.
 
 	pre.code
