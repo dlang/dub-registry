@@ -62,11 +62,11 @@ block body
 			td &nbsp;&nbsp;&nbsp;&nbsp;views/
 			td May contain string import files, such as HTML or UI templates
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;package.json
+			td &nbsp;&nbsp;&nbsp;&nbsp;dub.json
 			td Contains the package description of the project
 
 	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
-	
+
 	p After you have your new package in place, you can <a href="publish">publish it here</a>.
 
 
