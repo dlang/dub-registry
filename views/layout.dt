@@ -1,7 +1,9 @@
 ﻿!!! 5
 html
 	head
+		block css
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+		
 		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
 		block title
 		title= title ~ " - DUB registry"
