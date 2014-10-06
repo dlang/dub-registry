@@ -23,7 +23,7 @@ html
 			div#title
 				| DUB registry
 				h1= title
-		
+
 		nav#topnav
 			form(method="GET", action="#{req.rootDir}search")
 				input(name="q", type="text", placeholder="search for package")
@@ -47,10 +47,10 @@ html
 				li
 					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums
 				li
-					a(href="https://github.com/rejectedsoftware/dub-registry/issues") Bug tracker (website)
+					a(href="https://github.com/D-Programming-Language/dub-registry/issues") Bug tracker (website)
 				li
-					a(href="https://github.com/rejectedsoftware/dub/issues") Bug tracker (DUB)
+					a(href="https://github.com/D-Programming-Language/dub/issues") Bug tracker (DUB)
 				li
-					a(href="https://github.com/rejectedsoftware/dub-registry") GitHub repository (website)
+					a(href="https://github.com/D-Programming-Language/dub-registry") GitHub repository (website)
 				li
-					a(href="https://github.com/rejectedsoftware/dub") GitHub repository (DUB)
+					a(href="https://github.com/D-Programming-Language/dub") GitHub repository (DUB)
