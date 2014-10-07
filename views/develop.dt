@@ -12,14 +12,14 @@ block body
 	h2 Help with DUB's development
 
 	p You can help enhancing DUB by writing bug reports or by making pull requests on GitHub.
-	
+
 	p The main development happens on github in the following repositories:
 
 	ul
 		li
-			a(href="https://github.com/rejectedsoftware/dub") DUB command line tool
+			a(href="https://github.com/D-Programming-Language/dub") DUB command line tool
 		li
-			a(href="https://github.com/rejectedsoftware/dub-registry") DUB registry website
+			a(href="https://github.com/D-Programming-Language/dub-registry") DUB registry website
 
 
 	h3 Development focus
