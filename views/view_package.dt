@@ -6,7 +6,12 @@ block title
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
-	
+
+block css
+	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+	- if (versionInfo.readme.opt!string.length)
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
+
 block body
 
 	- import vibe.data.bson;
@@ -96,7 +101,9 @@ block body
 		|}
 	
 	- if (versionInfo.readme.opt!string.length)
-		section.repositoryReadme
+		h2 Readme
+		
+		section.repositoryReadme.markdown-body
 			- import vibe.textfilter.markdown;
 			- scope msettings = new MarkdownSettings;
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
