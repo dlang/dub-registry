@@ -17,9 +17,10 @@ import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
 import std.string : format, startsWith, toLower;
 import std.typecons;
-import vibe.data.bson;
+import userman.controller;
 import vibe.core.core;
 import vibe.core.log;
+import vibe.data.bson;
 import vibe.data.json;
 import vibe.stream.operations;
 
@@ -89,12 +90,12 @@ class DubRegistry {
 		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));
 	}
 
-	void addPackage(Json repository, BsonObjectID user)
+	void addPackage(Json repository, User.ID user)
 	{
 		auto pack_name = validateRepository(repository);
 
 		DbPackage pack;
-		pack.owner = user;
+		pack.owner = user.bsonObjectIDValue;
 		pack.name = pack_name;
 		pack.repository = repository;
 		m_db.addPackage(pack);
@@ -107,21 +108,21 @@ class DubRegistry {
 		m_db.addDownload(pack_id, ver, agent);
 	}
 
-	void removePackage(string packname, BsonObjectID user)
+	void removePackage(string packname, User.ID user)
 	{
 		logInfo("Removing package %s of %s", packname, user);
-		m_db.removePackage(packname, user);
+		m_db.removePackage(packname, user.bsonObjectIDValue);
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 	}
 
-	auto getPackages(BsonObjectID user)
+	auto getPackages(User.ID user)
 	{
-		return m_db.getUserPackages(user);
+		return m_db.getUserPackages(user.bsonObjectIDValue);
 	}
 
-	bool isUserPackage(BsonObjectID user, string package_name)
+	bool isUserPackage(User.ID user, string package_name)
 	{
-		return m_db.isUserPackage(user, package_name);
+		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)

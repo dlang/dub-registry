@@ -5,6 +5,7 @@ block title
 	- import vibe.data.json;
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;
+	- import userman.controller;
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 
 block css
@@ -15,7 +16,7 @@ block css
 block body
 
 	- import vibe.data.bson;
-	- if (user && req.session && user._id == BsonObjectID.fromString(req.session["userID"]))
+	- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
 		a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
 
 	h2 Description

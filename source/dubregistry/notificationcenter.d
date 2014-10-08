@@ -12,7 +12,6 @@ import std.encoding : sanitize;
 import std.string : format;
 import userman.controller;
 import vibe.core.log;
-import vibe.data.bson;
 import vibe.mail.smtp;
 import vibe.stream.memory;
 import vibe.templ.diet;
@@ -22,7 +21,7 @@ class NotificationCenter {
 	private {
 		UserManController m_users;
 		PersistentScheduler m_scheduler;
-		string[][string][BsonObjectID] m_deprecations;
+		string[][string][User.ID] m_deprecations;
 
 		enum weeklyDeprecationEventName = "deprecation-warnings";
 	}
@@ -40,7 +39,7 @@ class NotificationCenter {
 		m_scheduler.setEventHandler(weeklyDeprecationEventName, &onSendDeprecationWarnings);
 	}
 
-	void notifyNewErrors(BsonObjectID user_id, string package_name, string branch_or_version, string[] errors)
+	void notifyNewErrors(User.ID user_id, string package_name, string branch_or_version, string[] errors)
 	{
 		auto user = m_users.getUser(user_id);
 		if (user.email != "sludwig@rejectedsoftware.com") return;
@@ -59,7 +58,7 @@ class NotificationCenter {
 		sendMail(settings.mailSettings, mail);
 	}
 
-	void setDeprecationWarnings(BsonObjectID user_id, string package_name, string[] warnings)
+	void setDeprecationWarnings(User.ID user_id, string package_name, string[] warnings)
 	{
 		auto pd = user_id in m_deprecations;
 		if (!pd) {

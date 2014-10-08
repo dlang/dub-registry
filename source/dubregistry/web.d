@@ -229,7 +229,7 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, null, packageInfo, versionInfo))
 			return;
 
-		auto user = m_userman.getUser(BsonObjectID.fromHexString(packageInfo.owner.get!string));
+		auto user = m_userman.getUser(User.ID.fromString(packageInfo.owner.get!string));
 
 		if (json) {
 			if (pname.canFind(":")) return;
@@ -254,7 +254,7 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
 			return;
 
-		auto user = m_userman.getUser(BsonObjectID.fromHexString(packageInfo.owner.get!string));
+		auto user = m_userman.getUser(User.ID.fromString(packageInfo.owner.get!string));
 
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
@@ -337,7 +337,7 @@ class DubRegistryWebFrontend {
 		rep["kind"] = kind;
 		rep["owner"] = owner;
 		rep["project"] = project;
-		m_registry.addPackage(rep, _user._id);
+		m_registry.addPackage(rep, _user.id);
 		redirect("/my_packages");
 	}
 
@@ -376,7 +376,7 @@ class DubRegistryWebFrontend {
 	void postRemovePackage(string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);
-		m_registry.removePackage(_packname, _user._id);
+		m_registry.removePackage(_packname, _user.id);
 		redirect("/my_packages");
 	}
 
@@ -417,7 +417,7 @@ class DubRegistryWebFrontend {
 
 	private void enforceUserPackage(User user, string package_name)
 	{
-		enforceHTTP(m_registry.isUserPackage(user._id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
+		enforceHTTP(m_registry.isUserPackage(user.id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
 	}
 
 	private void updateCategories()

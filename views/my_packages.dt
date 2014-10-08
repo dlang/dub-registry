@@ -16,7 +16,7 @@ block body
 			th Latest version
 			th Description
 		- bool have_pack = false;
-		- foreach (p; sort!((a, b) => a < b)(registry.getPackages(user._id).array))
+		- foreach (p; sort!((a, b) => a < b)(registry.getPackages(user.id).array))
 			- have_pack = true;
 			- auto pack = registry.getPackageInfo(p, true);
 			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);

@@ -53,9 +53,9 @@ shared static this()
 	udbsettings.serviceName = "DUB registry";
 	udbsettings.serviceUrl = URL("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
-	udbsettings.databaseName = "vpmreg";
+	udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
 	udbsettings.requireAccountValidation = false;
-	auto userdb = new UserManController(udbsettings);
+	auto userdb = createUserManController(udbsettings);
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
