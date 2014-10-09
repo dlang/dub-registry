@@ -5,7 +5,7 @@ block title
 	
 block body
 
-	form(method="POST", action="#{req.rootDir}my_packages/register")
+	form(method="POST", action="#{req.rootDir}register_package")
 		select(name="kind", size="1")
 			option(value="github", selected=req.form.get("kind", "") == "github") GitHub project
 			option(value="bitbucket", selected=req.form.get("kind", "") == "bitbucket") Bitbucket project

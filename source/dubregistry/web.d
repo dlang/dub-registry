@@ -321,7 +321,7 @@ class DubRegistryWebFrontend {
 		render!("my_packages.dt", user, registry);
 	}
 
-	@auth @path("/my_packages/register")
+	@auth @path("/register_package")
 	void getRegisterPackage(User _user, string _error = null)
 	{
 		auto user = _user;
@@ -330,7 +330,7 @@ class DubRegistryWebFrontend {
 		render!("my_packages.register.dt", user, error, registry);
 	}
 
-	@auth @path("/my_packages/register") @errorDisplay!getRegisterPackage
+	@auth @path("/register_package") @errorDisplay!getRegisterPackage
 	void postRegisterPackage(string kind, string owner, string project, User _user)
 	{
 		Json rep = Json.emptyObject;
