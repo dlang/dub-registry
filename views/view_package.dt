@@ -104,7 +104,7 @@ block body
 	- if (versionInfo.readme.opt!string.length)
 		h2 Readme
 		
-		section.repositoryReadme.markdown-body
+		.repositoryReadme.markdown-body
 			- import vibe.textfilter.markdown;
 			- scope msettings = new MarkdownSettings;
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
