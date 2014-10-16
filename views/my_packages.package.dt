@@ -54,7 +54,7 @@ block body
 		h2 Package errors:
 		ul
 			- foreach_reverse (e; pack.errors)
-				li.error= e
+				li.error= e.get!string
 
 	h2 Repository
 
