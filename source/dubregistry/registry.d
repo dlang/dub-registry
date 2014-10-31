@@ -131,12 +131,12 @@ class DubRegistry {
 
 		DbPackage pack = m_db.getPackage(packname);
 
-		auto downloads = m_db.getPackageDownloads(pack._id);
+		auto downloads = m_db.getPackageDownloads(pack._id).filter!( dl =>dl.version_[0] != '~' );
 
 		alias ageFilter(uint dayCount) = filter!( dl => dl.time > ( Clock.currTime - dayCount.days ) );
 
 		PackageStats ret;
-		ret.downloads.total    = cast(uint)downloads.length;
+		ret.downloads.total    = cast(uint)downloads.array().length;
 		ret.downloads.perDay   = cast(uint)ageFilter!1(downloads).array().length;
 		ret.downloads.perWeek  = cast(uint)ageFilter!7(downloads).array().length;
 		ret.downloads.perMonth = cast(uint)ageFilter!30(downloads).array().length;
