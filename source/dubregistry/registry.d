@@ -127,7 +127,7 @@ class DubRegistry {
 
 	Json getPackageStats(string packname)
 	{
-		import std.datetime: weeks;
+		import std.datetime: days;
 
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
@@ -137,9 +137,10 @@ class DubRegistry {
 
 		Json ret = Json.emptyObject;
 		ret.downloads = Json.emptyObject;
-		ret.downloads.total = downloads.length;
-		ret.downloads.perWeek = downloads.filter!( dl => dl.time > ( Clock.currTime - 1.weeks ) ).array().length;
-		ret.downloads.perMonth = downloads.filter!( dl => dl.time > ( Clock.currTime - 4.weeks ) ).array().length;
+		ret.downloads.total    = downloads.length;
+		ret.downloads.perDay   = downloads.filter!( dl => dl.time > ( Clock.currTime -  1.days ) ).array().length;
+		ret.downloads.perWeek  = downloads.filter!( dl => dl.time > ( Clock.currTime -  7.days ) ).array().length;
+		ret.downloads.perMonth = downloads.filter!( dl => dl.time > ( Clock.currTime - 30.days ) ).array().length;
 		return ret;
 	}
 
