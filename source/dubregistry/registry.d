@@ -127,12 +127,19 @@ class DubRegistry {
 
 	Json getPackageStats(string packname)
 	{
+		import std.datetime: weeks;
+
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return Json(null);
 
+		auto downloads = m_db.getPackageDownloads(pack._id);
+
 		Json ret = Json.emptyObject;
-		ret.downloads = m_db.getPackageDownloads(pack._id).length;
+		ret.downloads = Json.emptyObject;
+		ret.downloads.total = downloads.length;
+		ret.downloads.perWeek = downloads.filter!( dl => dl.time > ( Clock.currTime - 1.weeks ) ).array().length;
+		ret.downloads.perMonth = downloads.filter!( dl => dl.time > ( Clock.currTime - 4.weeks ) ).array().length;
 		return ret;
 	}
 
