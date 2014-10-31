@@ -277,10 +277,10 @@ class DubRegistryWebFrontend {
 		auto pname = _packname;
 		auto rootPackName = pname.urlDecode().split(":")[0];
 
-		auto stats = m_registry.getPackageStats(rootPackName);
-		if( stats != null ) {
-			res.writeJsonBody(stats);
-		}
+		try {
+			auto stats = m_registry.getPackageStats(rootPackName);
+			res.writeJsonBody(stats.serializeToJson());
+		} catch (Exception) { }
 	}
 
 	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)

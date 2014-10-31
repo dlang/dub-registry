@@ -125,22 +125,21 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	Json getPackageStats(string packname)
+	PackageStats getPackageStats(string packname)
 	{
 		import std.datetime: days;
 
-		DbPackage pack;
-		try pack = m_db.getPackage(packname);
-		catch(Exception) return Json(null);
+		DbPackage pack = m_db.getPackage(packname);
 
 		auto downloads = m_db.getPackageDownloads(pack._id);
 
-		Json ret = Json.emptyObject;
-		ret.downloads = Json.emptyObject;
-		ret.downloads.total    = downloads.length;
-		ret.downloads.perDay   = downloads.filter!( dl => dl.time > ( Clock.currTime -  1.days ) ).array().length;
-		ret.downloads.perWeek  = downloads.filter!( dl => dl.time > ( Clock.currTime -  7.days ) ).array().length;
-		ret.downloads.perMonth = downloads.filter!( dl => dl.time > ( Clock.currTime - 30.days ) ).array().length;
+		alias ageFilter(uint dayCount) = filter!( dl => dl.time > ( Clock.currTime - dayCount.days ) );
+
+		PackageStats ret;
+		ret.downloads.total    = cast(uint)downloads.length;
+		ret.downloads.perDay   = cast(uint)ageFilter!1(downloads).array().length;
+		ret.downloads.perWeek  = cast(uint)ageFilter!7(downloads).array().length;
+		ret.downloads.perMonth = cast(uint)ageFilter!30(downloads).array().length;
 		return ret;
 	}
 
@@ -451,6 +450,17 @@ private void checkPackageName(string n, string error_suffix)
 				break;
 		}
 	}
+}
+
+struct PackageStats {
+	static struct DownloadStats {
+		uint total;
+		uint perDay;
+		uint perWeek;
+		uint perMonth;
+	}
+
+	DownloadStats downloads;
 }
 
 private struct PackageVersionInfo {
