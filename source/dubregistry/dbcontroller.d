@@ -163,6 +163,11 @@ class DbController {
 		return download._id;
 	}
 
+	DbPackageDownload[] getPackageDownloads(BsonObjectID pack)
+	{
+		return m_downloads.find!DbPackageDownload( [ "package_": pack ] ).array();
+	}
+
 	private void updateKeywords(string package_name)
 	{
 		auto p = getPackage(package_name);

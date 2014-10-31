@@ -125,6 +125,17 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
+	Json getPackageStats(string packname)
+	{
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
+		catch(Exception) return Json(null);
+
+		Json ret = Json.emptyObject;
+		ret.downloads = m_db.getPackageDownloads(pack._id).length;
+		return ret;
+	}
+
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
 		if (!include_errors) {

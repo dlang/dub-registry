@@ -271,6 +271,18 @@ class DubRegistryWebFrontend {
 		}
 	}
 
+	@path("/packages/:packname/stats.json")
+	void getPackageStats(HTTPServerRequest req, HTTPServerResponse res, string _packname)
+	{
+		auto pname = _packname;
+		auto rootPackName = pname.urlDecode().split(":")[0];
+
+		auto stats = m_registry.getPackageStats(rootPackName);
+		if( stats != null ) {
+			res.writeJsonBody(stats);
+		}
+	}
+
 	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
 	{
 		auto ppath = pack_name.urlDecode().split(":");
