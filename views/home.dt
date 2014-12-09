@@ -4,13 +4,13 @@ block title
 	- import dubregistry.viewutils;
 	- import dubregistry.web;
 	- import vibe.data.json;
-	- auto title = "Package list";
+	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
 		window.categories = #{serializeToJson(categories).toString()};
 
 block body
-	p Welcome to DUB, the D package registry. The following list shows the available packages:
+	p Welcome to DUB, the D package registry. The following list shows all available packages:
 
 	- auto category = req.query.get("category", null);
 	- auto sort_mode = req.query.get("sort", "updated");
