@@ -163,9 +163,17 @@ class DbController {
 		return download._id;
 	}
 
-	DbPackageDownload[] getPackageDownloads(BsonObjectID pack)
+	auto getPackageDownloads(BsonObjectID pack)
 	{
-		return m_downloads.find!DbPackageDownload( [ "package_": pack ] ).array();
+		return m_downloads.find!DbPackageDownload(["package_": pack]);
+	}
+
+	auto getPackageDownloads(BsonObjectID pack, SysTime since)
+	{
+		return m_downloads.find!DbPackageDownload([
+			"package_": Bson(pack),
+			"time": Bson(["$gte": Bson(BsonDate(since))])
+		]);
 	}
 
 	private void updateKeywords(string package_name)

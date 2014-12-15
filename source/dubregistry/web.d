@@ -271,16 +271,16 @@ class DubRegistryWebFrontend {
 		}
 	}
 
-	@path("/packages/:packname/stats.json")
+	@path("/api/packages/:packname/stats.json")
 	void getPackageStats(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
-		auto pname = _packname;
-		auto rootPackName = pname.urlDecode().split(":")[0];
+		import std.algorithm: findSplitBefore;
 
-		try {
-			auto stats = m_registry.getPackageStats(rootPackName);
-			res.writeJsonBody(stats.serializeToJson());
-		} catch (Exception) { }
+		auto pname = _packname;
+		auto rootPackName = pname.urlDecode().findSplitBefore(":")[0];
+
+		auto stats = m_registry.getPackageStats(rootPackName);
+		res.writeJsonBody(stats.serializeToJson());
 	}
 
 	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
@@ -465,11 +465,11 @@ class DubRegistryWebFrontend {
 
 			return cat;
 		}
-		
+
 		Category[] cats;
 		foreach (top_level_cat; json)
 			cats ~= processNode(top_level_cat, null);
-		
+
 		m_categories = cats;
 		m_categoryMap = catmap;
 	}

@@ -11,7 +11,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : chain, countUntil, filter, map, sort, swap;
+import std.algorithm : chain, countUntil, filter, map, sort, swap, walkLength;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
@@ -129,17 +129,28 @@ class DubRegistry {
 	{
 		import std.datetime: days;
 
+		auto currTime = Clock.currTime;
 		DbPackage pack = m_db.getPackage(packname);
 
-		auto downloads = m_db.getPackageDownloads(pack._id).filter!( dl =>dl.version_[0] != '~' );
-
-		alias ageFilter(uint dayCount) = filter!( dl => dl.time > ( Clock.currTime - dayCount.days ) );
+		uint downloadsInDays(uint numDays)
+		{
+			if(numDays == 0)
+				return cast(uint)m_db
+					.getPackageDownloads(pack._id)
+					.filter!(dl => dl.version_[0] != '~')
+					.walkLength();
+			else
+				return cast(uint)m_db
+					.getPackageDownloads(pack._id, currTime - numDays.days)
+					.filter!(dl => dl.version_[0] != '~')
+					.walkLength();
+		}
 
 		PackageStats ret;
-		ret.downloads.total    = cast(uint)downloads.array().length;
-		ret.downloads.perDay   = cast(uint)ageFilter!1(downloads).array().length;
-		ret.downloads.perWeek  = cast(uint)ageFilter!7(downloads).array().length;
-		ret.downloads.perMonth = cast(uint)ageFilter!30(downloads).array().length;
+		ret.downloads.total   = downloadsInDays(0);
+		ret.downloads.daily   = downloadsInDays(1);
+		ret.downloads.weekly  = downloadsInDays(7);
+		ret.downloads.monthly = downloadsInDays(30);
 		return ret;
 	}
 
@@ -455,9 +466,9 @@ private void checkPackageName(string n, string error_suffix)
 struct PackageStats {
 	static struct DownloadStats {
 		uint total;
-		uint perDay;
-		uint perWeek;
-		uint perMonth;
+		uint daily;
+		uint weekly;
+		uint monthly;
 	}
 
 	DownloadStats downloads;
