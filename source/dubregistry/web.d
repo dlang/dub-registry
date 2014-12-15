@@ -271,18 +271,6 @@ class DubRegistryWebFrontend {
 		}
 	}
 
-	@path("/api/packages/:packname/stats.json")
-	void getPackageStats(HTTPServerRequest req, HTTPServerResponse res, string _packname)
-	{
-		import std.algorithm: findSplitBefore;
-
-		auto pname = _packname;
-		auto rootPackName = pname.urlDecode().findSplitBefore(":")[0];
-
-		auto stats = m_registry.getPackageStats(rootPackName);
-		res.writeJsonBody(stats.serializeToJson());
-	}
-
 	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
 	{
 		auto ppath = pack_name.urlDecode().split(":");

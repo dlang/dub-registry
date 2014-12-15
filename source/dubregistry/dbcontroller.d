@@ -163,17 +163,19 @@ class DbController {
 		return download._id;
 	}
 
-	auto getPackageDownloads(BsonObjectID pack)
+	auto getPackageDownloads(BsonObjectID pack, string version_ = null, SysTime since = SysTime(0))
 	{
-		return m_downloads.find!DbPackageDownload(["package_": pack]);
-	}
+		auto query = ["package_": Bson(pack)];
 
-	auto getPackageDownloads(BsonObjectID pack, SysTime since)
-	{
-		return m_downloads.find!DbPackageDownload([
-			"package_": Bson(pack),
-			"time": Bson(["$gte": Bson(BsonDate(since))])
-		]);
+		if(version_) {
+			query["version_"] = version_;
+		}
+
+		if(since.stdTime > 0) {
+			query["time"] = Bson(["$gte": Bson(BsonDate(since))]);
+		}
+
+		return m_downloads.find!DbPackageDownload(query);
 	}
 
 	private void updateKeywords(string package_name)

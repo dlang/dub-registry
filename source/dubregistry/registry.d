@@ -125,7 +125,7 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	PackageStats getPackageStats(string packname)
+	PackageStats getPackageStats(string packname, string version_ = null)
 	{
 		import std.datetime: days;
 
@@ -134,16 +134,13 @@ class DubRegistry {
 
 		uint downloadsInDays(uint numDays)
 		{
-			if(numDays == 0)
-				return cast(uint)m_db
-					.getPackageDownloads(pack._id)
-					.filter!(dl => dl.version_[0] != '~')
-					.walkLength();
-			else
-				return cast(uint)m_db
-					.getPackageDownloads(pack._id, currTime - numDays.days)
-					.filter!(dl => dl.version_[0] != '~')
-					.walkLength();
+			// Set since to SysTime(0) if we want all stats.
+			auto since = numDays == 0 ? SysTime(0) : currTime - numDays.days;
+
+			return cast(uint)m_db
+				.getPackageDownloads(pack._id, version_, since)
+				.filter!(dl => dl.version_[0] != '~')
+				.walkLength();
 		}
 
 		PackageStats ret;
