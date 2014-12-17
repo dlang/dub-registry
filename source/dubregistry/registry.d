@@ -125,30 +125,10 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	PackageStats getPackageStats(string packname, string version_ = null)
+	PackageStats getPackageStats(string packname, string ver = null)
 	{
-		import std.datetime: days;
-
-		auto currTime = Clock.currTime;
 		DbPackage pack = m_db.getPackage(packname);
-
-		uint downloadsInDays(uint numDays)
-		{
-			// Set since to SysTime(0) if we want all stats.
-			auto since = numDays == 0 ? SysTime(0) : currTime - numDays.days;
-
-			return cast(uint)m_db
-				.getPackageDownloads(pack._id, version_, since)
-				.filter!(dl => dl.version_[0] != '~')
-				.walkLength();
-		}
-
-		PackageStats ret;
-		ret.downloads.total   = downloadsInDays(0);
-		ret.downloads.daily   = downloadsInDays(1);
-		ret.downloads.weekly  = downloadsInDays(7);
-		ret.downloads.monthly = downloadsInDays(30);
-		return ret;
+		return PackageStats(m_db.getDownloadStats(pack._id, ver));
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)
@@ -461,14 +441,7 @@ private void checkPackageName(string n, string error_suffix)
 }
 
 struct PackageStats {
-	static struct DownloadStats {
-		uint total;
-		uint daily;
-		uint weekly;
-		uint monthly;
-	}
-
-	DownloadStats downloads;
+	DbDownloadStats downloads;
 }
 
 private struct PackageVersionInfo {

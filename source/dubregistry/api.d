@@ -13,7 +13,7 @@ import vibe.d;
 DubRegistryWebApi registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
 {
 	auto settings = new WebInterfaceSettings;
-	settings.urlPrefix = "api";
+	settings.urlPrefix = "/api";
 
 	auto webapi = new DubRegistryWebApi(registry);
 	router.registerWebInterface(webapi, settings);
@@ -31,23 +31,17 @@ class DubRegistryWebApi {
 	}
 
 	@path("/packages/:packname/stats.json")
-	void getPackageStats(HTTPServerRequest req, HTTPServerResponse res, string _packname)
+	void getPackageStats(HTTPServerResponse res, string _packname)
 	{
-		import std.algorithm: findSplitBefore;
-
-		auto rootPackName = _packname.urlDecode().findSplitBefore(":")[0];
-
-		auto stats = m_registry.getPackageStats(rootPackName);
-		res.writeJsonBody(stats.serializeToJson());
+		return getPackageStats(res, _packname, null);
 	}
 
 	@path("/packages/:packname/:version/stats.json")
-	void getPackageStats(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
+	void getPackageStats(HTTPServerResponse res, string _packname, string _version)
 	{
 		import std.algorithm: findSplitBefore;
 
 		auto rootPackName = _packname.urlDecode().findSplitBefore(":")[0];
-
 		auto stats = m_registry.getPackageStats(rootPackName, _version);
 		res.writeJsonBody(stats.serializeToJson());
 	}
