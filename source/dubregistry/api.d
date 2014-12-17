@@ -43,6 +43,7 @@ class DubRegistryWebApi {
 
 		auto rootPackName = _packname.urlDecode().findSplitBefore(":")[0];
 		auto stats = m_registry.getPackageStats(rootPackName, _version);
-		res.writeJsonBody(stats.serializeToJson());
+		if (stats.type != Json.Type.null_) res.writeJsonBody(stats);
+		else res.writeJsonBody(["message": "Package/Version not found"], HTTPStatus.notFound);
 	}
 }
