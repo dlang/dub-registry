@@ -48,7 +48,7 @@ class DbController {
 		// create indices
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
 		m_packages.ensureIndex(["searchTerms": 1]);
-
+		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -163,19 +163,38 @@ class DbController {
 		return download._id;
 	}
 
-	auto getPackageDownloads(BsonObjectID pack, string version_ = null, SysTime since = SysTime(0))
+	auto getDownloadStats(BsonObjectID pack, string ver = null)
 	{
-		auto query = ["package_": Bson(pack)];
-
-		if(version_) {
-			query["version_"] = version_;
+		static Bson newerThan(SysTime time)
+		{
+			// doc.time >= time ? 1 : 0
+			alias bs = serializeToBson;
+			return bs([
+				"$cond": [bs(["$gte": [bs("$time"), bs(time)]]), bs(1), bs(0)]
+			]);
 		}
 
-		if(since.stdTime > 0) {
-			query["time"] = Bson(["$gte": Bson(BsonDate(since))]);
-		}
+		auto match = Bson.emptyObject();
+		match["package"] = Bson(pack);
+		if (ver.length) match["version"] = ver;
 
-		return m_downloads.find!DbPackageDownload(query);
+		immutable now = Clock.currTime;
+		auto res = m_downloads.aggregate(
+			["$match": match],
+			["$project": [
+					"_id": Bson(false),
+					"total": serializeToBson(["$literal": 1]),
+					"monthly": newerThan(now - 30.days),
+					"weekly": newerThan(now - 7.days),
+					"daily": newerThan(now - 1.days)]],
+			["$group": [
+					"_id": Bson(null), // single group
+					"total": Bson(["$sum": Bson("$total")]),
+					"monthly": Bson(["$sum": Bson("$monthly")]),
+					"weekly": Bson(["$sum": Bson("$weekly")]),
+					"daily": Bson(["$sum": Bson("$daily")])]]);
+		assert(res.length <= 1);
+		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
 	}
 
 	private void updateKeywords(string package_name)
@@ -244,6 +263,9 @@ struct DbPackageDownload {
 	string userAgent;
 }
 
+struct DbDownloadStats {
+	uint total, monthly, weekly, daily;
+}
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)
 {
