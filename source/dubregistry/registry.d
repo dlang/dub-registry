@@ -11,7 +11,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : chain, countUntil, filter, map, sort, swap;
+import std.algorithm : chain, countUntil, filter, map, sort, swap, walkLength;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
@@ -123,6 +123,15 @@ class DubRegistry {
 	bool isUserPackage(User.ID user, string package_name)
 	{
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
+	}
+
+	Json getPackageStats(string packname, string ver = null)
+	{
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
+		catch(Exception) return Json(null);
+		if (ver.length && !m_db.hasVersion(packname, ver)) return Json(null);
+		return PackageStats(m_db.getDownloadStats(pack._id, ver)).serializeToJson();
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)
@@ -432,6 +441,10 @@ private void checkPackageName(string n, string error_suffix)
 				break;
 		}
 	}
+}
+
+struct PackageStats {
+	DbDownloadStats downloads;
 }
 
 private struct PackageVersionInfo {

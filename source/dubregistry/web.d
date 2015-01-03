@@ -453,11 +453,11 @@ class DubRegistryWebFrontend {
 
 			return cat;
 		}
-		
+
 		Category[] cats;
 		foreach (top_level_cat; json)
 			cats ~= processNode(top_level_cat, null);
-		
+
 		m_categories = cats;
 		m_categoryMap = catmap;
 	}
