@@ -51,7 +51,7 @@ shared static this()
 
 	// user management
 	auto udbsettings = new UserManSettings;
-	udbsettings.serviceName = "DUB registry";
+	udbsettings.serviceName = "DUB - The D package registry";
 	udbsettings.serviceUrl = URL("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";

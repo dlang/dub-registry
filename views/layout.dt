@@ -3,10 +3,10 @@ html
 	head
 		block css
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-		
+
 		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
 		block title
-		title= title ~ " - DUB registry"
+		title= title ~ " - DUB - The D package registry"
 	body
 		#header
 			#profile
@@ -23,7 +23,7 @@ html
 			a.blind(href="http://code.dlang.org/")
 				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
 			div#title
-				| DUB registry
+				| DUB - The D package registry
 				h1= title
 
 		nav#topnav
