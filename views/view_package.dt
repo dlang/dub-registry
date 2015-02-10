@@ -22,9 +22,9 @@ block body
 	h2 Description
 
 	p= versionInfo.description.opt!string
-	
+
 	h2 Package Information
-	
+
 	table
 		- if (packageName.canFind(":"))
 			tr
@@ -35,7 +35,7 @@ block body
 		tr
 			td Version
 			td #{versionInfo["version"].get!string} (#{formatDate(versionInfo.date)})
-		
+
 		- if( auto ph = "homepage" in versionInfo )
 			tr
 				td Homepage
@@ -83,27 +83,27 @@ block body
 								a(href="#{req.rootDir}packages/#{urlEncode(dep)}")= dep
 				- else
 					td none
-		
+
 		- if (auto ps = "systemDependencies" in versionInfo)
 			tr
 				td System dependencies
 				td= ps.get!string
 
 	h2 Installation
-	
+
 	p To use this package, put the following dependency into your project's dub.json into the dependencies section:
 	- string expr = versionInfo["version"].get!string;
-	- if( !expr.startsWith("~") ) expr = ">=" ~ expr;
+	- if( !expr.startsWith("~") ) expr = "~>" ~ expr;
 	pre.code {
 		|	...
 		|	"dependencies": {
 		|		"#{packageName}": "#{expr}"
 		|	}
 		|}
-	
+
 	- if (versionInfo.readme.opt!string.length)
 		h2 Readme
-		
+
 		.repositoryReadme.markdown-body
 			- import vibe.textfilter.markdown;
 			- scope msettings = new MarkdownSettings;
