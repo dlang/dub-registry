@@ -85,6 +85,21 @@ class DubRegistry {
 		return false;
 	}
 
+	/** Returns the current index of a given package in the update queue.
+
+		An index of zero indicates that the package is currently being updated.
+		A negative index is returned when the package is not in the update
+		queue.
+	*/
+	sizediff_t getUpdateQueuePosition(string pack_name)
+	{
+		if (m_currentUpdatePackage == pack_name) return 0;
+		synchronized (m_updateQueueMutex) {
+			auto idx = m_updateQueue.countUntil(pack_name);
+			return idx >= 0 ? idx + 1 : -1;
+		}
+	}
+
 	auto searchPackages(string[] keywords)
 	{
 		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));

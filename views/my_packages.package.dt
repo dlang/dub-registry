@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- auto title = "Edit package " ~ packageName;
-	
+
 block body
 	- import vibe.data.json;
 	- import dubregistry.web : Category;
@@ -18,16 +18,21 @@ block body
 		- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
 		dt Latest version
 		dd= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
-	
+
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
 		button(type="submit") Remove this package
 
-	- bool update_check_active = registry.isPackageScheduledForUpdate(packageName);
+	- auto update_check_index = registry.getUpdateQueuePosition(packageName);
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
 		p
-			button(type="submit", disabled=update_check_active) Trigger manual update
-			- if (update_check_active)
-				| Package is scheduled for an update check...
+			button(type="submit", disabled=(update_check_index >= 0)) Trigger manual update
+			- if (update_check_index == 0)
+				| Package is currently being updated.
+			- else if (update_check_index == 1)
+				| Package is scheduled for an update check. Still have to wait for one more package.
+			- else if (update_check_index > 1)
+				| Package is scheduled for an update check. Still have to wait for #{update_check_index} other packages to complete.
+
 
 	h2 Categories
 
