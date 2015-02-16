@@ -162,7 +162,7 @@ class DbController {
 					foreach (kw; barekeywords.data) {
 						import std.algorithm;
 						auto dist = levenshteinDistance(t, kw);
-						if (dist <= 3) score += 3 - dist;
+						if (dist <= 3 && dist+1 < kw.length) score += 3 - dist;
 					}
 				if (score > 0) results ~= tuple(p, score);
 			}
