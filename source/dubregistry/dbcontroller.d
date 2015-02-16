@@ -148,7 +148,27 @@ class DbController {
 			barekeywords ~= parts.filter!(p => p.count > 2).map!(p => p.toLower).array;
 		}
 		logInfo("search for %s %s", keywords, barekeywords.data);
-		return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
+
+		version (none) {
+			// performs only exact matches - we should implement something more
+			// flexible, for example based on elastic search
+			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
+		} else {
+			// in the meantime, we'll perform a brute force search instead
+			Appender!(Tuple!(DbPackage, int)[]) results;
+			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
+				int score = 0;
+				foreach (t; p.searchTerms)
+					foreach (kw; barekeywords.data) {
+						import std.algorithm;
+						int dist = levenshteinDistance(t, kw);
+						if (dist <= 3) score += 3 - dist;
+					}
+				if (score > 0) results ~= tuple(p, score);
+			}
+			sort!((a, b) => a[1] > b[1])(results.data);
+			return results.data.map!(r => r[0]);
+		}
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)
