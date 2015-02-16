@@ -149,19 +149,19 @@ class DbController {
 		}
 		logInfo("search for %s %s", keywords, barekeywords.data);
 
-		version (none) {
+		static if (0) {
 			// performs only exact matches - we should implement something more
 			// flexible, for example based on elastic search
 			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
 		} else {
 			// in the meantime, we'll perform a brute force search instead
-			Appender!(Tuple!(DbPackage, int)[]) results;
+			Appender!(Tuple!(DbPackage, size_t)[]) results;
 			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
-				int score = 0;
+				size_t score = 0;
 				foreach (t; p.searchTerms)
 					foreach (kw; barekeywords.data) {
 						import std.algorithm;
-						int dist = levenshteinDistance(t, kw);
+						auto dist = levenshteinDistance(t, kw);
 						if (dist <= 3) score += 3 - dist;
 					}
 				if (score > 0) results ~= tuple(p, score);
