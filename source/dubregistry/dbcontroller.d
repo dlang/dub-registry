@@ -145,7 +145,7 @@ class DbController {
 			kw = kw.strip();
 			//kw = kw.normalize(); // separate character from diacritics
 			string[] parts = splitAlphaNumParts(kw.toLower());
-			barekeywords ~= parts.filter!(p => p.count > 2).map!(p => p.toLower).array;
+			barekeywords ~= parts.filter!(p => p.count >= 2).map!(p => p.toLower).array;
 		}
 		logInfo("search for %s %s", keywords, barekeywords.data);
 
@@ -224,7 +224,7 @@ class DbController {
 		void processString(string str) {
 			if (str.length == 0) return;
 			foreach (w; splitAlphaNumParts(str))
-				if (w.count > 2)
+				if (w.count >= 2)
 					keywords[w.toLower()] = true;
 		}
 		void processVer(Json info) {
