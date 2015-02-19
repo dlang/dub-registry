@@ -10,6 +10,7 @@ import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
 import dubregistry.web;
+import dubregistry.api;
 
 import std.algorithm : sort;
 import std.file;
@@ -50,7 +51,7 @@ shared static this()
 
 	// user management
 	auto udbsettings = new UserManSettings;
-	udbsettings.serviceName = "DUB registry";
+	udbsettings.serviceName = "DUB - The D package registry";
 	udbsettings.serviceUrl = URL("http://code.dlang.org/");
 	udbsettings.serviceEmail = "noreply@vibed.org";
 	udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
@@ -63,14 +64,15 @@ shared static this()
 
 	// web front end
 	router.registerDubRegistryWebFrontend(s_registry, userdb);
-	
+	router.registerDubRegistryWebApi(s_registry);
+
 	// start the web server
  	auto settings = new HTTPServerSettings;
 	settings.hostName = "code.dlang.org";
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
 	settings.sessionStore = new MemorySessionStore;
-	
+
 	listenHTTP(settings, router);
 
 	// poll github for new project versions

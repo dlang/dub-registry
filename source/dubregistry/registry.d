@@ -11,7 +11,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : chain, countUntil, filter, map, sort, swap;
+import std.algorithm : chain, countUntil, filter, map, sort, swap, walkLength;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
@@ -85,6 +85,21 @@ class DubRegistry {
 		return false;
 	}
 
+	/** Returns the current index of a given package in the update queue.
+
+		An index of zero indicates that the package is currently being updated.
+		A negative index is returned when the package is not in the update
+		queue.
+	*/
+	sizediff_t getUpdateQueuePosition(string pack_name)
+	{
+		if (m_currentUpdatePackage == pack_name) return 0;
+		synchronized (m_updateQueueMutex) {
+			auto idx = m_updateQueue.countUntil(pack_name);
+			return idx >= 0 ? idx + 1 : -1;
+		}
+	}
+
 	auto searchPackages(string[] keywords)
 	{
 		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));
@@ -123,6 +138,15 @@ class DubRegistry {
 	bool isUserPackage(User.ID user, string package_name)
 	{
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
+	}
+
+	Json getPackageStats(string packname, string ver = null)
+	{
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
+		catch(Exception) return Json(null);
+		if (ver.length && !m_db.hasVersion(packname, ver)) return Json(null);
+		return PackageStats(m_db.getDownloadStats(pack._id, ver)).serializeToJson();
 	}
 
 	Json getPackageInfo(string packname, bool include_errors = false)
@@ -209,7 +233,8 @@ class DubRegistry {
 
 		// derive package name and perform various sanity checks
 		auto name = info.info.name.get!string;
-		string package_check_string = "Check "~info.info.packageDescriptionFile.get!string~".";
+		string package_desc_file = info.info.packageDescriptionFile.get!string;
+		string package_check_string = format(`Check your %s.`, package_desc_file);
 		enforce(name.length <= 60,
 			"Package names must not be longer than 60 characters: \""~name[0 .. 60]~"...\" - "~package_check_string);
 		enforce(name == name.toLower(),
@@ -218,10 +243,15 @@ class DubRegistry {
 			`A "license" field in the package description file is missing or empty. `~package_check_string);
 		enforce(info.info.description.opt!string.length > 0,
 			`A "description" field in the package description file is missing or empty. `~package_check_string);
-		checkPackageName(name, package_check_string);
-		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
-			foreach (p; n.split(":"))
-				checkPackageName(p, package_check_string);
+		checkPackageName(name, format(`Check the "name" field of your %s.`, package_desc_file));
+		foreach (string n, vspec; info.info.dependencies.opt!(Json[string])) {
+			auto parts = n.split(":").array;
+			// allow shortcut syntax ":subpack"
+			if (parts.length > 1 && parts[0].length == 0) parts = parts[1 .. $];
+			// verify all other parts of the package name
+			foreach (p; parts)
+				checkPackageName(p, format(`Check the "dependencies" field of your %s.`, package_desc_file));
+		}
 
 		// ensure that at least one tagged version is present
 		auto tags = rep.getTags();
@@ -432,6 +462,10 @@ private void checkPackageName(string n, string error_suffix)
 				break;
 		}
 	}
+}
+
+struct PackageStats {
+	DbDownloadStats downloads;
 }
 
 private struct PackageVersionInfo {

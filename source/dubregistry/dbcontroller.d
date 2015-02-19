@@ -48,7 +48,7 @@ class DbController {
 		// create indices
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
 		m_packages.ensureIndex(["searchTerms": 1]);
-
+		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -145,10 +145,30 @@ class DbController {
 			kw = kw.strip();
 			//kw = kw.normalize(); // separate character from diacritics
 			string[] parts = splitAlphaNumParts(kw.toLower());
-			barekeywords ~= parts.filter!(p => p.count > 2).map!(p => p.toLower).array;
+			barekeywords ~= parts.filter!(p => p.count >= 2).map!(p => p.toLower).array;
 		}
 		logInfo("search for %s %s", keywords, barekeywords.data);
-		return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
+
+		static if (0) {
+			// performs only exact matches - we should implement something more
+			// flexible, for example based on elastic search
+			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
+		} else {
+			// in the meantime, we'll perform a brute force search instead
+			Appender!(Tuple!(DbPackage, size_t)[]) results;
+			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
+				size_t score = 0;
+				foreach (t; p.searchTerms)
+					foreach (kw; barekeywords.data) {
+						import std.algorithm;
+						auto dist = levenshteinDistance(t, kw);
+						if (dist <= 3 && dist+1 < kw.length) score += 3 - dist;
+					}
+				if (score > 0) results ~= tuple(p, score);
+			}
+			sort!((a, b) => a[1] > b[1])(results.data);
+			return results.data.map!(r => r[0]);
+		}
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)
@@ -163,6 +183,40 @@ class DbController {
 		return download._id;
 	}
 
+	auto getDownloadStats(BsonObjectID pack, string ver = null)
+	{
+		static Bson newerThan(SysTime time)
+		{
+			// doc.time >= time ? 1 : 0
+			alias bs = serializeToBson;
+			return bs([
+				"$cond": [bs(["$gte": [bs("$time"), bs(time)]]), bs(1), bs(0)]
+			]);
+		}
+
+		auto match = Bson.emptyObject();
+		match["package"] = Bson(pack);
+		if (ver.length) match["version"] = ver;
+
+		immutable now = Clock.currTime;
+		auto res = m_downloads.aggregate(
+			["$match": match],
+			["$project": [
+					"_id": Bson(false),
+					"total": serializeToBson(["$literal": 1]),
+					"monthly": newerThan(now - 30.days),
+					"weekly": newerThan(now - 7.days),
+					"daily": newerThan(now - 1.days)]],
+			["$group": [
+					"_id": Bson(null), // single group
+					"total": Bson(["$sum": Bson("$total")]),
+					"monthly": Bson(["$sum": Bson("$monthly")]),
+					"weekly": Bson(["$sum": Bson("$weekly")]),
+					"daily": Bson(["$sum": Bson("$daily")])]]);
+		assert(res.length <= 1);
+		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
+	}
+
 	private void updateKeywords(string package_name)
 	{
 		auto p = getPackage(package_name);
@@ -170,7 +224,7 @@ class DbController {
 		void processString(string str) {
 			if (str.length == 0) return;
 			foreach (w; splitAlphaNumParts(str))
-				if (w.count > 2)
+				if (w.count >= 2)
 					keywords[w.toLower()] = true;
 		}
 		void processVer(Json info) {
@@ -229,6 +283,9 @@ struct DbPackageDownload {
 	string userAgent;
 }
 
+struct DbDownloadStats {
+	uint total, monthly, weekly, daily;
+}
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)
 {

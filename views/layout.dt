@@ -3,10 +3,10 @@ html
 	head
 		block css
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-		
+
 		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
 		block title
-		title= title ~ " - DUB registry"
+		title= title ~ " - DUB - The D package registry"
 	body
 		#header
 			#profile
@@ -20,10 +20,10 @@ html
 						a(href="#{req.rootDir}register") Register
 					p
 						a(href='#{req.rootDir}login?redirect=#{req.requestURL == "/" ? "/my_packages" : req.requestURL}') Log in
-			a.blind(href="http://code.dlang.org/")
+			a.blind(href="#{req.rootDir}")
 				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
 			div#title
-				| DUB registry
+				| DUB - The D package registry
 				h1= title
 
 		nav#topnav

@@ -124,7 +124,7 @@ class DubRegistryWebFrontend {
 	@path("/package-format")
 	void getPackageFormat() { render!("package_format.dt"); }
 
-	void getDownload()
+	private auto downloadInfo()
 	{
 		static struct DownloadFile {
 			string fileName;
@@ -139,6 +139,8 @@ class DubRegistryWebFrontend {
 
 		static struct Info {
 			DownloadVersion[] versions;
+			string latest = "";
+
 			void addFile(string ver, string platform, string filename)
 			{
 
@@ -166,31 +168,36 @@ class DubRegistryWebFrontend {
 				DownloadVersion dv = DownloadVersion(ver);
 				dv.files[platform] = [df];
 				versions ~= dv;
+				if (!isPreReleaseVersion(ver) && (latest.empty || compareVersions(ver, latest) > 0))
+					latest = ver;
 			}
 		}
 
-		Info info;
+		static Info info;
+		if (info.versions.length)
+			return info;
+
+		if (!"public/files".exists || !"public/files".isDir)
+			return info;
 
 		import std.regex;
-		static Regex!char[][string] platformPatterns;
-		if (platformPatterns.length == 0) {
-			platformPatterns["windows-x86"] = [
-				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.*))?(?:-setup\\.exe|-windows-x86\\.zip)$")
-			];
-			platformPatterns["linux-x86_64"] = [
-				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86_64\\.tar\\.gz$"),
-				regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86_64\\.rpm$")
-			];
-			platformPatterns["linux-x86"] = [
-				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
-				regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
-			];
-			platformPatterns["osx-x86_64"] = [
-				regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
-			];
-		}
+		Regex!char[][string] platformPatterns;
+		platformPatterns["windows-x86"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.*))?(?:-setup\\.exe|-windows-x86\\.zip)$")
+		];
+		platformPatterns["linux-x86_64"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86_64\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86_64\\.rpm$")
+		];
+		platformPatterns["linux-x86"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
+		];
+		platformPatterns["osx-x86_64"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
+		];
 
-		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)){
+		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)) {
 			auto name = Path(de.name).head.toString();
 
 			foreach (platform, rexes; platformPatterns) {
@@ -205,8 +212,21 @@ class DubRegistryWebFrontend {
 		}
 
 		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
+		return info;
+	}
 
+	void getDownload()
+	{
+		auto info = downloadInfo();
 		render!("download.dt", info);
+	}
+
+	@path("/download/LATEST")
+	void getLatest(HTTPServerResponse res)
+	{
+		auto info = downloadInfo();
+		enforceHTTP(!info.latest.empty, HTTPStatus.notFound, "No version available.");
+		res.writeBody(info.latest);
 	}
 
 	@path("/view_package/:packname")
@@ -453,11 +473,11 @@ class DubRegistryWebFrontend {
 
 			return cat;
 		}
-		
+
 		Category[] cats;
 		foreach (top_level_cat; json)
 			cats ~= processNode(top_level_cat, null);
-		
+
 		m_categories = cats;
 		m_categoryMap = catmap;
 	}

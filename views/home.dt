@@ -4,19 +4,19 @@ block title
 	- import dubregistry.viewutils;
 	- import dubregistry.web;
 	- import vibe.data.json;
-	- auto title = "Package list";
+	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
 		window.categories = #{serializeToJson(categories).toString()};
-	
+
 block body
-	p Welcome to the DUB registry. The following list shows the available packages:
+	p Welcome to DUB, the D package registry. The following list shows all available packages:
 
 	- auto category = req.query.get("category", null);
 	- auto sort_mode = req.query.get("sort", "updated");
 	form#category-form(method="GET", action="")
 		input(type="hidden", name="sort", value=sort_mode)
-		p Category: 
+		p Category:
 			select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
 				- void outputCat(Category cat)
 					- if (!cat)
@@ -29,7 +29,7 @@ block body
 				- outputCat(null);
 			button#category-submit(type="submit") Update
 	#category-dynamic-form(style="display: none")
-		p Category: 
+		p Category:
 			- foreach (i; 0 .. 6)
 				select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
 		:javascript setupCategoryForm();
@@ -38,7 +38,7 @@ block body
 	p Sort by:
 		- foreach (i, c; browse_kinds)
 			- if (i > 0)
-				| - 
+				| -
 			- auto cp = c.split(";");
 			- if (sort_mode == cp[0])
 				strong= cp[1]
