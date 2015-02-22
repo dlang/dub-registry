@@ -232,8 +232,6 @@ block body
 		|	"sourceFiles-windows-x86_64-dmd": ["lib/win32/mylib.lib"],
 		|}
 
-	p Inside of build setting values, it is possible to use variables using dollar notation. <code>$PACKAGE_DIR</code> contains the path to the package itself and all other variables are taken from the program environment.
-
 	table
 		tr
 			th Name
@@ -386,7 +384,20 @@ block body
 				code string[]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
-	p
+	p Inside of build setting values, it is possible to use variables using dollar notation. Any variable not matching a predefined name will be taken from the program environment. To denote a literal dollar sign, use <code>$$</code>. The predefined variables are:
+	table
+		tr
+			th Variable
+			th Contents
+		tr
+			td <code>$PACKAGE_DIR</code>
+			td Path to the package itself
+		tr
+			td <code>$ROOT_PACKAGE_DIR</code>
+			td Path to the root package of the build dependency tree
+		tr
+			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
+			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
 
 
 	h3#version-specs Version specifications
