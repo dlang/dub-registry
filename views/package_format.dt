@@ -65,7 +65,7 @@ block body
 			th Name
 			th Type
 			th Description
-		
+
 		tr
 			td name [required]
 			td
@@ -183,28 +183,28 @@ block body
 
 	p The license field should only contain one of the standard license identifiers if possible. At a later point in time, DUB may use this information to validate proper licensing in dependency hierarchies and output warnings when licenses don't match up. Multiple licenses can be separated using the term "or" and for versioned licenses, the postfix "or later" is allowed to also include any later version of the same license.
 
-	p The standard license identifiers are: 
-		|<code>public domain</code>, 
-		|<code>AFL-3.0</code> (Academic Free License 3.0), 
-		|<code>AGPL-3.0</code> (Affero GNU Public License 3.0), 
-		|<code>Apache-2.0</code>, 
-		|<code>APSL-2.0</code> (Apple Public Source License), 
-		|<code>Artistic-2.0</code>, 
-		|<code>BSL-1.0</code> (Boost Software License), 
-		|<code>BSD 2-clause</code>, 
-		|<code>BSD 3-clause</code>, 
-		|<code>EPL-1.0</code> (Eclipse Public License),  
-		|<code>GPL-2.0</code>, 
-		|<code>GPL-3.0</code>, 
-		|<code>ISC</code>, 
-		|<code>LGPL-2.1</code>, 
-		|<code>LGPL-3.0</code>, 
-		|<code>MIT</code>, 
-		|<code>MPL-2.0</code> (Mozilla Public License 2.0), 
-		|<code>MS-PL</code> (Microsoft Public License), 
-		|<code>MS-RL</code> (Microsoft Reciprocal License), 
-		|<code>OpenSSL</code> (OpenSSL License), 
-		|<code>SSLeay</code> (SSLeay License), 
+	p The standard license identifiers are:
+		|<code>public domain</code>,
+		|<code>AFL-3.0</code> (Academic Free License 3.0),
+		|<code>AGPL-3.0</code> (Affero GNU Public License 3.0),
+		|<code>Apache-2.0</code>,
+		|<code>APSL-2.0</code> (Apple Public Source License),
+		|<code>Artistic-2.0</code>,
+		|<code>BSL-1.0</code> (Boost Software License),
+		|<code>BSD 2-clause</code>,
+		|<code>BSD 3-clause</code>,
+		|<code>EPL-1.0</code> (Eclipse Public License),
+		|<code>GPL-2.0</code>,
+		|<code>GPL-3.0</code>,
+		|<code>ISC</code>,
+		|<code>LGPL-2.1</code>,
+		|<code>LGPL-3.0</code>,
+		|<code>MIT</code>,
+		|<code>MPL-2.0</code> (Mozilla Public License 2.0),
+		|<code>MS-PL</code> (Microsoft Public License),
+		|<code>MS-RL</code> (Microsoft Reciprocal License),
+		|<code>OpenSSL</code> (OpenSSL License),
+		|<code>SSLeay</code> (SSLeay License),
 		|<code>Zlib</code> (zlib/libpng License)
 
 	p Any other value is considered to be a proprietary license, which is assumed to be incompatible with any other license. If you think there is a license that should be included in this list, please file a quick <a href="https://github.com/rejectedsoftware/dub-registry/issues/new">bug report</a>. Please also note that pure D bindings of C/C++ libraries <em>should</em> specify the same license as the original library, although a stricter but compatible license can be used, too.
@@ -216,7 +216,7 @@ block body
 		|"GPL-2.0 or later or proprietary"
 		|"GPL-2.0 or LGPL-3.0"
 		|"LGPL-2.1 or proprietary"
-	
+
 	h2#build-settings Build settings
 
 	p Build settings fields influence the command line options passed to the compiler and linker. All fields are optional.
@@ -239,7 +239,7 @@ block body
 			th Name
 			th Type
 			th Description
-		
+
 		tr
 			td dependencies
 			td
@@ -257,7 +257,7 @@ block body
 			td
 				code string
 			td Specifies a specific <a href="#target-types">target type</a> - this field does not support platform suffixes
-		
+
 		tr
 			td targetName
 			td
@@ -386,9 +386,9 @@ block body
 				code string[]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
-	p 
+	p
 
-	
+
 	h3#version-specs Version specifications
 	p A version specification can either be a simple declaration or a more complex variant, alowing more control.
 
@@ -413,7 +413,7 @@ block body
 					p <code>"version": "&lt;version-string&gt;"</code> - The version specification as used for the simple form
 					p A version specification should only be specified when no <code>"path"</code> field is present, or when compatibility with older versions of DUB (&lt; 0.9.22) is desired.
 				li
-					p <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from. 
+					p <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from.
 					p References a package in a specific path. This can be used in situations where a specific copy of a package needs to be used. Examples of this include packages that are included as GIT submodules, or packages in sub folders of the main package, such as example projects.
 				li
 					p <code>"optional": true</code> - Indicate an optional dependency.
@@ -651,7 +651,7 @@ block body
 			th Name
 			th Type
 			th Description
-		
+
 		tr
 			td name [required]
 			td
