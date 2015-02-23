@@ -388,7 +388,7 @@ block body
 
 	
 	h3#version-specs Version specifications
-	p A version specification can either be a simple declaration or a more complex variant, alowing more control.
+	p A version specification can either be a simple declaration or a more complex variant, allowing more control.
 
 	ul
 		li Simple variant:
