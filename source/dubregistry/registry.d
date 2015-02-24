@@ -97,7 +97,7 @@ class DubRegistry {
 	{
 		if (m_currentUpdatePackage == pack_name) return 0;
 		synchronized (m_updateQueueMutex) {
-			auto idx = m_updateQueue.countUntil(pack_name);
+			auto idx = m_updateQueue[].countUntil(pack_name);
 			return idx >= 0 ? idx + 1 : -1;
 		}
 	}
