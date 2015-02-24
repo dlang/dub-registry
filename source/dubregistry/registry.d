@@ -23,6 +23,7 @@ import vibe.core.log;
 import vibe.data.bson;
 import vibe.data.json;
 import vibe.stream.operations;
+import vibe.utils.array : FixedRingBuffer;
 
 
 /// Settings to configure the package registry.
@@ -37,7 +38,7 @@ class DubRegistry {
 		Json[string] m_packageInfos;
 
 		// list of package names to check for updates
-		string[] m_updateQueue; // TODO: use a ring buffer
+		FixedRingBuffer!string m_updateQueue;
 		string m_currentUpdatePackage;
 		Task m_updateQueueTask;
 		TaskMutex m_updateQueueMutex;
@@ -49,6 +50,7 @@ class DubRegistry {
 	{
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
+		m_updateQueue.capacity = 10000;
 		m_updateQueueMutex = new TaskMutex;
 		m_updateQueueCondition = new TaskCondition(m_updateQueueMutex);
 		m_updateQueueTask = runTask(&processUpdateQueue);
@@ -62,8 +64,8 @@ class DubRegistry {
 	void triggerPackageUpdate(string pack_name)
 	{
 		synchronized (m_updateQueueMutex) {
-			if (!m_updateQueue.canFind(pack_name))
-				m_updateQueue ~= pack_name;
+			if (!m_updateQueue[].canFind(pack_name))
+				m_updateQueue.put(pack_name);
 		}
 
 		// watchdog for update task
@@ -81,7 +83,7 @@ class DubRegistry {
 	{
 		if (m_currentUpdatePackage == pack_name) return true;
 		synchronized (m_updateQueueMutex)
-			if (m_updateQueue.canFind(pack_name)) return true;
+			if (m_updateQueue[].canFind(pack_name)) return true;
 		return false;
 	}
 
