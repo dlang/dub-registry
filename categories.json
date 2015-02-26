@@ -66,6 +66,7 @@
 		{"name": "i18n", "description": "Internationalization and localization"},
 		{"name": "scientific", "description": "Scientific", "categories": [
 			{"name": "linalg", "description": "Linear algebra"},
+			{"name": "numeric", "description": "Numerical methods and algorithms"},
 			{"name": "newton", "description": "Newton physics"},
 			{"name": "bioinformatics", "description": "Bioinformatics"}
 		]},
