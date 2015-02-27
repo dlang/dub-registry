@@ -21,6 +21,7 @@ import vibe.d;
 
 Task s_checkTask;
 DubRegistry s_registry;
+DubRegistryWebFrontend s_web;
 
 void startMonitoring()
 {
@@ -28,7 +29,7 @@ void startMonitoring()
 	{
 		while(true){
 			s_registry.checkForNewVersions();
-			sleep(15.minutes());
+			sleep(30.minutes());
 		}
 	}
 	s_checkTask = runTask(&monitorNewVersions);
@@ -63,7 +64,7 @@ shared static this()
 	s_registry = new DubRegistry(regsettings);
 
 	// web front end
-	router.registerDubRegistryWebFrontend(s_registry, userdb);
+	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb);
 	router.registerDubRegistryWebApi(s_registry);
 
 	// start the web server

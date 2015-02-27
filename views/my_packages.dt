@@ -2,11 +2,11 @@ extends layout
 
 block title
 	- auto title = "My packages";
-	
+
 block body
 	- import vibe.data.json;
 	- import std.algorithm;
-	
+
 	form(method="GET", action="#{req.rootDir}register_package")
 		button(type="submit") Register new package
 
@@ -34,5 +34,5 @@ block body
 			tr
 				td(colspan="3") You have not registered any packages yet.
 
-	p Note that it can take up to 30 min until new packages and new git tags are automatically reflected in the registry. You can force a manual update of individual packages on their details page.
-	
+	p Note that it can take up to an hour until new packages and new git tags are automatically reflected in the registry. You can force a manual update of individual packages on their details page.
+
