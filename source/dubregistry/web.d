@@ -173,7 +173,7 @@ class DubRegistryWebFrontend {
 			}
 		}
 
-		static Info info;
+		Info info;
 
 		if (!"public/files".exists || !"public/files".isDir)
 			return info;
