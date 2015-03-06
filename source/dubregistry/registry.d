@@ -11,10 +11,11 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : chain, countUntil, filter, map, sort, swap, walkLength;
+import std.algorithm : countUntil, filter, map, sort, swap;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
+import std.range : chain, walkLength;
 import std.string : format, startsWith, toLower;
 import std.typecons;
 import userman.controller;

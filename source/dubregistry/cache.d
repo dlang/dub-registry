@@ -10,7 +10,7 @@ import vibe.db.mongo.mongo;
 import vibe.http.client;
 import vibe.stream.memory;
 
-import std.array : startsWith;
+import std.algorithm : startsWith;
 import std.exception;
 
 
