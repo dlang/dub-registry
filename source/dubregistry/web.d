@@ -174,8 +174,6 @@ class DubRegistryWebFrontend {
 		}
 
 		static Info info;
-		if (info.versions.length)
-			return info;
 
 		if (!"public/files".exists || !"public/files".isDir)
 			return info;
