@@ -326,7 +326,7 @@ block body
 			td copyFiles
 			td
 				code string[]
-			td Files that are copied to the applications directory - typically these are DLLs on Windows
+			td A list of <a href="http://dlang.org/phobos/std_path.html#.globMatch">globs</a> matching files or directories to be copied to <code>targetPath</code>. Matching directories are copied recursively, i.e. <code>"copyFiles": ["path/to/dir"]"</code> recursively copies <code>dir</code>, while <code>"copyFiles": ["path/to/dir/*"]"</code> only copies files within <code>dir</code>.
 
 		tr
 			td versions
