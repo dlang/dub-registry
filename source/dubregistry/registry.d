@@ -152,6 +152,14 @@ class DubRegistry {
 		return PackageStats(m_db.getDownloadStats(pack._id, ver)).serializeToJson();
 	}
 
+	Json getLatestVersion(string packname)
+	{
+		DbPackageVersion ver;
+		try ver = m_db.getLatestVersion(packname);
+		catch(Exception) return Json(null);
+		return ver.serializeToJson();
+	}
+
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
 		if (!include_errors) {

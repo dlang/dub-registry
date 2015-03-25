@@ -22,6 +22,9 @@ interface IPackages {
 
 	@path(":name/:version/stats")
 	Json getStats(string _name, string _version);
+
+	@path(":name/latest")
+	Json getLatest(string _name);
 }
 
 class Packages : IPackages {
@@ -34,17 +37,29 @@ class Packages : IPackages {
 		m_registry = registry;
 	}
 
-	override Json getStats(string _name) {
+override {
+	Json getStats(string _name) {
 		return getStats(_name, null);
 	}
 
-	override Json getStats(string _name, string _version)
-	{
-		import std.algorithm: findSplitBefore;
-
-		_name = _name.urlDecode().findSplitBefore(":")[0];
+	Json getStats(string _name, string _version){
+		_name = rootOf(_name);
 		auto stats = m_registry.getPackageStats(_name, _version);
 		enforce(stats.type != Json.Type.null_, new HTTPStatusException(HTTPStatus.notFound, "Package/Version not found"));
 		return stats;
+	}
+
+	Json getLatest(string _name) {
+		_name = rootOf(_name);
+		auto ver = m_registry.getLatestVersion(_name);
+		enforce(ver.type != Json.Type.null_, new HTTPStatusException(HTTPStatus.notFound, "Package not found"));
+		return ver;
+	}
+}
+
+private:
+	string rootOf(string pkg) {
+		import std.algorithm: findSplitBefore;
+		return pkg.urlDecode().findSplitBefore(":")[0];
 	}
 }
