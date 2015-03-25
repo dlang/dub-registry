@@ -10,17 +10,24 @@ import dubregistry.registry;
 
 import vibe.d;
 
-DubRegistryWebApi registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
+void registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
 {
-	auto settings = new WebInterfaceSettings;
-	settings.urlPrefix = "/api";
-
-	auto webapi = new DubRegistryWebApi(registry);
-	router.registerWebInterface(webapi, settings);
-	return webapi;
+	auto pkgs = new Packages(registry);
+	router.registerRestInterface(pkgs, "/api/packages");
 }
 
-class DubRegistryWebApi {
+interface IPackages {
+	@path(":name/stats")
+	Json getStats(string _name);
+
+	@path(":name/:version/stats")
+	Json getStats(string _name, string _version);
+
+	@path(":name/latest")
+	Json getLatest(string _name);
+}
+
+class Packages : IPackages {
 	private {
 		DubRegistry m_registry;
 	}
@@ -30,20 +37,29 @@ class DubRegistryWebApi {
 		m_registry = registry;
 	}
 
-	@path("/packages/:packname/stats.json")
-	void getPackageStats(HTTPServerResponse res, string _packname)
-	{
-		return getPackageStats(res, _packname, null);
+override {
+	Json getStats(string _name) {
+		return getStats(_name, null);
 	}
 
-	@path("/packages/:packname/:version/stats.json")
-	void getPackageStats(HTTPServerResponse res, string _packname, string _version)
-	{
-		import std.algorithm: findSplitBefore;
+	Json getStats(string _name, string _version){
+		_name = rootOf(_name);
+		auto stats = m_registry.getPackageStats(_name, _version);
+		enforce(stats.type != Json.Type.null_, new HTTPStatusException(HTTPStatus.notFound, "Package/Version not found"));
+		return stats;
+	}
 
-		auto rootPackName = _packname.urlDecode().findSplitBefore(":")[0];
-		auto stats = m_registry.getPackageStats(rootPackName, _version);
-		if (stats.type != Json.Type.null_) res.writeJsonBody(stats);
-		else res.writeJsonBody(["message": "Package/Version not found"], HTTPStatus.notFound);
+	Json getLatest(string _name) {
+		_name = rootOf(_name);
+		auto ver = m_registry.getLatestVersion(_name);
+		enforce(ver.type != Json.Type.null_, new HTTPStatusException(HTTPStatus.notFound, "Package not found"));
+		return ver;
+	}
+}
+
+private:
+	string rootOf(string pkg) {
+		import std.algorithm: findSplitBefore;
+		return pkg.urlDecode().findSplitBefore(":")[0];
 	}
 }

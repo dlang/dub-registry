@@ -138,6 +138,15 @@ class DbController {
 		return !ret.isNull();
 	}
 
+	DbPackageVersion getLatestVersion(string packname)
+	{
+		auto pack = m_packages.findOne(["name": packname], ["versions": true]);
+		enforce(!pack.isNull(), "Unknown package name.");
+		auto versions = deserializeBson!(DbPackageVersion[])(pack.versions);
+		versions.sort!((a, b) => vcmp(a, b));
+		return versions[$-1];
+	}
+
 	auto searchPackages(string[] keywords)
 	{
 		Appender!(string[]) barekeywords;
