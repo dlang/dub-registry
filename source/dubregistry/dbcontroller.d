@@ -132,10 +132,24 @@ class DbController {
 
 	bool hasVersion(string packname, string ver)
 	{
-		auto packbson = Bson(packname);
-		auto verbson = serializeToBson(["$elemMatch": ["version": ver]]);
-		auto ret = m_packages.findOne(["name": packbson, "versions" : verbson], ["_id": true]);
+		auto ret = m_packages.findOne(["name": packname, "versions.version" : ver], ["_id": true]);
 		return !ret.isNull();
+	}
+
+	string getLatestVersion(string packname)
+	{
+		auto slice = serializeToBson(["$slice": -1]);
+		auto pack = m_packages.findOne(["name": packname], ["_id": Bson(true), "versions": slice]);
+		if (pack.isNull() || pack.versions.isNull() || pack.versions.length != 1) return null;
+		return deserializeBson!(string)(pack.versions[0]["version"]);
+	}
+
+	DbPackageVersion getVersionInfo(string packname, string ver)
+	{
+		auto pack = m_packages.findOne(["name": packname, "versions.version": ver], ["versions.$": true]);
+		enforce(!pack.isNull(), "unknown package/version");
+		assert(pack.versions.length == 1);
+		return deserializeBson!(DbPackageVersion)(pack.versions[0]);
 	}
 
 	auto searchPackages(string[] keywords)
