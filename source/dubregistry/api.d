@@ -10,17 +10,30 @@ import dubregistry.registry;
 
 import vibe.d;
 
-DubRegistryWebApi registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
+void registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
 {
-	auto settings = new WebInterfaceSettings;
-	settings.urlPrefix = "/api";
-
-	auto webapi = new DubRegistryWebApi(registry);
-	router.registerWebInterface(webapi, settings);
-	return webapi;
+	auto pkgs = new Packages(registry);
+	router.registerRestInterface(pkgs, "/api/packages");
 }
 
-class DubRegistryWebApi {
+interface IPackages {
+	@path(":name/latest")
+	string getLatestVersion(string _name);
+
+	@path(":name/stats")
+	Json getStats(string _name);
+
+	@path(":name/:version/stats")
+	Json getStats(string _name, string _version);
+
+	@path(":name/info")
+	Json getInfo(string _name);
+
+	@path(":name/:version/info")
+	Json getInfo(string _name, string _version);
+}
+
+class Packages : IPackages {
 	private {
 		DubRegistry m_registry;
 	}
@@ -30,20 +43,43 @@ class DubRegistryWebApi {
 		m_registry = registry;
 	}
 
-	@path("/packages/:packname/stats.json")
-	void getPackageStats(HTTPServerResponse res, string _packname)
-	{
-		return getPackageStats(res, _packname, null);
+override {
+	string getLatestVersion(string name) {
+		return m_registry.getLatestVersion(rootOf(name))
+			.check!(r => r.length)(HTTPStatus.notFound, "Package not found");
 	}
 
-	@path("/packages/:packname/:version/stats.json")
-	void getPackageStats(HTTPServerResponse res, string _packname, string _version)
-	{
+	Json getStats(string name) {
+		return m_registry.getPackageStats(rootOf(name))
+			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package not found");
+	}
+
+	Json getStats(string name, string ver) {
+		return m_registry.getPackageStats(rootOf(name), ver)
+			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	}
+
+	Json getInfo(string name) {
+		return m_registry.getPackageInfo(rootOf(name))
+			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	}
+
+	Json getInfo(string name, string ver) {
+		return m_registry.getPackageVersionInfo(rootOf(name), ver)
+			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	}
+}
+
+private:
+	string rootOf(string pkg) {
 		import std.algorithm: findSplitBefore;
-
-		auto rootPackName = _packname.urlDecode().findSplitBefore(":")[0];
-		auto stats = m_registry.getPackageStats(rootPackName, _version);
-		if (stats.type != Json.Type.null_) res.writeJsonBody(stats);
-		else res.writeJsonBody(["message": "Package/Version not found"], HTTPStatus.notFound);
+		return pkg.urlDecode().findSplitBefore(":")[0];
 	}
+}
+
+
+private	auto ref T check(alias cond, T)(auto ref T t, HTTPStatus status, string msg)
+{
+	enforce(cond(t), new HTTPStatusException(status, msg));
+	return t;
 }
