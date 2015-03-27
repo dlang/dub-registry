@@ -15,14 +15,14 @@ block body
 		|	"name": "myproject",
 		|	"description": "A little web service of mine.",
 		|	"authors": ["Peter Parker"],
-		|	"homepage": "http://myproject.com",
+		|	"homepage": "http://myproject.example.com",
 		|	"license": "GPL-2.0",
 		|	"dependencies": {
-		|		"vibe-d": ">=0.7.11"
+		|		"vibe-d": "~>0.7.23"
 		|	}
 		|}
 
-	p Please keep the description concise and don't include obvious things like the fact that the package is for the D language.
+	p Please keep the description concise (not more than 100 characters) and avoid including unspecific information such as the fact that the package is written in D. The same goes for the package name - since <em>all</em> DUB packages are written in D, it's usually better to avoid mentioning D explicitly, unless the package is for example a high-level wrapper around a C/C++ library.
 
 	h2 Contents
 
