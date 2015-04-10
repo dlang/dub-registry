@@ -31,7 +31,7 @@ html
 				input(name="q", type="text", placeholder="search for package")
 				button(type="submit") Search
 
-			- auto items = ["Packages;", "About;about", "Development;develop", "Package format;package-format", "Download;download"];
+			- auto items = ["Packages;", "Getting Started;getting_started", "Development;develop", "Package format;package-format", "Download;download"];
 			- if (req.session) items ~= "My packages;my_packages";
 			ul
 			- foreach(itm; items)
