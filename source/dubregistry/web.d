@@ -117,8 +117,10 @@ class DubRegistryWebFrontend {
 		render!("search_results.dt", queryString, results);
 	}
 
-	void getAbout() { render!("usage.dt"); }
-	void getUsage() { redirect("/about"); }
+	void getGettingStarted() { render!("getting_started.dt"); }
+	void getAbout() { redirect("/getting_started"); }
+	void getUsage() { redirect("/getting_started"); }
+
 	void getPublish() { render!("publish.dt"); }
 	void getDevelop() { render!("develop.dt"); }
 	@path("/package-format")
