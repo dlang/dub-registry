@@ -67,6 +67,10 @@ block body
 
 	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
 
+	p It is recommended to version your code using GIT tags of the form <code>v1.0.0</code>, where the "1.0.0" can be any valid <a href="http://semver.org/">SemVer</a> version number. Please try to follow the rules of the SemVer specification as close as possible (regarding breaking changes and added features). This has a fundamental effect on the vitality of the overall package ecosystem, so it's worth putting some care into this.
+
+	p The version numbers can then be used to refer to specific commits/revisions of your package. See the <a href="package-format#version-specs">package version section</a> of the package description format page for more information. If you need to use a version control system other than GIT, please <a href="https://github.com/D-Programming-Language/dub/issues">open a ticket</a> or add a comment if an equivalent ticket already exists.
+
 	p After you have your new package in place, you can <a href="publish">publish it here</a>.
 
 
