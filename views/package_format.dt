@@ -155,9 +155,9 @@ block body
 		|}
 	p <code>/component1/dub.json</code>
 
-	p The sub directories /component1 and /component2 then contain normal packages and can be referred to as "mylib:component1" and "mylib:component2" from outside projects.
+	p The sub directories /component1 and /component2 then contain normal packages and can be referred to as "mylib:component1" and "mylib:component2" from outside projects. To refer to sub packages within the same repository use the <code>"*"</code> version specifier.
 
-	p It is also possible to define the sub packages in the root package file, but note that it's discouraged to put the source code of multiple sub packages into the same source folder. Doing so can lead to hidden dependencies to sub packages that haven't been explicitly stated in the "dependencies" section. These hidden dependencies can then result in build errors in conjunction with certain build modes or dependency trees that may be hard to understand.
+	p It is also possible to define the sub packages within the root package file, but note that it is generally discouraged to put the source code of multiple sub packages into the same source folder. Doing so can lead to hidden dependencies to sub packages that haven't been explicitly stated in the "dependencies" section. These hidden dependencies can then result in build errors in conjunction with certain build modes or dependency trees that may be hard to understand.
 
 	pre.code
 		|{
