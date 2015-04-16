@@ -69,7 +69,7 @@ class BitbucketRepository : Repository {
 
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
-		assert(path.absolute);
+		assert(path.absolute, "Passed relative path to readFile.");
 		auto url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~commit_sha~path.toString();
 		downloadCached(url, (scope input) {
 			reader(input);

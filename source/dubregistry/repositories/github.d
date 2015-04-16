@@ -77,7 +77,7 @@ class GithubRepository : Repository {
 
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
-		assert(path.absolute);
+		assert(path.absolute, "Passed relative path to readFile.");
 		auto url = getContentURLPrefix()~"/"~m_owner~"/"~m_project~"/"~commit_sha~path.toString();
 		downloadCached(url, (scope input) {
 			reader(input);
