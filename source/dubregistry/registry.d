@@ -328,6 +328,7 @@ class DubRegistry {
 		catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
 
 		if (m_db.hasVersion(packname, ver)) {
+			logDebug("Updating existing version info.");
 			m_db.updateVersion(packname, dbver);
 			return false;
 		}
@@ -335,6 +336,7 @@ class DubRegistry {
 		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
 		if (auto pv = "version" in info.info)
 			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
+		logDebug("Adding new version info.");
 		m_db.addVersion(packname, dbver);
 		return true;
 	}
@@ -410,17 +412,20 @@ class DubRegistry {
 		} catch (Exception e) {
 			errors ~= format("Failed to get GIT tags/branches: %s", e.msg);
 		}
+		logInfo("Updating tags for %s: %s", packname, tags.map!(t => t.name).array);
 		foreach (tag; tags) {
 			auto name = tag.name[1 .. $];
 			existing[name] = true;
 			try {
 				if (addVersion(packname, name, rep, tag))
-					logInfo("Added version %s for %s", name, packname);
+					logInfo("Added version %s of %s", name, packname);
 			} catch( Exception e ){
-				logDebug("version %s", sanitize(e.toString()));
+				logInfo("Error for version %s of %s: %s", name, packname, e.msg);
+				logDebug("Full error: %s", sanitize(e.toString()));
 				errors ~= format("Version %s: %s", name, e.msg);
 			}
 		}
+		logInfo("Updating branches for %s: %s", packname, branches.map!(t => t.name).array);
 		foreach (branch; branches) {
 			auto name = "~" ~ branch.name;
 			existing[name] = true;
@@ -428,7 +433,8 @@ class DubRegistry {
 				if (addVersion(packname, name, rep, branch))
 					logInfo("Added branch %s for %s", name, packname);
 			} catch( Exception e ){
-				logDebug("%s", sanitize(e.toString()));
+				logInfo("Error for branch %s of %s: %s", name, packname, e.msg);
+				logDebug("Full error: %s", sanitize(e.toString()));
 				errors ~= format("Branch %s: %s", name, e.msg);
 			}
 		}
@@ -455,7 +461,11 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 		try {
 			ret.info = rep.readCachedJsonFile(commit.sha, Path("/" ~ filename));
 			ret.info.packageDescriptionFile = filename;
-		} catch (FileNotFoundException) { /* try another filename */ }
+			logDebug("Found package description file %s.", filename);
+			break;
+		} catch (FileNotFoundException) {
+			logDebug("Package description file %s not found...", filename);
+		}
 	}
 	if (ret.info == Json.undefined)
 		 throw new Exception("Found no package information file in the repository.");
