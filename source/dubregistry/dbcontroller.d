@@ -108,11 +108,14 @@ class DbController {
 		size_t nretrys = 0;
 
 		while (true) {
-			auto versions = deserializeBson!(DbPackageVersion[])(m_packages.findOne(["name": packname], ["versions": true]).versions);
+			auto bversions = m_packages.findOne(["name": packname], ["versions": true]).versions;
+			auto versions = deserializeBson!(DbPackageVersion[])(bversions);
 			auto new_versions = versions ~ ver;
 			new_versions.sort!((a, b) => vcmp(a, b));
 
-			auto res = m_packages.findAndModify(["name": Bson(packname), "versions": serializeToBson(versions)], ["$set": ["versions": new_versions]], ["_id": true]);
+			//assert((cast(Json)bversions).toString() == (cast(Json)serializeToBson(versions)).toString());
+
+			auto res = m_packages.findAndModify(["name": Bson(packname), "versions": bversions], ["$set": ["versions": new_versions]], ["_id": true]);
 			if (!res.isNull) {
 				updateKeywords(packname);
 				return;
