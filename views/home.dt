@@ -34,24 +34,20 @@ block body
 				select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
 		:javascript setupCategoryForm();
 
-	- static immutable browse_kinds = ["updated;Updated", "name;Name", "added;Added"];
-	p Sort by:
-		- foreach (i, c; browse_kinds)
-			- if (i > 0)
-				| -
-			- auto cp = c.split(";");
-			- if (sort_mode == cp[0])
-				strong= cp[1]
-			- else
-				a(href="?sort=#{cp[0]}&category=#{category}")= cp[1]
-
-
 	table
+
+		- static immutable browse_kinds = ["name;Name", "updated;Last update", "added;Registered", ";Description"];
 		tr
-			th Package
-			th Latest version
-			th Date
-			th Description
+			- foreach (i, c; browse_kinds)
+				- auto cp = c.split(";");
+				- if (cp[0].length == 0)
+					th= cp[1]
+				- else if (sort_mode == cp[0])
+					th.selected= cp[1]
+				- else
+					th
+						a(href="?sort=#{cp[0]}&category=#{category}")= cp[1]
+
 		- foreach( pl; packages )
 			- if( pl.versions.length )
 				- auto p = getBestVersion(pl.versions);
@@ -71,7 +67,8 @@ block body
 							|= ver
 						- else
 							| #{ver[0 .. 18]}&hellip;
-					td.nobreak= formatDate(p.date)
+						span.dull.nobreak(title=formatDateTime(p.date))<> , #{formatFuzzyDate(p.date)}
+					td.nobreak(title=formatDateTime(pl.dateAdded))= formatDate(pl.dateAdded)
 					- if (desc.length <= 100)
 						td= desc
 					- else

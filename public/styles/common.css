@@ -53,6 +53,8 @@ dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt; }
 
 .nobreak { white-space: nowrap; }
 
+.dull { color: #888; font-style: italic; }
+
 /********************/
 /* HEADER           */
 /********************/
@@ -199,6 +201,11 @@ h3 {
 	text-align: left;
 	font-weight: bold;
 }
+
+/* sortable table headers */
+#content th a { color: #eee; text-decoration: none; }
+#content th a:hover { text-decoration: underline; }
+#content th.selected:after { content: " ↕"; }
 
 #content table.form { width: auto; }
 #content table.form th { border: none; background: none; }
