@@ -200,6 +200,11 @@ h3 {
 	font-weight: bold;
 }
 
+/* sortable table headers */
+#content th a { color: #eee; text-decoration: none; }
+#content th a:hover { text-decoration: underline; }
+#content th.selected:after { content: " ↕"; }
+
 #content table.form { width: auto; }
 #content table.form th { border: none; background: none; }
 #content table.form td { border: none; }
