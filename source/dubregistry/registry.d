@@ -443,7 +443,8 @@ class DubRegistry {
 			} catch( Exception e ){
 				logInfo("Error for branch %s of %s: %s", name, packname, e.msg);
 				logDebug("Full error: %s", sanitize(e.toString()));
-				errors ~= format("Branch %s: %s", name, e.msg);
+				if (branch.name != "gh-pages") // ignore errors on the special GitHub website branch
+					errors ~= format("Branch %s: %s", name, e.msg);
 			}
 		}
 		if (got_all_tags_and_branches) {
