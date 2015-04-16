@@ -138,8 +138,8 @@ block body
 		|	"name": "mylib",
 		|	"targetType": "none",
 		|	"dependencies": {
-		|		"mylib:component1": "~master",
-		|		"mylib:component2": "~master"
+		|		"mylib:component1": "*",
+		|		"mylib:component2": "*"
 		|	},
 		|	"subPackages": [
 		|		"./component1/",
@@ -164,8 +164,8 @@ block body
 		|	"name": "mylib",
 		|	"targetType": "none",
 		|	"dependencies": {
-		|		"mylib:component1": "~master",
-		|		"mylib:component2": "~master"
+		|		"mylib:component1": "*",
+		|		"mylib:component2": "*"
 		|	},
 		|	"subPackages": [
 		|		{
