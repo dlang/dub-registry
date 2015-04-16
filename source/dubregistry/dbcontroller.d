@@ -105,16 +105,22 @@ class DbController {
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
 
+		size_t nretrys = 0;
+
 		while (true) {
 			auto versions = deserializeBson!(DbPackageVersion[])(m_packages.findOne(["name": packname], ["versions": true]).versions);
 			auto new_versions = versions ~ ver;
 			new_versions.sort!((a, b) => vcmp(a, b));
 
 			auto res = m_packages.findAndModify(["name": Bson(packname), "versions": serializeToBson(versions)], ["$set": ["versions": new_versions]], ["_id": true]);
-			if (!res.isNull) break;
-		}
+			if (!res.isNull) {
+				updateKeywords(packname);
+				return;
+			}
 
-		updateKeywords(packname);
+			enforce(nretrys++ < 20, format("Failed to store updated version list for %s", packname));
+			logDebug("Failed to update version list atomically, retrying...");
+		}
 	}
 
 	void removeVersion(string packname, string ver)
@@ -258,7 +264,6 @@ class DbController {
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
-			logDebugV("pack %s", bp.toJson());
 			auto p = deserializeBson!DbPackage(bp);
 			p.versions = p.versions
 				.filter!(v => v.version_.startsWith("~") || v.version_.isValidVersion)
