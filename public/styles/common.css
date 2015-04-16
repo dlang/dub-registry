@@ -53,6 +53,8 @@ dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt; }
 
 .nobreak { white-space: nowrap; }
 
+.dull { color: #888; font-style: italic; }
+
 /********************/
 /* HEADER           */
 /********************/

@@ -36,7 +36,7 @@ block body
 
 	table
 
-		- static immutable browse_kinds = ["name;Name", ";Current version", "updated;Updated", "added;Added", ";Description"];
+		- static immutable browse_kinds = ["name;Name", "updated;Last update", "added;Registered", ";Description"];
 		tr
 			- foreach (i, c; browse_kinds)
 				- auto cp = c.split(";");
@@ -67,8 +67,8 @@ block body
 							|= ver
 						- else
 							| #{ver[0 .. 18]}&hellip;
-					td.nobreak= formatDate(p.date)
-					td.nobreak= formatDate(pl.dateAdded)
+						span.dull.nobreak(title=formatDateTime(p.date))<> , #{formatFuzzyDate(p.date)}
+					td.nobreak(title=formatDateTime(pl.dateAdded))= formatDate(pl.dateAdded)
 					- if (desc.length <= 100)
 						td= desc
 					- else

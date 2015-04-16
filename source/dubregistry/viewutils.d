@@ -11,14 +11,61 @@ import vibe.data.json;
 
 string formatDate(string iso_ext_date)
 {
+	if (iso_ext_date.length == 0) return "---";
 	auto date = SysTime.fromISOExtString(iso_ext_date);
 	return (cast(Date)date).toSimpleString();
 }
 
 string formatDate(Json date)
 {
-	if( date.type == Json.Type.Undefined ) return "---";
-	return formatDate(date.get!string);
+	return formatDate(date.opt!string);
+}
+
+string formatDateTime(string iso_ext_date)
+{
+	if (iso_ext_date.length == 0) return "---";
+	auto date = SysTime.fromISOExtString(iso_ext_date);
+	return date.toSimpleString();
+}
+
+string formatDateTime(Json date)
+{
+	return formatDateTime(date.opt!string);
+}
+
+string formatFuzzyDate(Json iso_ext_date)
+{
+	return formatFuzzyDate(iso_ext_date.opt!string);
+}
+
+string formatFuzzyDate(string iso_ext_date)
+{
+	if (iso_ext_date.length == 0) return "---";
+	return formatFuzzyDate(SysTime.fromISOExtString(iso_ext_date));
+}
+
+string formatFuzzyDate(SysTime st)
+{
+	auto now = Clock.currTime(UTC());
+
+	// TODO: proper singular forms etc. (probably done together with l8n)
+	auto tm = now - st;
+	if (tm < dur!"seconds"(0)) return "still going to happen";
+	else if (tm < dur!"seconds"(1)) return "just now";
+	else if (tm < dur!"minutes"(1)) return "less than a minute ago";
+	else if (tm < dur!"minutes"(2)) return "a minute ago";
+	else if (tm < dur!"hours"(1)) return format("%s minutes ago", tm.total!"minutes"());
+	else if (tm < dur!"hours"(2)) return "an hour ago";
+	else if (tm < dur!"days"(1)) return format("%s hours ago", tm.total!"hours"());
+	else if (tm < dur!"days"(2)) return "a day ago";
+	else if (tm < dur!"weeks"(5)) return format("%s days ago", tm.total!"days"());
+	else if (tm < dur!"weeks"(52)) {
+		auto m1 = st.month;
+		auto m2 = now.month;
+		auto months = (now.year - st.year) * 12 + m2 - m1;
+		if (months == 1) return "a month ago";
+		else return format("%s months ago", months);
+	} else return format("%s years ago", now.year - st.year);
 }
 
 Json getBestVersion(Json versions)
