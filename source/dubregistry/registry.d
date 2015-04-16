@@ -312,7 +312,9 @@ class DubRegistry {
 
 		//assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
 		info.info.name = info.info.name.get!string.toLower();
-		enforce(info.info.name == packname, "Package name must match the original package name.");
+		enforce(info.info.name == packname,
+			format("Package name (%s) does not match the original package name (%s). Check %s.",
+				info.info.name.get!string, packname, info.info.packageDescriptionFile.get!string));
 
 		if ("description" !in info.info || "license" !in info.info) {
 		//enforce("description" in info.info && "license" in info.info,
