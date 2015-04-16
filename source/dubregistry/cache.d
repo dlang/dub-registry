@@ -40,26 +40,31 @@ class URLCache {
 		url.username = null;
 		url.password = null;
 
-		auto be = m_entries.findOne(["url": url.toString()]);
-		CacheEntry entry;
-		if( !be.isNull() ) {
-			deserializeBson(entry, be);
-			if (cache_priority) {
-				logDiagnostic("Cache HIT (early): %s", url.toString());
-				auto data = be["data"].get!BsonBinData().rawData();
-				scope result = new MemoryStream(cast(ubyte[])data, false);
-				callback(result);
-				return;
-			}
-		} else {
-			entry._id = BsonObjectID.generate();
-			entry.url = url.toString();
-		}
-
 		InputStream result;
 		bool handled_uncached = false;
 
 		foreach (i; 0 .. 10) { // follow max 10 redirects
+			auto be = m_entries.findOne(["url": url.toString()]);
+			CacheEntry entry;
+			if( !be.isNull() ) {
+				deserializeBson(entry, be);
+				if (cache_priority) {
+					logDiagnostic("Cache HIT (early): %s", url.toString());
+					if (entry.redirectURL.length) {
+						url = URL(entry.redirectURL);
+						continue;
+					} else {
+						auto data = be["data"].get!BsonBinData().rawData();
+						scope tmpresult = new MemoryStream(cast(ubyte[])data, false);
+						callback(tmpresult);
+						return;
+					}
+				}
+			} else {
+				entry._id = BsonObjectID.generate();
+				entry.url = url.toString();
+			}
+
 			requestHTTP(url,
 				(scope req){
 					if (entry.etag.length) req.headers["If-None-Match"] = entry.etag;
@@ -84,6 +89,10 @@ class URLCache {
 							if (startsWith((*pv), "http:") || startsWith((*pv), "https:")) {
 								url = URL(*pv);
 							} else url.localURI = *pv;
+							res.dropBody();
+
+							entry.redirectURL = url.toString();
+							m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
 							break;
 						case HTTPStatus.ok:
 							auto pet = "ETag" in res.headers;
@@ -133,6 +142,7 @@ private struct CacheEntry {
 	string url;
 	string etag;
 	BsonBinData data;
+	@optional string redirectURL;
 }
 
 private URLCache s_cache;
