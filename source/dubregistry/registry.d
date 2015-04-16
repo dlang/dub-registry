@@ -475,7 +475,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 			logDebug("Package description file %s not found...", filename);
 		}
 	}
-	if (ret.info == Json.undefined)
+	if (ret.info.type == Json.Type.undefined)
 		 throw new Exception("Found no package information file in the repository.");
 	return ret;
 }
