@@ -76,6 +76,7 @@ class URLCache {
 							throw new Exception("Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
 						case HTTPStatus.notModified:
 							logDiagnostic("Cache HIT: %s", url.toString());
+							res.dropBody();
 							auto data = be["data"].get!BsonBinData().rawData();
 							result = new MemoryStream(cast(ubyte[])data, false);
 							break;
