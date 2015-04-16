@@ -33,6 +33,7 @@ class URLCache {
 	{
 		m_db = connectMongoDB("127.0.0.1");
 		m_entries = m_db.getCollection("urlcache.entries");
+		m_entries.ensureIndex(["url": true]);
 	}
 
 	void clearEntry(URL url)
