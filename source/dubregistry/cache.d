@@ -10,14 +10,23 @@ import vibe.db.mongo.mongo;
 import vibe.http.client;
 import vibe.stream.memory;
 
+import core.time;
 import std.algorithm : startsWith;
 import std.exception;
+
+
+enum CacheMatchMode {
+	always, // return cached data if available
+	etag,   // return cached data if the server responds with "not modified"
+	never   // always request fresh data
+}
 
 
 class URLCache {
 	private {
 		MongoClient m_db;
 		MongoCollection m_entries;
+		Duration m_maxCacheTime = 365.days;
 	}
 
 	this()
@@ -33,6 +42,12 @@ class URLCache {
 
 	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 	{
+		get(url, callback, cache_priority ? CacheMatchMode.always : CacheMatchMode.etag);
+	}
+
+	void get(URL url, scope void delegate(scope InputStream str) callback, CacheMatchMode mode = CacheMatchMode.etag)
+	{
+		import std.datetime : Clock, UTC;
 		import vibe.http.auth.basic_auth;
 
 		auto user = url.username;
@@ -43,12 +58,19 @@ class URLCache {
 		InputStream result;
 		bool handled_uncached = false;
 
+		auto now = Clock.currTime(UTC());
+
 		foreach (i; 0 .. 10) { // follow max 10 redirects
 			auto be = m_entries.findOne(["url": url.toString()]);
 			CacheEntry entry;
-			if( !be.isNull() ) {
+			if (!be.isNull()) {
+				// invalidate out of date cache entries
+				if (be._id.get!BsonObjectID.timeStamp < now - m_maxCacheTime)
+					m_entries.remove(["_id": be._id]);
+				
 				deserializeBson(entry, be);
-				if (cache_priority) {
+				if (mode == CacheMatchMode.always) {
+					// directly return cache result for cache_priority == true
 					logDiagnostic("Cache HIT (early): %s", url.toString());
 					if (entry.redirectURL.length) {
 						url = URL(entry.redirectURL);
@@ -67,7 +89,7 @@ class URLCache {
 
 			requestHTTP(url,
 				(scope req){
-					if (entry.etag.length) req.headers["If-None-Match"] = entry.etag;
+					if (entry.etag.length && mode != CacheMatchMode.never) req.headers["If-None-Match"] = entry.etag;
 					if (user.length) addBasicAuth(req, user, password);
 				},
 				(scope res){
@@ -97,7 +119,7 @@ class URLCache {
 							break;
 						case HTTPStatus.ok:
 							auto pet = "ETag" in res.headers;
-							if (pet || cache_priority) {
+							if (pet || mode == CacheMatchMode.always) {
 								logDiagnostic("Cache MISS: %s", url.toString());
 								auto dst = new MemoryOutputStream;
 								dst.write(res.bodyReader);
