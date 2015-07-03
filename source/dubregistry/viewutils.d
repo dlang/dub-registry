@@ -65,7 +65,8 @@ string formatFuzzyDate(SysTime st)
 		auto months = (now.year - st.year) * 12 + m2 - m1;
 		if (months == 1) return "a month ago";
 		else return format("%s months ago", months);
-	} else return format("%s years ago", now.year - st.year);
+	} else if (now.year - st.year <= 1) return "a year ago";
+	else return format("%s years ago", now.year - st.year);
 }
 
 Json getBestVersion(Json versions)
