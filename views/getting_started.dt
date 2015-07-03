@@ -30,10 +30,9 @@ block body
 
 	h2#foreign-projects Building foreign projects
 
-	p Building existing projects is as simple as getting the package and running either <code>dub</code> to run or <code>dub build</code> from the package's root directory to build it. DUB will automatically download all needed dependencies and issue the build command. See the <a href="#command-line">command line documentation</a> for information on how to customize the build process.
+	p Building existing projects is as simple as getting the package and running either <code>dub run</code> (or short <code>dub</code>) to build and run or <code>dub build</code> from the package's root directory to build it. DUB will automatically download all needed dependencies and issue the build command. See the <a href="#command-line">command line documentation</a> for information on how to customize the build process.
 
-	p To get the package, either use <code>git clone</code> with the projects git URL, or type <code>dub install --local &lt;package name&gt;</code> to have the package downloaded and installed in a sub-folder of the current working directory.
-
+	p To get the package, either use <code>git clone</code> with the projects git URL, or type <code>dub fetch &lt;package name&gt;</code> to have the package downloaded and installed in a package repository in your user folder. <code>dub run &lt;package name&gt;</code> can then be used to build and execute the package. <code>dub fetch --local &lt;package name&gt;</code> can be used instead to extract the package into a sub folder of the current working directory.
 
 	h2#own-projects Creating an own project
 
@@ -62,7 +61,7 @@ block body
 			td &nbsp;&nbsp;&nbsp;&nbsp;views/
 			td May contain string import files, such as HTML or UI templates
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;dub.json
+			td &nbsp;&nbsp;&nbsp;&nbsp;dub.sdl or dub.json
 			td Contains the package description of the project
 
 	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
@@ -72,6 +71,26 @@ block body
 	p The version numbers can then be used to refer to specific commits/revisions of your package. See the <a href="package-format#version-specs">package version section</a> of the package description format page for more information. If you need to use a version control system other than GIT, please <a href="https://github.com/D-Programming-Language/dub/issues">open a ticket</a> or add a comment if an equivalent ticket already exists.
 
 	p After you have your new package in place, you can <a href="publish">publish it here</a>.
+
+	h2#local-packages Using dependencies that are not on the public registry
+
+	In cases where certain dependencies are not available in the package registry, for example because they are in closed source repositories, or because they are modified forks of the official packages, there are several possibilities to choose from:
+
+	dl
+		dt <code>dub add-path</code>
+		dd Adds a local search directory. All direct sub directories will be searched for packages and those are preferred over packages downloaded from the registry.
+		
+		dt <code>dub add-local</code>
+		dd Similar to the above, but only adds a single package directory.
+
+		dt <code>dub add-override</code>
+		dd Can be used to override a certain version or version range of a package with another version, branch or path. This can be used to change dependencies system wide without modifying the description or selection files of a package.
+
+		dt Path based dependencies
+		dd Dependencies in the package description can use a path instead of a version. This can be used together with Git sub-modules or -trees, or with an otherwise known directory layout to use arbitrarily defined versions of a dependency. Note that this should only be used for non-public packages.
+
+		dt Path based selections
+		dd The <code>dub.selections.json</code> file can be used to specify arbitrary versions, branches, or paths, even if they contradict with the dependency specification of the packages involved (DUB will output a warning message in that case).
 
 
 	h2#command-line Command line interface
