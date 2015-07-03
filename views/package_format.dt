@@ -29,7 +29,7 @@ block body
 	nav
 		ul
 			li
-				a(href="#standard-fields") Global Fields
+				a(href="#standard-settings") Global settings
 				ul
 					li
 						a(href="#sub-packages") Sub packages
@@ -50,15 +50,16 @@ block body
 				a(href="#configurations") Configurations
 				ul
 					li
-						a(href="#configuration-fields") Specific fields
+						a(href="#configuration-settings") Specific settings
 			li
 				a(href="#build-types") Build types
 
 
 
-	h2#standard-fields Global fields
+	a#standard-fields
+	h2#standard-settings Global settings
 
-	p In addition to the fields listed here, all <a href="#build-settings">build settings fields</a> are allowed at the global scope.
+	p In addition to the settings listed here, all <a href="#build-settings">build settings</a> are allowed at the global scope.
 
 	table
 		tr
@@ -129,7 +130,7 @@ block body
 
 	h3#sub-packages Sub packages
 
-	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined in the <code>"subPackages"</code> field of the main dub.json file. They can be referenced by concatenating their name with the name of the main package using a colon as a delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
+	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined in the <code>"subPackages"</code> section of the main dub.json file. They can be referenced by concatenating their name with the name of the main package using a colon as the delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
 
 	p The typical use for this feature is to split up a library into a number of parts without breaking it up into different code repositories:
 
@@ -181,7 +182,7 @@ block body
 
 	h3#licenses License specifications
 
-	p The license field should only contain one of the standard license identifiers if possible. At a later point in time, DUB may use this information to validate proper licensing in dependency hierarchies and output warnings when licenses don't match up. Multiple licenses can be separated using the term "or" and for versioned licenses, the postfix "or later" is allowed to also include any later version of the same license.
+	p The license setting should only contain one of the standard license identifiers if possible. At a later point in time, DUB may use this information to validate proper licensing in dependency hierarchies and output warnings when licenses don't match up. Multiple licenses can be separated using the term "or" and for versioned licenses, the postfix "or later" is allowed to also include any later version of the same license.
 
 	p The standard license identifiers are:
 		|<code>public domain</code>,
@@ -219,7 +220,7 @@ block body
 
 	h2#build-settings Build settings
 
-	p Build settings fields influence the command line options passed to the compiler and linker. All fields are optional.
+	p Build settings influence the command line options passed to the compiler and linker. All settings are optional.
 
 	p Platform specific settings are supported through the use of field name suffixes. Suffixes are dash separated platform identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
 
@@ -254,31 +255,31 @@ block body
 			td targetType
 			td
 				code string
-			td Specifies a specific <a href="#target-types">target type</a> - this field does not support platform suffixes
+			td Specifies a specific <a href="#target-types">target type</a> - this setting does not support platform suffixes
 
 		tr
 			td targetName
 			td
 				code string
-			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this field does not support platform suffixes
+			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this setting does not support platform suffixes
 
 		tr
 			td targetPath
 			td
 				code string
-			td The destination path of the output binary - this field does not support platform suffixes
+			td The destination path of the output binary - this setting does not support platform suffixes
 
 		tr
 			td workingDirectory
 			td
 				code string
-			td A fixed working directory from which the generated executable will be run - this field does not support platform suffixes
+			td A fixed working directory from which the generated executable will be run - this setting does not support platform suffixes
 
 		tr
 			td subConfigurations
 			td
 				code string[string]
-			td Locks the dependencies to specific configurations; a map from package name to configuration name, see also the <a href="#configurations">configurations section</a> - this field does not support platform suffixes
+			td Locks the dependencies to specific configurations; a map from package name to configuration name, see also the <a href="#configurations">configurations section</a> - this setting does not support platform suffixes
 
 		tr
 			td buildRequirements
@@ -308,7 +309,7 @@ block body
 			td sourcePaths
 			td
 				code string[]
-			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> field is given) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
+			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> setting is specified) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
 
 		tr
 			td excludedSourceFiles
@@ -320,7 +321,7 @@ block body
 			td mainSourceFile
 			td
 				code string
-			td Determines the file that contains the <code>main()</code> function. This field can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this field does not support platform suffixes
+			td Determines the file that contains the <code>main()</code> function. This setting can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this setting does not support platform suffixes
 
 		tr
 			td copyFiles
@@ -409,12 +410,12 @@ block body
 			p This is the usual way to specify a dependency.
 
 		li Complex variant:
-			p <code>"&lt;name&gt;" : { "&lt;field&gt;": "&lt;value&gt;"[, ...] }</code>
-			p The following fields can be used to to control how a dependency is resolved:
+			p <code>"&lt;name&gt;" : { "&lt;attribute&gt;": "&lt;value&gt;"[, ...] }</code>
+			p The following attributes can be used to to control how a dependency is resolved:
 			ul
 				li
 					p <code>"version": "&lt;version-specifier&gt;"</code> - The version specification as used for the simple form
-					p A version specification should only be specified when no <code>"path"</code> field is present, or when compatibility with older versions of DUB (&lt; 0.9.22) is desired.
+					p A version specification should only be specified when no <code>"path"</code> attribute is present, or when compatibility with older versions of DUB (&lt; 0.9.22) is desired.
 				li
 					p <code>"path": "&lt;path-to-package&gt;"</code> - Use a folder to source a package from.
 					p References a package in a specific path. This can be used in situations where a specific copy of a package needs to be used. Examples of this include packages that are included as GIT submodules, or packages in sub folders of the main package, such as example projects.
@@ -439,7 +440,7 @@ block body
 
 	h3#target-types Target types
 
-	p The following values are recognized for the <code>"targetType"</code> field:
+	p The following values are recognized for the <code>"targetType"</code> setting:
 
 	table
 		tr
@@ -451,7 +452,7 @@ block body
 
 		tr
 			td "none"
-			td Does not generate an output file. This is useful for packages that are supposed to drag in other packages using its "dependencies" field.
+			td Does not generate an output file. This is useful for packages that are supposed to drag in other packages using the "dependencies" section.
 
 		tr
 			td "executable"</code>
@@ -475,7 +476,7 @@ block body
 
 	h3#build-requirements Build requirements
 
-	p The following values are recognized as array items in the "buildRequirements" field:
+	p The following values are recognized as array items for the "buildRequirements" setting:
 
 	table
 		tr
@@ -514,7 +515,7 @@ block body
 
 	h3#build-options Build options
 
-	p The "buildOptions" field provides a compiler agnostic way to specify common compiler options/flags. Note that many of these options are implicitly managed by the <a href="#build-requirements">"buildRequirements"</a> field and most others usually only occur in <a href="#custom-build-types">"buildTypes"</a> blocks. It supports the following values:
+	p The "buildOptions" setting provides a compiler agnostic way to specify common compiler options/flags. Note that many of these options are implicitly managed by the <a href="#build-requirements">"buildRequirements"</a> setting and most others usually only occur in <a href="#custom-build-types">"buildTypes"</a> blocks. It supports the following values:
 
 	table
 		tr
@@ -609,7 +610,7 @@ block body
 
 	h2#configurations Configurations
 
-	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" field.
+	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configurations" section.
 
 	p If no configurations are specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/main.d</code>, <code>source/&lt;package name&gt;/app.d</code>, <code>source/&lt;package name&gt;/main.d</code>, <code>src/app.d</code>, <code>src/main.d</code>, <code>src/&lt;package name&gt;/app.d</code>, <code>src/&lt;package name&gt;/main.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
 
@@ -620,7 +621,7 @@ block body
 	pre.code
 		|{
 		|	...
-		|	"name": "somepackage"
+		|	"name": "somepackage",
 		|	"configurations": [
 		|		{
 		|			"name": "metro-app",
@@ -644,7 +645,7 @@ block body
 		|	]
 		|}
 
-	p You can choose a specific configuration for certain dependencies by using the "subConfigurations" field:
+	p You can choose a specific configuration for certain dependencies by using the "subConfigurations" section:
 
 	pre.code
 		|{
@@ -657,12 +658,13 @@ block body
 		|	}
 		|}
 
-	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" field below).
+	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" setting below).
 
 
-	h3#configuration-fields Configuration block specific fields
+	a#configuration-fields
+	h3#configuration-settings Configuration block specific settings
 
-	p In addition to the usual <a href="#build-settings">build settings</a>, the following fields are recognized inside of a configuration block:
+	p In addition to the usual <a href="#build-settings">build settings</a>, the following settings are recognized inside of a configuration block:
 
 	table
 		tr
@@ -717,7 +719,7 @@ block body
 			td unittest-cov
 			td <code>["unittests", "coverage", "debugMode", "debugInfo"]</code>
 
-	p The existing build types can be customized and new build types can be added using the global <code>"buildTypes"</code> field. Each entry in <code>"buildTypes"</code> can use any of the low level <a href="#build-settings">build settings fields</a> (excluding "dependencies", "targetType", "targetName", "targetPath", "workingDirectory", "subConfigurations"). The build settings specified here will later be modified by the package/configuration specific settings.
+	p The existing build types can be customized and new build types can be added using the global <code>"buildTypes"</code> section. Each entry in <code>"buildTypes"</code> can use any of the low level <a href="#build-settings">build settingss</a> (excluding "dependencies", "targetType", "targetName", "targetPath", "workingDirectory", "subConfigurations"). The build settings specified here will later be modified/augmented by the package/configuration specific settings.
 
 	p An example that overrides the "debug" build type and defines a new "debug-profile" type:
 
