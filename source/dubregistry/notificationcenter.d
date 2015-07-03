@@ -10,7 +10,7 @@ import dubregistry.scheduler;
 import std.datetime;
 import std.encoding : sanitize;
 import std.string : format;
-import userman.controller;
+import userman.db.controller;
 import vibe.core.log;
 import vibe.mail.smtp;
 import vibe.stream.memory;

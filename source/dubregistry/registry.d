@@ -18,7 +18,7 @@ import std.encoding : sanitize;
 import std.range : chain, walkLength;
 import std.string : format, startsWith, toLower;
 import std.typecons;
-import userman.controller;
+import userman.db.controller;
 import vibe.core.core;
 import vibe.core.log;
 import vibe.data.bson;
