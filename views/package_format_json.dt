@@ -1,12 +1,14 @@
 extends layout
 
 block title
-	- auto title = "Package file format";
+	- auto title = "Package file format (JSON)";
 
 block body
 	h2 Introduction
 
-	p Every DUB package <em>should</em> contain a <code>dub.json</code> (was <code>package.json</code> in earlier versions) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized fields and their meaning. Note that any unknown fields are ignored for backwards compatibility reasons.
+	p NOTE: this describes the JSON version of the package file format. See also the <a href="package-format?lang=sdl">specification based on SDLang</a>.
+
+	p Every DUB package <em>should</em> contain a <code>dub.json</code> (or <code>dub.sdl</code>, formerly also <code>package.json</code>) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized settings and their meaning. Note that any unknown settings are ignored for backwards compatibility reasons.
 
 	p A typical example of a simple application that requires no platform specific setup:
 
@@ -113,13 +115,13 @@ block body
 			td configurations
 			td
 				code T[]
-			td Speficies an optional list of build configurations (specified using "--config=...") - see the <a href="#configurations">configurations section</a> for more details
+			td Speficies an optional list of build configurations (chosen on the command line using <code>--config=...</code>) - see the <a href="#configurations">configurations section</a> for more details
 
 		tr
 			td buildTypes
 			td
 				code T[string]
-			td Defines additional custom build types or overrides the default ones (specified using "--build=...") - see the <a href="#build-types">build types section</a> for an example
+			td Defines additional custom build types or overrides the default ones (chosen on the command line using <code>--build=...</code>) - see the <a href="#build-types">build types section</a> for an example
 
 		tr
 			td -ddoxFilterArgs

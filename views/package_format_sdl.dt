@@ -1,0 +1,703 @@
+extends layout
+
+block title
+	- auto title = "Package file format (SDLang)";
+
+block body
+	h2 Introduction
+
+	p NOTE: this describes the SDLang version of the package file format. See also the <a href="package-format?lang=json">specification based on JSON</a>.
+
+	p Every DUB package <em>should</em> contain a <code>dub.sdl</code> (or <code>dub.json</code>) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized settings and their meaning. Note that any unknown settings are ignored for backwards compatibility reasons.
+
+	p A typical example of a simple application that requires no platform specific setup:
+
+	pre.code
+		|// dub.sdl can contain comments!
+		|name "myproject"
+		|description "A little web service of mine."
+		|authors "Peter Parker"
+		|homepage "http://myproject.example.com"
+		|license "GPL-2.0"
+		|dependency "vibe-d" version="~>0.7.23"
+
+	p Please keep the description concise (not more than 100 characters) and avoid including unspecific information such as the fact that the package is written in D. The same goes for the package name - since <em>all</em> DUB packages are written in D, it's usually better to avoid mentioning D explicitly, unless the package is for example a high-level wrapper around a C/C++ library.
+
+	h2 Contents
+
+	nav
+		ul
+			li
+				a(href="#standard-settings") Global settings
+				ul
+					li
+						a(href="#sub-packages") Sub packages
+					li
+						a(href="#licenses") License specifications
+			li
+				a(href="#build-settings") Build settings
+				ul
+					li
+						a(href="#platform-specs") Platform specifications
+					li
+						a(href="#version-specs") Version specifications
+					li
+						a(href="#target-types") Target types
+					li
+						a(href="#build-requirements") Build requirements
+					li
+						a(href="#build-options") Build options
+			li
+				a(href="#configurations") Configurations
+				ul
+					li
+						a(href="#configuration-settings") Specific settings
+			li
+				a(href="#build-types") Build types
+
+
+
+	h2#standard-settings Global settings
+
+	p In addition to the settings listed here, all <a href="#build-settings">build settings</a> are allowed at the global scope.
+
+	table
+		tr
+			th Name
+			th Arguments
+			th Description
+
+		tr
+			td name [required]
+			td
+				code "&lt;name&gt;"
+			td Name of the package, used to uniquely identify the package. Must be comprised of only lower case ASCII alpha-numeric characters, "-" or "_".
+
+		tr
+			td description [required for publishing]
+			td
+				code "&lt;text&gt;"
+			td Brief description of the package
+
+		tr
+			td homepage
+			td
+				code "&lt;url&gt;"
+			td URL of the project website
+
+		tr
+			td authors
+			td
+				code "&lt;author1&gt;" ["&lt;author2&gt;" [...]]
+			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lg;pparker@example.com&gt;"</code>)
+
+		tr
+			td copyright
+			td
+				code "&lt;text&gt;"
+			td Copyright declaration string
+
+		tr
+			td license [required for publishing]
+			td
+				code "&lt;license spec&gt;"
+			td License(s) under which the project can be used - see the <a href="#licenses">license specification</a> section for possible values
+
+		tr
+			td subPackage
+			td
+				code "&lt;path&gt;"
+				| or
+				code { ... }
+			td Defines a sub-package using either a path to a sub directory, or in-place - see the <a href="#sub-packages">sub package section</a> for more information
+
+		tr
+			td configuration
+			td
+				code "&lt;name&gt;" { ... }
+			td Speficies a build configuration (chosen on the command line using <code>--config=...</code>) - see the <a href="#configurations">configurations section</a> for more details
+
+		tr
+			td buildType
+			td
+				code "&lt;name&gt;" { ... }
+			td Defines an additional custom build type or overrides one of the default ones (chosen on the command line using <code>--build=...</code>) - see the <a href="#build-types">build types section</a> for an example
+
+		tr
+			td x:ddoxFilterArgs
+			td
+				code "&lt;arg1&gt;" ["&lt;arg2&gt;" [...]]
+			td Specifies a list of command line flags usable for controlling filter behavior for --build=ddox <span style="color: red;">[experimental]</span>
+
+
+	h3#sub-packages Sub packages
+
+	p A package may contain an arbitrary number of additional publicly visible packages. These packages can be defined using <code>subPackage</code> directives in the main dub.sdl file. They can be referenced by concatenating their name with the name of the main package using a colon as the delimiter (i.e. <code>"main-package-name:sub-package-name"</code>).
+
+	p The typical use for this feature is to split up a library into a number of parts without breaking it up into different code repositories:
+
+	pre.code
+		|name "mylib"
+		|targetType "none"
+		|dependency "mylib:component1" version="*"
+		|dependency "mylib:component2" version="*"
+		|subPackage "./component1/"
+		|subPackage "./component2/"
+	p <code>/dub.sdl</code>
+
+	pre.code
+		|name "component1"
+		|targetType "library"
+	p <code>/component1/dub.sdl</code>
+
+	p The sub directories /component1 and /component2 then contain normal packages and can be referred to as "mylib:component1" and "mylib:component2" from outside projects. To refer to sub packages within the same repository use the <code>"*"</code> version specifier.
+
+	p It is also possible to define the sub packages within the root package file, but note that it is generally discouraged to put the source code of multiple sub packages into the same source folder. Doing so can lead to hidden dependencies to sub packages that haven't been explicitly stated in the "dependencies" section. These hidden dependencies can then result in build errors in conjunction with certain build modes or dependency trees that may be hard to understand.
+
+	pre.code
+		|name "mylib"
+		|targetType "none"
+		|dependency "mylib:component1" version="*"
+		|subPackage {
+		|	name "component1"
+		|	targetType "library"
+		|	sourcePaths "component1/source"
+		|	importPaths "component1/source"
+		|}
+	p <code>/dub.sdl</code>
+
+
+	h3#licenses License specifications
+
+	p The license setting should only contain one of the standard license identifiers if possible. At a later point in time, DUB may use this information to validate proper licensing in dependency hierarchies and output warnings when licenses don't match up. Multiple licenses can be separated using the term "or" and for versioned licenses, the postfix "or later" is allowed to also include any later version of the same license.
+
+	p The standard license identifiers are:
+		|<code>public domain</code>,
+		|<code>AFL-3.0</code> (Academic Free License 3.0),
+		|<code>AGPL-3.0</code> (Affero GNU Public License 3.0),
+		|<code>Apache-2.0</code>,
+		|<code>APSL-2.0</code> (Apple Public Source License),
+		|<code>Artistic-2.0</code>,
+		|<code>BSL-1.0</code> (Boost Software License),
+		|<code>BSD 2-clause</code>,
+		|<code>BSD 3-clause</code>,
+		|<code>EPL-1.0</code> (Eclipse Public License),
+		|<code>GPL-2.0</code>,
+		|<code>GPL-3.0</code>,
+		|<code>ISC</code>,
+		|<code>LGPL-2.1</code>,
+		|<code>LGPL-3.0</code>,
+		|<code>MIT</code>,
+		|<code>MPL-2.0</code> (Mozilla Public License 2.0),
+		|<code>MS-PL</code> (Microsoft Public License),
+		|<code>MS-RL</code> (Microsoft Reciprocal License),
+		|<code>OpenSSL</code> (OpenSSL License),
+		|<code>SSLeay</code> (SSLeay License),
+		|<code>Zlib</code> (zlib/libpng License)
+
+	p Any other value is considered to be a proprietary license, which is assumed to be incompatible with any other license. If you think there is a license that should be included in this list, please file a quick <a href="https://github.com/rejectedsoftware/dub-registry/issues/new">bug report</a>. Please also note that pure D bindings of C/C++ libraries <em>should</em> specify the same license as the original library, although a stricter but compatible license can be used, too.
+
+	p Some example license specifications:
+	pre.code
+		|"GPL-3.0"
+		|"GPL-2.0 or later"
+		|"GPL-2.0 or later or proprietary"
+		|"GPL-2.0 or LGPL-3.0"
+		|"LGPL-2.1 or proprietary"
+
+	h2#build-settings Build settings
+
+	p Build settings influence the command line options passed to the compiler and linker. All settings are optional.
+
+	table
+		tr
+			th Name
+			th Arguments
+			th Description
+
+		tr
+			td dependency
+			td
+				code "&lt;name&gt;" ...
+			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like
+
+		tr
+			td systemDependencies
+			td
+				code "&lt;text&gt;"
+			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors.
+
+		tr
+			td targetType
+			td
+				code "&lt;type&gt;"
+			td Specifies a specific <a href="#target-types">target type</a> - this setting does not support the platform attribute
+
+		tr
+			td targetName
+			td
+				code "&lt;name&gt;"
+			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this setting does not support the platform attribute
+
+		tr
+			td targetPath
+			td
+				code "&lt;path&gt;"
+			td The destination path of the output binary - this setting does not support the platform attribute
+
+		tr
+			td workingDirectory
+			td
+				code "&lt;path&gt;"
+			td A fixed working directory from which the generated executable will be run - this setting does not support the platform attribute
+
+		tr
+			td subConfiguration
+			td
+				code "&lt;dependency&gt;" "&lt;configuration&gt;"
+			td Locks a dependency (first argument) to a specific configuration (second argument); see also the <a href="#configurations">configurations section</a> - this setting does not support the platform attribute
+
+		tr
+			td buildRequirements
+			td
+				code "&lt;requirement1&gt;" ["&lt;requirement2&gt;" [...]]
+			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
+
+		tr
+			td buildOptions
+			td
+				code "&lt;option1&gt;" ["&lt;option2&gt;" [...]]
+			td List of build option identifiers (corresponding to compiler flags) - see the <a href="#build-options">build options section</a> for details.
+
+		tr
+			td libs
+			td
+				code "&lt;lib1&gt;" ["&lt;lib2&gt;" [...]]
+			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
+
+		tr
+			td sourceFiles
+			td
+				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
+
+		tr
+			td sourcePaths
+			td
+				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> setting is specified) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
+
+		tr
+			td excludedSourceFiles
+			td
+				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths") - <a href="http://dlang.org/phobos/std_path.html#.globMatch">Glob matching</a> can be used to pattern match multiple files at once
+
+		tr
+			td mainSourceFile
+			td
+				code "&lt;path&gt;"
+			td Determines the file that contains the <code>main()</code> function. This setting can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this setting does not support platform suffixes
+
+		tr
+			td copyFiles
+			td
+				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td A list of <a href="http://dlang.org/phobos/std_path.html#.globMatch">globs</a> matching files or directories to be copied to <code>targetPath</code>. Matching directories are copied recursively, i.e. <code>"copyFiles": ["path/to/dir"]"</code> recursively copies <code>dir</code>, while <code>"copyFiles": ["path/to/dir/*"]"</code> only copies files within <code>dir</code>.
+
+		tr
+			td versions
+			td
+				code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
+			td A list of D versions to be defined during compilation
+
+		tr
+			td debugVersions
+			td
+				code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
+			td A list of D debug identifiers to be defined during compilation
+
+		tr
+			td importPaths
+			td
+				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td Additional import paths to search for D modules (the <code>source/</code> folder is used by default as a source folder, if it exists)
+
+		tr
+			td stringImportPaths
+			td
+				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
+		tr
+			td preGenerateCommands
+			td
+				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td A list of shell commands that is executed before project generation is started
+		tr
+			td postGenerateCommands
+			td
+				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td A list of shell commands that is executed after project generation is finished
+		tr
+			td preBuildCommands
+			td
+				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td A list of shell commands that is executed always before the project is built
+		tr
+			td postBuildCommands
+			td
+				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td A list of shell commands that is executed always after the project is built
+
+		tr
+			td dflags
+			td
+				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
+			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
+
+		tr
+			td lflags
+			td
+				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
+			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
+
+	p Inside of build setting values, it is possible to use variables using dollar notation. Any variable not matching a predefined name will be taken from the program environment. To denote a literal dollar sign, use <code>$$</code>. The predefined variables are:
+	table
+		tr
+			th Variable
+			th Contents
+		tr
+			td <code>$PACKAGE_DIR</code>
+			td Path to the package itself
+		tr
+			td <code>$ROOT_PACKAGE_DIR</code>
+			td Path to the root package of the build dependency tree
+		tr
+			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
+			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
+
+
+	h3#platform-specs Platform specifications
+
+	p Platform specific settings are supported through the use of the "platform" attribute. Platform attributes contain dash separated platform identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
+
+	pre.code
+		|// used on all platforms
+		|versions "PrintfDebugging"
+		|// only applies if compiled with DMD
+		|dflags "-vtls" platform="dmd"
+		|// only used when building for X86-64
+		|versions "UseAmd64Impl" platform="x86_64"
+		|// only used on Posix systems (Linux, OS X, FreeBSD etc.)
+		|libs "ssl" "crypto" platform="posix"
+		|// applies if compiled for Windows, X86-64 using DMD
+		|sourceFiles "lib/win32/mylib.lib" platform="windows-x86_64-dmd"
+
+
+	h3#version-specs Version specifications
+	p A version specification can consist of a number of attributes, mainly the "version" attribute:
+
+	ul
+		li
+			p <code>version="&lt;version-specifier&gt;"</code> - The version specification as used for the simple form
+			p A version specification should only be specified when no <code>"path"</code> attribute is present, or when compatibility with older versions of DUB (&lt; 0.9.22) is desired.
+		li
+			p <code>path="&lt;path-to-package&gt;"</code> - Use a folder to source a package from.
+			p References a package in a specific path. This can be used in situations where a specific copy of a package needs to be used. Examples of this include packages that are included as GIT submodules, or packages in sub folders of the main package, such as example projects.
+		li
+			p <code>optional=true</code> - Indicate an optional dependency.
+			p With this specified, the dependency will only be used, if it is already available on the local machine.
+
+	p Version specifiers define a range of acceptable versions. They can be specified in any of the following ways:
+	ul
+		li Restrict to a certain minor version: <code>"~&gt;2.2.13"</code>, equivalent to <code>"&gt;=2.2.13 &lt;2.3.0"</code>
+		li Restrict to a certain major version: <code>"~&gt;2.2"</code>, equivalent to <code>"&gt;=2.2.0 &lt;3.0.0"</code>
+		li Require a certain version: <code>"==1.3.0"</code>
+		li Require a minimum version: <code>"&gt;=1.3.0"</code>
+		li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
+		li Match any released version (equivalent to <code>">=0.0.0"</code>): <code>"*"</code>
+		li Use a GIT branch (deprecated): <code>"~master"</code>
+	
+	p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>. The recommended way to specify versions is using the <code>~&gt;</code> operator as a way to balance between flexible upgrades and reducing the risk of code breakage.
+
+	p Whenever you refer to (sub) packages within the same repository, use the "any version" version specifier: <code>"*"</code>
+
+
+	h3#target-types Target types
+
+	p The following values are recognized for the <code>targetType</code> setting:
+
+	table
+		tr
+			th Value
+			th Description
+		tr
+			td "autodetect"
+			td Automatically detects the target type. This is the default global value and causes dub to try and generate "application" and "library" <a href="#configurations">configurations</a>. Use of other values limits the auto-generated configurations to either of the two. This value is not allowed inside of a configuration block.
+
+		tr
+			td "none"
+			td Does not generate an output file. This is useful for packages that are supposed to drag in other packages using "dependency" directives.
+
+		tr
+			td "executable"</code>
+			td Generates an executable binary
+
+		tr
+			td "library"</code>
+			td Specifies that the package is to be used as a library, without limiting the actual type of library. This should be the default for most libraries.
+
+		tr
+			td "sourceLibrary"</code>
+			td This target type does not generate a binary, but rather forces dub to add all source files directly to the same compiler invocation as the dependent project.
+
+		tr
+			td "staticLibrary"</code>
+			td Forces output as a static library container.
+
+		tr
+			td "dynamicLibrary"</code>
+			td Forces output as a dynamic/shared library.
+
+	h3#build-requirements Build requirements
+
+	p The following values are recognized as array items in the "buildRequirements" setting:
+
+	table
+		tr
+			th Value
+			th Description
+		tr
+			td "allowWarnings"
+			td Warnings do not abort compilation
+		tr
+			td "silenceWarnings"
+			td Don't show warnings
+		tr
+			td "disallowDeprecations"
+			td Using deprecated features aborts compilation
+		tr
+			td "silenceDeprecations"
+			td Don't show deprecation warnings
+		tr
+			td "disallowInlining"
+			td Avoid function inlining, even in release builds
+		tr
+			td "disallowOptimization"
+			td Avoid optimizations, even in release builds
+		tr
+			td "requireBoundsCheck"
+			td Always perform bounds checks
+		tr
+			td "requireContracts"
+			td Leave assertions and contracts enabled in release builds
+		tr
+			td "relaxProperties"
+			td Do not enforce strict property handling (removes the -property switch) <span style="color: red;">[deprecated, recent versions of DUB never issue -property]</span>
+		tr
+			td "noDefaultFlags"
+			td Does not emit build type specific flags (e.g. -debug, -cov or -unittest). <span style="color: red;">Note that this flag should never be used for released packages and is indended purely as a development/debugging tool. Using "-build=plain" may also be a more appropriate alternative.</span>
+
+	h3#build-options Build options
+
+	p The "buildOptions" setting provides a compiler agnostic way to specify common compiler options/flags. Note that many of these options are implicitly managed by the <a href="#build-requirements">"buildRequirements"</a> setting and most others usually only occur in <a href="#custom-build-types">buildType</a> block. It supports the following values:
+
+	table
+		tr
+			th Value
+			th Description
+			th Corresponding DMD flag
+		tr
+			td "debugMode"
+			td Compile in debug mode (enables contracts)
+			td -debug
+		tr
+			td "releaseMode"
+			td Compile in release mode (disables assertions and bounds checks)
+			td -release
+		tr
+			td "coverage"
+			td Enable code coverage analysis
+			td -cov
+		tr
+			td "debugInfo"
+			td Enable symbolic debug information
+			td -g
+		tr
+			td "debugInfoC"
+			td Enable symbolic debug information in C compatible form
+			td -gc
+		tr
+			td "alwaysStackFrame"
+			td Always generate a stack frame
+			td -gs
+		tr
+			td "stackStomping"
+			td Perform stack stomping
+			td -gx
+		tr
+			td "inline"
+			td Perform function inlining
+			td -inline
+		tr
+			td "noBoundsCheck"
+			td Disable all bounds checking
+			td -noboundscheck
+		tr
+			td "optimize"
+			td Enable optimizations
+			td -O
+		tr
+			td "profile"
+			td Emit profiling code
+			td -profile
+		tr
+			td "unittests"
+			td Compile unit tests
+			td -unittest
+		tr
+			td "verbose"
+			td Verbose compiler output
+			td -v
+		tr
+			td "ignoreUnknownPragmas"
+			td Ignores unknown pragmas during compilation
+			td -ignore
+		tr
+			td "syntaxOnly"
+			td Don't generate object files
+			td -o-
+		tr
+			td "warnings"
+			td Enable warnings, enabled by default (use "buildRequirements" to control this setting)
+			td -wi
+		tr
+			td "warningsAsErrors"
+			td Treat warnings as errors (use "buildRequirements" to control this setting)
+			td -w
+		tr
+			td "ignoreDeprecations"
+			td Do not warn about using deprecated features (use "buildRequirements" to control this setting)
+			td -d
+		tr
+			td "deprecationWarnings"
+			td Warn about using deprecated features, enabled by default (use "buildRequirements" to control this setting)
+			td -dw
+		tr
+			td "deprecationErrors"
+			td Stop compilation upon usage of deprecated features (use "buildRequirements" to control this setting)
+			td -de
+		tr
+			td "property"
+			td Enforce property syntax - <span style="color: red;">deprecated</span>
+			td -property
+
+
+	h2#configurations Configurations
+
+	p In addition to platform specific build settings, it is possible to define build configurations. Build configurations add or override build settings to the global ones. To choose a configuration, use <code>dub --config=&lt;name&gt;</code>. By default, the first configuration that matches the target type and build platform is selected automatically. The configurations are defined by adding a "configuration" directive.
+
+	p If no configurations are specified, dub automatically tries to detect the two default configurations "application" and "library". The "application" configuration is only added if at least one of the following files is found: <code>source/app.d</code>, <code>source/main.d</code>, <code>source/&lt;package name&gt;/app.d</code>, <code>source/&lt;package name&gt;/main.d</code>, <code>src/app.d</code>, <code>src/main.d</code>, <code>src/&lt;package name&gt;/app.d</code>, <code>src/&lt;package name&gt;/main.d</code>. Those files are expected to contain only the application entry point (usually <code>main()</code>) and are only added to the "application" configuration.
+
+	p When defining a configuration's platform, any of the specifiers described in <a href="#build-settings">build settings</a> may be combined to make the configuration as specific as necessary.
+
+	p The following example defines "metro-app" and "desktop-app" configurations that are only available on Windows and a "glut-app" configuration that is available on all platforms.
+
+	pre.code
+		|...
+		|name "somepackage"
+		|
+		|configuration "metro-app" {
+		|	platforms "windows"
+		|	targetType "executable"
+		|	versions "MetroApp"
+		|	libs "d3d11"
+		|}
+		|
+		|configuration "desktop-app" {
+		|	platforms "windows"
+		|	targetType "executable"
+		|	versions "DesktopApp"
+		|	libs "d3d9"
+		|}
+		|
+		|configuration "glut-app" {
+		|	// works on any platform
+		|	"targetType": "executable"
+		|	"versions": "GlutApp"
+		|}
+
+	p You can choose a specific configuration for certain dependencies by using the "subConfiguration" directive:
+
+	pre.code
+		|	...
+		|	dependency "somepackage" version=">=1.0.0"
+		|	"subConfiguration" "somepackage" "glut-app"
+
+	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" setting below).
+
+
+	h3#configuration-settings Configuration block specific settings
+
+	p In addition to the usual <a href="#build-settings">build settings</a>, the following settings are recognized inside of a configuration block:
+
+	table
+		tr
+			th Name
+			th Arguments
+			th Description
+
+		tr
+			td platforms
+			td
+				code "&lt;spec1&gt; ["&lt;spec2&gt;" [...]]
+			td A list of <a href="#platform-specs">platform specifiers</a> to limit on which platforms the configuration applies
+
+	h2#build-types Build types
+
+	p By default, a set of predefined build types is already provided by DUB and can be specified using <code>dub build --build=&lt;name&gt;</code>:
+
+	table
+		tr
+			th Name
+			th Build options
+		tr
+			td plain
+			td <code></code>
+		tr
+			td debug
+			td <code>"debugMode" "debugInfo"</code>
+		tr
+			td release
+			td <code>"releaseMode" "optimize" "inline"</code>
+		tr
+			td unittest
+			td <code>"unittests" "debugMode" "debugInfo"</code>
+		tr
+			td docs
+			td <code>"syntaxOnly"</code>, plus <code>dflags "-c" "-Dddocs"</code>
+		tr
+			td ddox
+			td <code>"syntaxOnly"</code>, plus <code>dflags "-c" "-Df__dummy.html" "-Xfdocs.json"</code>
+		tr
+			td profile
+			td <code>"profile" "optimize" "inline" "debugInfo"</code>
+		tr
+			td cov
+			td <code>"coverage" "debugInfo"</code>
+		tr
+			td unittest-cov
+			td <code>"unittests" "coverage" "debugMode" "debugInfo"</code>
+
+	p The existing build types can be customized and new build types can be added using the global <code>buildType</code> directive. Any of the low level <a href="#build-settings">build settings</a> (excluding "dependencies", "targetType", "targetName", "targetPath", "workingDirectory", "subConfigurations") can be used inside those. The build settings specified here will later be modified/augmented by the package/configuration specific settings.
+
+	p An example that overrides the "debug" build type and defines a new "debug-profile" type:
+
+	pre.code
+		|name "my-package"
+		|buildType "debug" {
+		|	buildOptions "debugMode" "debugInfo" "optimize"
+		|}
+		|buildType "debug-profile" {
+		|	buildOptions "debugMode" "debugInfo" "profile"
+		|}

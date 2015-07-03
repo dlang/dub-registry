@@ -123,8 +123,16 @@ class DubRegistryWebFrontend {
 
 	void getPublish() { render!("publish.dt"); }
 	void getDevelop() { render!("develop.dt"); }
+
 	@path("/package-format")
-	void getPackageFormat() { render!("package_format.dt"); }
+	void getPackageFormat(string lang = null)
+	{
+		switch (lang) {
+			default: redirect("package-format?lang=json"); break;
+			case "json": render!("package_format_json.dt"); break;
+			case "sdl": render!("package_format_sdl.dt"); break;
+		}
+	}
 
 	private auto downloadInfo()
 	{
