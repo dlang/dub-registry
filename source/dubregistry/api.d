@@ -32,8 +32,9 @@ interface IPackages {
 	@path(":name/:version/info")
 	Json getInfo(string _name, string _version);
 
-	@path("search")
-	string[] querySimilarPackages(string name, uint maxResults=5);
+	@method(HTTPMethod.GET)
+        @path("search")
+	string[] search(string q, uint maxResults=5);
 }
 
 class Packages : IPackages {
@@ -72,9 +73,9 @@ override {
 			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
 	}
 
-	string[] querySimilarPackages(string name, uint maxResults){
+	string[] search(string q, uint maxResults){
 		import std.range : take;
-		return m_registry.searchPackages([name])
+		return m_registry.searchPackages([q])
 			.take(maxResults)
 			.map!(a => a["name"].get!string)
 			.array;
