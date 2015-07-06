@@ -33,7 +33,7 @@ interface IPackages {
 	Json getInfo(string _name, string _version);
 
 	@path("search")
-	Json querySimilarPackages(string name, uint maxResults=5);
+	string[] querySimilarPackages(string name, uint maxResults=5);
 }
 
 class Packages : IPackages {
@@ -72,13 +72,12 @@ override {
 			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
 	}
 
-	Json querySimilarPackages(string name, uint maxResults){
+	string[] querySimilarPackages(string name, uint maxResults){
 		import std.range : take;
 		return m_registry.searchPackages([name])
 			.take(maxResults)
-			.map!(a => a["name"])
-			.array
-			.serializeToJson;
+			.map!(a => a["name"].get!string)
+			.array;
 	}
 }
 
