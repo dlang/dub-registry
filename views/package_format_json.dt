@@ -6,7 +6,8 @@ block title
 block body
 	h2 Introduction
 
-	p NOTE: this describes the JSON version of the package file format. See also the <a href="package-format?lang=sdl">specification based on SDLang</a>.
+	p
+		strong NOTE: this describes the JSON version of the package file format. See also the <a href="package-format?lang=sdl">specification based on SDLang</a>.
 
 	p Every DUB package <em>should</em> contain a <code>dub.json</code> (or <code>dub.sdl</code>, formerly also <code>package.json</code>) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized settings and their meaning. Note that any unknown settings are ignored for backwards compatibility reasons.
 
