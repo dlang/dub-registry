@@ -15,10 +15,10 @@ block body
 	p Finally, in many cases there is no explicit configuration needed at all, by relying on some conventions:
 
 	ul
-		li Folders named "source" or "src" get automatically scanned for sources and are treated as import folders.
-		li A file "app.d", or "&lt;package name&gt;.d" is treated as containing the applications <code>main()</code> and automatically gets excluded in library builds of the package
+		li Folders named <code>source</code> or <code>src</code> get automatically scanned for sources and are treated as import folders.
+		li A file <code>app.d</code>, or <code>&lt;package name&gt;.d</code> is treated as containing the applications <code>main()</code> and automatically gets excluded in library builds of the package
 		li The two configurations "application" and "library" get added automatically, depending on the availability of those files
-		li A folder "views" is automatically treated as a string import folder (the -J switch)
+		li A folder <code>views</code> is automatically treated as a string import folder (the <code>-J</code> command line switch for DMD)
 
 
 	h2#installation Installation
@@ -43,25 +43,25 @@ block body
 			th Folder
 			th Description
 		tr
-			td &lt;package_name&gt;/
+			td <code>&lt;package_name&gt;/</code>
 			td The root folder of the new project
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;source/
+			td &nbsp;&nbsp;&nbsp;&nbsp;<code>source/</code>
 			td The root folder for the project's source code
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;app.d
+			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>app.d</code>
 			td Suggested source file for the application entry point - this will automatically excluded if the project is used as a library
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;package_name&gt;/
+			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>&lt;package_name&gt;/</code>
 			td The suggested root package under which the project's source code will be stored
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;public/
+			td &nbsp;&nbsp;&nbsp;&nbsp;<code>public/</code>
 			td A folder for putting public files that are used at run time (mostly meant for web service projects)
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;views/
+			td &nbsp;&nbsp;&nbsp;&nbsp;<code>views/</code>
 			td May contain string import files, such as HTML or UI templates
 		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;dub.sdl or dub.json
+			td &nbsp;&nbsp;&nbsp;&nbsp;<code>dub.sdl</code> or <code>dub.json</code>
 			td Contains the package description of the project
 
 	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
