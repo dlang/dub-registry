@@ -464,13 +464,21 @@ class DubRegistry {
 
 private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try)
 {
+	import dub.recipe.io;
+	import dub.recipe.json;
+
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
 	foreach (filename; chain((&first_filename_try)[0 .. 1], packageInfoFilenames.filter!(f => f != first_filename_try))) {
 		if (!filename.length) continue;
 		try {
-			ret.info = rep.readCachedJsonFile(commit.sha, Path("/" ~ filename));
+			rep.readFile(commit.sha, Path("/" ~ filename), (scope input) {
+				auto text = input.readAllUTF8(false);
+				auto recipe = parsePackageRecipe(text, filename);
+				ret.info = recipe.toJson();
+			});
+
 			ret.info.packageDescriptionFile = filename;
 			logDebug("Found package description file %s.", filename);
 			break;
@@ -480,16 +488,6 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 	}
 	if (ret.info.type == Json.Type.undefined)
 		 throw new Exception("Found no package description file in the repository.");
-	return ret;
-}
-
-private Json readCachedJsonFile(Repository rep, string commit_sha, Path path)
-{
-	Json ret;
-	rep.readFile(commit_sha, path, (scope input) {
-		auto text = input.readAllUTF8(false);
-		ret = parseJsonString(text);
-	});
 	return ret;
 }
 
