@@ -1,14 +1,14 @@
 {
+	"fileVersion": 1,
 	"versions": {
 		"dub": "0.9.24-rc.1+commit.6.g280233e",
 		"libasync": "0.7.5",
 		"memutils": "0.4.1",
 		"openssl": "1.1.4+1.0.1g",
-		"vibe-d": "0.7.24-beta.3+commit.31.g44d67f3",
+		"vibe-d": "0.7.24-beta.4",
 		"libevent": "2.0.1+2.0.16",
 		"backtrace-d": "~master",
 		"libev": "5.0.0+4.04",
 		"userman": "0.3.0-beta.2"
-	},
-	"fileVersion": 1
+	}
 }
