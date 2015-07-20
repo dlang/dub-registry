@@ -82,6 +82,11 @@ class BitbucketRepository : Repository {
 		else ver = ver;
 		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~ver~".zip";
 	}
+
+	void download(string ver, scope void delegate(scope InputStream) del)
+	{
+		downloadCached(getDownloadUrl(ver), del);
+	}
 }
 
 private auto bbToIsoDate(string bbdate)

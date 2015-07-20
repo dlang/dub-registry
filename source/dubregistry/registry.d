@@ -216,6 +216,13 @@ class DubRegistry {
 		return ret;
 	}
 
+	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) del)
+	{
+		DbPackage pack = m_db.getPackage(packname);
+		auto rep = getRepository(pack.repository);
+		rep.download(vers, del);
+	}
+
 	void setPackageCategories(string pack_name, string[] categories)
 	{
 		m_db.setPackageCategories(pack_name, categories);

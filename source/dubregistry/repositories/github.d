@@ -91,6 +91,11 @@ class GithubRepository : Repository {
 		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
 	}
 
+	void download(string ver, scope void delegate(scope InputStream) del)
+	{
+		downloadCached(getDownloadUrl(ver), del);
+	}
+
 	private string getAPIURLPrefix() {
 		if (m_authUser.length) return "https://"~m_authUser~":"~m_authPassword~"@api.github.com";
 		else return "https://api.github.com";
