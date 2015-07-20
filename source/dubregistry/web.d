@@ -495,12 +495,13 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	}
 
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
-	void postRegisterPackage(string kind, string owner, string project, User _user, bool ignore_fork = false)
+	void postRegisterPackage(string kind, string owner, string project, string root, User _user, bool ignore_fork = false)
 	{
 		DbRepository rep;
 		rep.kind = kind;
 		rep.owner = owner;
 		rep.project = project;
+		rep.rootPath = root;
 
 		if (!ignore_fork) {
 			auto info = m_registry.getRepositoryInfo(rep);

@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- auto title = "Add new package";
-	
+
 block body
 
 	- if(error.length)
@@ -15,7 +15,7 @@ block body
 	.inputForm
 		h1 Add new package
 			p.light
-				a.blind(href="#{req.rootDir}publish") Learn more 
+				a.blind(href="#{req.rootDir}publish") Learn more
 				| about publishing.
 
 		form(method="POST", action="#{req.rootDir}register_package")
@@ -35,5 +35,9 @@ block body
 			p
 				label(for="project") Repository name
 				input(type="text", name="project", value=project)
+			p
+				label(for="root") Root directory:
+				input#root(type="text", name="root", value=req.form.get("root", "/"))
+				| (should usually be "/")
 			p
 				button(type="submit") Register package

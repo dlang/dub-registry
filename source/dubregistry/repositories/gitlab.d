@@ -25,17 +25,18 @@ class GitLabRepository : Repository {
 		string m_project;
 		URL m_baseURL;
 		string m_authToken;
+		string m_rootPath;
 	}
 
 	static void register(string auth_token, string url)
 	{
 		Repository factory(DbRepository info){
-			return new GitLabRepository(info.owner, info.project, auth_token, url.length ? URL(url) : URL("https://gitlab.com/"));
+			return new GitLabRepository(info.owner, info.project, auth_token, url.length ? URL(url) : URL("https://gitlab.com/"), info.rootPath);
 		}
 		addRepositoryFactory("gitlab", &factory);
 	}
 
-	this(string owner, string project, string auth_token, URL base_url)
+	this(string owner, string project, string auth_token, URL base_url, string root_path)
 	{
 		m_owner = owner;
 		m_project = project;

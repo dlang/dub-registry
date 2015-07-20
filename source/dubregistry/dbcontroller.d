@@ -350,6 +350,8 @@ struct DbRepository {
 	string kind;
 	string owner;
 	string project;
+	/// Path within the repository to treat as the package root directory
+	string rootPath = "/";
 }
 
 struct DbPackageVersion {

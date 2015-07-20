@@ -48,6 +48,16 @@ interface Repository {
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
 	string getDownloadUrl(string tag_or_branch);
 	void download(string tag_or_branch, scope void delegate(scope InputStream) del);
+
+	protected final string validateRootPath(string path)
+	{
+		auto p = Path(path);
+		p.normalize();
+		enforce(p.absolute, "The repository root directory must be absolute.");
+		foreach (i; 0 .. p.length)
+			enforce(p[i] != "." && p[i] != "..", "Repository root path contains invalid directory names.");
+		return p.toString();
+	}
 }
 
 struct RepositoryInfo {

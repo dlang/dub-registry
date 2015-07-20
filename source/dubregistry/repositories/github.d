@@ -22,22 +22,24 @@ class GithubRepository : Repository {
 		string m_project;
 		string m_authUser;
 		string m_authPassword;
+		string m_rootDir;
 	}
 
 	static void register(string user, string password)
 	{
 		Repository factory(DbRepository info){
-			return new GithubRepository(info.owner, info.project, user, password);
+			return new GithubRepository(info.owner, info.project, user, password, info.rootPath);
 		}
 		addRepositoryFactory("github", &factory);
 	}
 
-	this(string owner, string project, string auth_user, string auth_password)
+	this(string owner, string project, string auth_user, string auth_password, string root_dir)
 	{
 		m_owner = owner;
 		m_project = project;
 		m_authUser = auth_user;
 		m_authPassword = auth_password;
+		m_rootDir = root_dir.length ? validateRootPath(root_dir) : "/";
 	}
 
 	RefInfo[] getTags()
