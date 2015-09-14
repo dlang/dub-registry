@@ -95,4 +95,4 @@ block body
 
 	h2#command-line Command line interface
 
-	p TODO! Please run <code>dub help</code> for a brief description of the command line interface.
+	p See the <a href="docs/commandline">command line interface documentation</a> for an overview of DUB's CLI. You can also view the available command line options by running <code>dub --help</code> or <code>dub &lt;command&gt; --help</code>. 

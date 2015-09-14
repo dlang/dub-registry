@@ -1,0 +1,107 @@
+extends layout
+
+block title
+	- auto title = "Commandline interface";
+
+block body
+	- import dub.commandline;
+	- void writeIndentedLine(string line)
+		- while (line.length > 0 && line[0] == ' ')
+			| &nbsp;
+			- line = line[1 .. $];
+		|= line
+
+
+	h2 General usage
+
+	pre<
+		code dub [--version] [&lt;command&gt;] [&lt;options...&gt;] [-- [&lt;application arguments...&gt;]]
+
+	p If the command is omitted, DUB will default to "run". When running an application, "--" can be used to separate DUB options from options passed to the application.
+
+	p Setting the "http_proxy" environment variable will instruct DUB to use a proxy server when fetching packages or package meta data.
+
+	p The following options are always accepted in addition to command specific ones:
+
+	- CommonOptions options;
+	- auto common_args = new CommandArgs(null);
+	- options.prepare(common_args);
+	table
+		- foreach (arg; common_args.recognizedArgs)
+			tr
+				- auto names = arg.names.split("|");
+				- auto sarg = names[0].length == 1 ? names[0] : null;
+				- auto larg = names[0].length > 1 ? names[0] : names.length > 1 ? names[1] : null;
+				- if (sarg.length)
+					td -#{sarg}
+				- else
+					td &nbsp;
+
+				- if (larg.length)
+					- if (arg.defaultValue.peek!bool)
+						td --#{larg}
+					- else
+						td --#{larg}=&lt;value&gt;
+				- else
+					td &nbsp;
+				td
+					- foreach (ln; arg.helpText)
+						- writeIndentedLine(ln);
+						br
+
+	h2 Command overview
+
+	ul
+		- foreach (grp; commands)
+			li= grp.caption
+				ul
+					- foreach (cmd; grp.commands)
+						li
+							a(href="\##{cmd.name}") #{cmd.name}
+							| - #{cmd.description}
+
+	- foreach (grp; commands)
+		h2 #{grp.caption} commands
+		- foreach (cmd; grp.commands)
+			- if (cmd.hidden) continue;
+			
+			h3(id=cmd.name)= cmd.name
+
+			pre<
+				code dub #{cmd.name} #{cmd.argumentsPattern} [&lt;options...&gt;]#{cmd.acceptsAppArgs ? " -- <application arguments>" : ""}
+			
+			- if (cmd.helpText.length)
+				p
+					- foreach (ln; cmd.helpText)
+						- writeIndentedLine(ln);
+						br
+			- else
+				p= cmd.description
+
+			- auto args = new CommandArgs(null);
+			- cmd.prepare(args);
+			
+			- if (args.recognizedArgs.length)
+				p Available options:
+				table
+					- foreach (arg; args.recognizedArgs)
+						tr
+							- auto names = arg.names.split("|");
+							- auto sarg = names[0].length == 1 ? names[0] : null;
+							- auto larg = names[0].length > 1 ? names[0] : names.length > 1 ? names[1] : null;
+							- if (sarg.length)
+								td -#{sarg}
+							- else
+								td &nbsp;
+
+							- if (larg.length)
+								- if (arg.defaultValue.peek!bool)
+									td --#{larg}
+								- else
+									td --#{larg}=&lt;value&gt;
+							- else
+								td &nbsp;
+							td
+								- foreach (ln; arg.helpText)
+									- writeIndentedLine(ln);
+									br

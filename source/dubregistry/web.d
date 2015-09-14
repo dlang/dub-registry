@@ -456,6 +456,14 @@ class DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname);
 	}
 
+	@path("/docs/commandline")
+	void getCommandLineDocs()
+	{
+		import dub.commandline;
+		auto commands = getCommands();
+		render!("docs.commandline.dt", commands);
+	}
+
 	private void enforceUserPackage(User user, string package_name)
 	{
 		enforceHTTP(m_registry.isUserPackage(user.id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
