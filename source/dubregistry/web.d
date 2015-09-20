@@ -201,6 +201,10 @@ class DubRegistryWebFrontend {
 			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
 			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
 		];
+		platformPatterns["linux-arm"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-arm\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.arm\\.rpm$")
+		];
 		platformPatterns["osx-x86_64"] = [
 			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
 		];

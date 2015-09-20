@@ -62,13 +62,14 @@ block body
 			th Version
 			th Linux, x86
 			th Linux, x86-64
+			th Linux, ARM
 			th Windows, x86
 			th OS X 10.7, x86-64
 			th Source
 		- foreach_reverse(v; info.versions)
 			tr
 				td= v.id
-				- foreach(p; ["linux-x86", "linux-x86_64", "windows-x86", "osx-x86_64"])
+				- foreach(p; ["linux-x86", "linux-x86_64", "linux-arm", "windows-x86", "osx-x86_64"])
 					td
 						- if( auto pf = p in v.files )
 							- foreach (i, f; *pf)
