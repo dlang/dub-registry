@@ -161,7 +161,7 @@ class DbController {
 		return deserializeBson!(DbPackageVersion)(pack.versions[0]);
 	}
 
-	auto searchPackages(string[] keywords)
+	DbPackage[] searchPackages(string[] keywords)
 	{
 		Appender!(string[]) barekeywords;
 		foreach( kw; keywords ) {
@@ -178,19 +178,23 @@ class DbController {
 			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
 		} else {
 			// in the meantime, we'll perform a brute force search instead
-			Appender!(Tuple!(DbPackage, size_t)[]) results;
+			Appender!(DbPackage[]) pkgs;
+			Appender!(size_t[]) scores;
 			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
 				size_t score = 0;
 				foreach (t; p.searchTerms)
 					foreach (kw; barekeywords.data) {
-						import std.algorithm;
 						auto dist = levenshteinDistance(t, kw);
 						if (dist <= 3 && dist+1 < kw.length) score += 3 - dist;
 					}
-				if (score > 0) results ~= tuple(p, score);
+				if (score > 0) {
+					pkgs ~= p;
+					scores ~= score;
+				}
 			}
-			sort!((a, b) => a[1] > b[1])(results.data);
-			return results.data.map!(r => r[0]);
+			import std.range : zip;
+			sort!((a, b) => a[1] > b[1])(zip(pkgs.data, scores.data));
+			return pkgs.data;
 		}
 	}
 
@@ -290,7 +294,7 @@ struct DbPackage {
 }
 
 struct DbPackageVersion {
-	BsonDate date;
+	SysTime date;
 	string version_;
 	@optional string commitID;
 	Json info;

@@ -16,7 +16,12 @@ void registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
 	router.registerRestInterface(pkgs, "/api/packages");
 }
 
+struct SearchResult { string name, description, version_; }
+
 interface IPackages {
+	@method(HTTPMethod.GET)
+	SearchResult[] search(string q);
+
 	@path(":name/latest")
 	string getLatestVersion(string _name);
 
@@ -44,6 +49,13 @@ class Packages : IPackages {
 	}
 
 override {
+	@method(HTTPMethod.GET)
+	SearchResult[] search(string q) {
+		return m_registry.searchPackages(q)
+			.map!(p => SearchResult(p.name, p.info["description"].opt!string, p.version_))
+			.array;
+	}
+
 	string getLatestVersion(string name) {
 		return m_registry.getLatestVersion(rootOf(name))
 			.check!(r => r.length)(HTTPStatus.notFound, "Package not found");
