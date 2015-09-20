@@ -15,21 +15,19 @@ block body
 			th Latest version
 			th Date
 			th Description
-		- foreach (pl; results)
-			- if (pl.versions.length)
-				- auto p = getBestVersion(pl.versions);
-				- auto desc = p.description.opt!string;
-				- auto ver = p["version"].opt!string();
-				tr
-					td
-						a(href="packages/#{pl.name.get!string}")= pl.name.get!string
-					td.nobreak
-						- if (ver.length <= 20)
-							|= ver
-						- else
-							| #{ver[0 .. 18]}&hellip;
-					td.nobreak= formatDate(p.date)
-					- if (desc.length <= 100)
-						td= desc
+		- foreach (p; results)
+			- auto desc = p.info["description"].opt!string;
+			- auto ver = p.version_;
+			tr
+				td
+					a(href="packages/#{p.name}")= p.name
+				td.nobreak
+					- if (ver.length <= 20)
+						|= ver
 					- else
-						td #{desc[0 .. 98]}&hellip;
+						| #{ver[0 .. 18]}&hellip;
+				td.nobreak= formatDate(p.date)
+				- if (desc.length <= 100)
+					td= desc
+				- else
+					td #{desc[0 .. 98]}&hellip;

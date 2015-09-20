@@ -9,33 +9,41 @@ import std.datetime;
 import std.string;
 import vibe.data.json;
 
-string formatDate(string iso_ext_date)
-{
-	if (iso_ext_date.length == 0) return "---";
-	auto date = SysTime.fromISOExtString(iso_ext_date);
-	return (cast(Date)date).toSimpleString();
-}
-
 string formatDate(Json date)
 {
 	return formatDate(date.opt!string);
 }
 
+string formatDate(string iso_ext_date)
+{
+	if (iso_ext_date.length == 0) return "---";
+	return formatDate(SysTime.fromISOExtString(iso_ext_date));
+}
+
+string formatDate(SysTime st)
+{
+	return (cast(Date)st).toSimpleString();
+}
+
+string formatDateTime(Json dateTime)
+{
+	return formatDateTime(dateTime.opt!string);
+}
+
 string formatDateTime(string iso_ext_date)
 {
 	if (iso_ext_date.length == 0) return "---";
-	auto date = SysTime.fromISOExtString(iso_ext_date);
-	return date.toSimpleString();
+	return formatDateTime(SysTime.fromISOExtString(iso_ext_date));
 }
 
-string formatDateTime(Json date)
+string formatDateTime(SysTime st)
 {
-	return formatDateTime(date.opt!string);
+	return st.toSimpleString();
 }
 
-string formatFuzzyDate(Json iso_ext_date)
+string formatFuzzyDate(Json dateTime)
 {
-	return formatFuzzyDate(iso_ext_date.opt!string);
+	return formatFuzzyDate(dateTime.opt!string);
 }
 
 string formatFuzzyDate(string iso_ext_date)

@@ -105,8 +105,10 @@ class DubRegistry {
 
 	auto searchPackages(string query)
 	{
+		static struct Info { string name; DbPackageVersion _base; alias _base this; }
 		auto keywords = query.split();
-		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));
+		return m_db.searchPackages(keywords).map!(p =>
+			Info(p.name, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
 	}
 
 	void addPackage(Json repository, User.ID user)
@@ -191,7 +193,7 @@ class DubRegistry {
 		foreach (v; pack.versions) {
 			auto nfo = v.info;
 			nfo["version"] = v.version_;
-			nfo.date = v.date.toSysTime().toISOExtString();
+			nfo.date = v.date.toISOExtString();
 			nfo.url = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
 			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
 			if (v.readme.length && v.readme.length < 256 && v.readme[0] == '/') {
@@ -335,7 +337,7 @@ class DubRegistry {
 				checkPackageName(p, "Check "~info.info.packageDescriptionFile.get!string~".");
 
 		DbPackageVersion dbver;
-		dbver.date = BsonDate(info.date);
+		dbver.date = info.date;
 		dbver.version_ = ver;
 		dbver.commitID = info.sha;
 		dbver.info = info.info;

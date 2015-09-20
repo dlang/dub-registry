@@ -294,7 +294,7 @@ struct DbPackage {
 }
 
 struct DbPackageVersion {
-	BsonDate date;
+	SysTime date;
 	string version_;
 	@optional string commitID;
 	Json info;
