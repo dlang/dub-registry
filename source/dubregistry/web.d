@@ -128,7 +128,7 @@ class DubRegistryWebFrontend {
 	void getPackageFormat(string lang = null)
 	{
 		switch (lang) {
-			default: redirect("package-format?lang=json"); break;
+			default: redirect("package-format?lang=sdl"); break;
 			case "json": render!("package_format_json.dt"); break;
 			case "sdl": render!("package_format_sdl.dt"); break;
 		}
