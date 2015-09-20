@@ -3,21 +3,19 @@ extends layout
 block title
 	- import dubregistry.viewutils;
 	- auto title = "Search results for \"" ~ queryString ~ "\"";
-	
+
 block body
 	p Search results for: <em>#{queryString}</em>
 
-	- auto results_array = results.array;
+	p Found #{results.length} packages.
 
-	p Found #{results_array.length} packages.
-	
 	table
 		tr
 			th Package
 			th Latest version
 			th Date
 			th Description
-		- foreach (pl; results_array)
+		- foreach (pl; results)
 			- if (pl.versions.length)
 				- auto p = getBestVersion(pl.versions);
 				- auto desc = p.description.opt!string;
