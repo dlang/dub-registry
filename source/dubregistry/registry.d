@@ -103,8 +103,9 @@ class DubRegistry {
 		}
 	}
 
-	auto searchPackages(string[] keywords)
+	auto searchPackages(string query)
 	{
+		auto keywords = query.split();
 		return m_db.searchPackages(keywords).map!(p => getPackageInfo(p.name));
 	}
 

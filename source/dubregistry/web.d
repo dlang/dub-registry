@@ -111,9 +111,8 @@ class DubRegistryWebFrontend {
 
 	void querySearch(string q = "")
 	{
+		auto results = m_registry.searchPackages(q);
 		auto queryString = q;
-		auto keywords = queryString.split();
-		auto results = m_registry.searchPackages(keywords);
 		render!("search_results.dt", queryString, results);
 	}
 
