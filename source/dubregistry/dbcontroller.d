@@ -117,6 +117,11 @@ class DbController {
 			auto new_versions = versions ~ ver;
 			new_versions.sort!((a, b) => vcmp(a, b));
 
+			// remove versions with invalid dependency names to avoid the findAndModify below to fail
+			versions = versions.filter!(
+					v => !v.info["dependencies"].opt!(Json[string]).byKey.canFind!(k => k.canFind("."))
+				).array;
+
 			//assert((cast(Json)bversions).toString() == (cast(Json)serializeToBson(versions)).toString());
 
 			auto res = m_packages.findAndModify(
