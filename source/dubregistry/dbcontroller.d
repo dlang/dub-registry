@@ -44,7 +44,7 @@ class DbController {
 		}
 
 		// add updateCounter field for packages that don't have it yet
-		m_packages.update(["updateCounter": ["$exists": false]], ["$set" : ["updateCounter" : 0L]]);
+		m_packages.update(["updateCounter": ["$exists": false]], ["$set" : ["updateCounter" : 0L]], UpdateFlags.MultiUpdate);
 
 		repairVersionOrder();
 
