@@ -43,6 +43,9 @@ class DbController {
 			m_packages.update(["_id": p._id], p);
 		}
 
+		// add updateCounter field for packages that don't have it yet
+		m_packages.update(["updateCounter": ["$exists": false]], ["$set" : ["updateCounter" : 0L]]);
+
 		repairVersionOrder();
 
 		// create indices
@@ -108,14 +111,19 @@ class DbController {
 		size_t nretrys = 0;
 
 		while (true) {
-			auto bversions = m_packages.findOne(["name": packname], ["versions": true]).versions;
-			auto versions = deserializeBson!(DbPackageVersion[])(bversions);
+			auto pack = m_packages.findOne(["name": packname], ["versions": true, "updateCounter": true]);
+			auto counter = pack.updateCounter.get!long;
+			auto versions = deserializeBson!(DbPackageVersion[])(pack.versions);
 			auto new_versions = versions ~ ver;
 			new_versions.sort!((a, b) => vcmp(a, b));
 
 			//assert((cast(Json)bversions).toString() == (cast(Json)serializeToBson(versions)).toString());
 
-			auto res = m_packages.findAndModify(["name": Bson(packname), "versions": bversions], ["$set": ["versions": new_versions]], ["_id": true]);
+			auto res = m_packages.findAndModify(
+				["name": Bson(packname), "updateCounter": Bson(counter)],
+				["$set": ["versions": serializeToBson(new_versions), "updateCounter": Bson(counter+1)]],
+				["_id": true]);
+			
 			if (!res.isNull) {
 				updateKeywords(packname);
 				return;
@@ -291,6 +299,7 @@ struct DbPackage {
 	string[] errors;
 	string[] categories;
 	string[] searchTerms;
+	long updateCounter = 0; // used to implement lockless read-modify-write cycles
 }
 
 struct DbPackageVersion {
