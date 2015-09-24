@@ -222,7 +222,7 @@ block body
 			td dependency
 			td
 				code "&lt;name&gt;" ...
-			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like
+			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like. Use multiple <code>dependency</code> directives to add more than one dependency.
 
 		tr
 			td systemDependencies
