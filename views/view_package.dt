@@ -25,6 +25,8 @@ block body
 
 	h2 Package Information
 
+	- string repo_url;
+
 	table
 		- if (packageName.canFind(":"))
 			tr
@@ -43,16 +45,15 @@ block body
 					a(href="#{ph.get!string}")= ph.get!string
 
 		- if( auto pr = "repository" in packageInfo )
-			- string url;
 			- if( pr.kind == "github" )
-				- url = "https://github.com/"~pr.owner.get!string~"/"~pr.project.get!string;
+				- repo_url = "https://github.com/"~pr.owner.get!string~"/"~pr.project.get!string;
 			- else if( pr.kind == "bitbucket" )
-				- url = "https://bitbucket.org/"~pr.owner.get!string~"/"~pr.project.get!string;
-			- if( url.length )
+				- repo_url = "https://bitbucket.org/"~pr.owner.get!string~"/"~pr.project.get!string;
+			- if (repo_url.length)
 				tr
 					td Repository
 					td
-						a(href=url)= url
+						a(href=repo_url)= repo_url
 
 		- if( auto pl = "license" in versionInfo )
 			tr
@@ -109,6 +110,7 @@ block body
 			- scope msettings = new MarkdownSettings;
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
 			- msettings.headingBaseLevel = 2;
+			- msettings.linkFilter = (lnk) => lnk.startsWith("http://") || lnk.startsWith("https://") ? lnk : repo_url ~ "/blob/master/" ~ lnk;
 			!= filterMarkdown(versionInfo.readme.get!string, msettings)
 
 	h2 Available versions
