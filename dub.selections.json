@@ -1,14 +1,14 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"dub": "0.9.24-rc.4",
-		"libasync": "0.7.5",
-		"memutils": "0.4.1",
-		"openssl": "1.1.4+1.0.1g",
-		"vibe-d": "0.7.25-rc.1",
 		"libevent": "2.0.1+2.0.16",
-		"backtrace-d": "~master",
 		"libev": "5.0.0+4.04",
-		"userman": "0.3.0-beta.2"
+		"userman": "0.3.0",
+		"dub": "0.9.24+commit.35.ge65f132",
+		"openssl": "1.1.4+1.0.1g",
+		"memutils": "0.4.1",
+		"vibe-d": "0.7.25+commit.56.g6e1ddbd",
+		"backtrace-d": "~master",
+		"libasync": "0.7.5"
 	}
 }

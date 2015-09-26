@@ -8,7 +8,7 @@
 		"Matthias Dondorff"
 	],
 	"dependencies": {
-		"userman": "~>0.2.0",
+		"userman": "~>0.3.0",
 		"vibe-d": "~>0.7.21-rc.2",
 		"dub": "~>0.9.22"
 	},
