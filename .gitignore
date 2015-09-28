@@ -1,0 +1,7 @@
+/.project
+/.dub
+/__test__library__
+/dub-registry
+*.exe
+log.txt
+
