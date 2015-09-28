@@ -15,5 +15,18 @@
 	"subConfigurations": {
 		"dub": "library-nonet"
 	},
-	"versions": ["VibeDefaultMain", "VibeJsonFieldNames"]
+	"versions": ["VibeJsonFieldNames"],
+	"configurations": [
+		{
+			"name": "application",
+			"targetType": "executable",
+			"mainSourceFile": "source/app.d",
+			"versions": ["VibeDefaultMain"]
+		},
+		{
+			"name": "library",
+			"targetType": "library",
+			"excludedSourceFiles": ["source/app.d"]
+		}
+	]
 }
