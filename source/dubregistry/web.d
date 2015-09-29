@@ -247,39 +247,27 @@ class DubRegistryWebFrontend {
 	}
 
 	@path("/packages/:packname")
-	void getPackage(HTTPServerResponse res, string _packname)
+	void getPackage(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
-		bool json = false;
-		auto pname = _packname;
-		if( pname.endsWith(".json") ){
-			pname = pname[0 .. $-5];
-			json = true;
-		}
-
-		Json packageInfo, versionInfo;
-		if (!getPackageInfo(pname, null, packageInfo, versionInfo))
-			return;
-
-		auto user = m_userman.getUser(User.ID.fromString(packageInfo.owner.get!string));
-
-		if (json) {
-			if (pname.canFind(":")) return;
-			res.writeJsonBody(packageInfo);
-		} else {
-			string packageName = pname;
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo);
-		}
+		getPackageVersion(req, res, _packname, null);
 	}
 
 	@path("/packages/:packname/:version")
 	void getPackageVersion(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
 	{
 		auto pname = _packname;
-
-		auto ver = req.params["version"].replace(" ", "+");
+		auto ver = _version.replace(" ", "+");
 		string ext;
-		if( ver.endsWith(".zip") ) ext = "zip", ver = ver[0 .. $-4];
-		else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
+
+		if (_version.length) {
+			if (ver.endsWith(".zip")) ext = "zip", ver = ver[0 .. $-4];
+			else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
+		} else {
+			if (pname.endsWith(".json")) {
+				pname = pname[0 .. $-5];
+				ext = "json";
+			}
+		}
 
 		Json packageInfo, versionInfo;
 		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
@@ -306,12 +294,32 @@ class DubRegistryWebFrontend {
 					res.writeBody(data, "application/zip");
 				});
 			}
-		} else if ( ext == "json") {
+		} else if (ext == "json") {
 			if (pname.canFind(":")) return;
-			res.writeJsonBody(versionInfo);
+			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
 		} else {
+			string urlFilter(string url, bool is_image)
+			{
+				if (url.startsWith("http://") || url.startsWith("https://"))
+					return url;
+
+				if (auto pr = "repository" in packageInfo) {
+					auto owner = (*pr)["owner"].get!string;
+					auto project = (*pr)["project"].get!string;
+					switch ((*pr)["kind"].get!string) {
+						default: return url;
+						// TODO: BitBucket + GitLab
+						case "github":
+							if (is_image) return format("https://github.com/%s/%s/raw/master/%s", owner, project, url);
+							else return format("https://github.com/%s/%s/blob/master/%s", owner, project, url);
+					}
+				}
+
+				return url;
+			}
+
 			auto packageName = pname;
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo);
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo, urlFilter);
 		}
 	}
 

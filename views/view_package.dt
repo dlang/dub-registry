@@ -110,7 +110,7 @@ block body
 			- scope msettings = new MarkdownSettings;
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
 			- msettings.headingBaseLevel = 2;
-			- msettings.linkFilter = (lnk) => lnk.startsWith("http://") || lnk.startsWith("https://") ? lnk : repo_url ~ "/blob/master/" ~ lnk;
+			- msettings.urlFilter = &urlFilter;
 			!= filterMarkdown(versionInfo.readme.get!string, msettings)
 
 	h2 Available versions

@@ -7,7 +7,7 @@
 		"dub": "0.9.24+commit.35.ge65f132",
 		"openssl": "1.1.4+1.0.1g",
 		"memutils": "0.4.1",
-		"vibe-d": "0.7.26-alpha.1",
+		"vibe-d": "0.7.26-alpha.2",
 		"backtrace-d": "~master",
 		"libasync": "0.7.5"
 	}
