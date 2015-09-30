@@ -626,8 +626,8 @@ block body
 		|
 		|configuration "glut-app" {
 		|	// works on any platform
-		|	"targetType": "executable"
-		|	"versions": "GlutApp"
+		|	targetType "executable"
+		|	versions "GlutApp"
 		|}
 
 	p You can choose a specific configuration for certain dependencies by using the "subConfiguration" directive:
