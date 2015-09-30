@@ -298,6 +298,8 @@ class DubRegistryWebFrontend {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
 		} else {
+			auto gitVer = versionInfo["version"].get!string;
+			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
 			string urlFilter(string url, bool is_image)
 			{
 				if (url.startsWith("http://") || url.startsWith("https://"))
@@ -310,8 +312,8 @@ class DubRegistryWebFrontend {
 						default: return url;
 						// TODO: BitBucket + GitLab
 						case "github":
-							if (is_image) return format("https://github.com/%s/%s/raw/master/%s", owner, project, url);
-							else return format("https://github.com/%s/%s/blob/master/%s", owner, project, url);
+							if (is_image) return format("https://github.com/%s/%s/raw/%s/%s", owner, project, gitVer, url);
+							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url);
 					}
 				}
 
