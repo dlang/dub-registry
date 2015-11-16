@@ -54,6 +54,7 @@ block body
 
 		[Homebrew](http://mxcl.github.io/homebrew/) includes a DUB package by Chris Molozian. Use `brew install dub` or `brew install dub --HEAD`.
 
+		There is also a port available on [MacPorts](http://mxcl.github.io/homebrew/). Use `sudo port install dub`.
 
 	h2 Release history
 
