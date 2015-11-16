@@ -635,7 +635,7 @@ block body
 	pre.code
 		|	...
 		|	dependency "somepackage" version=">=1.0.0"
-		|	"subConfiguration" "somepackage" "glut-app"
+		|	subConfiguration "somepackage" "glut-app"
 
 	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" setting below).
 
