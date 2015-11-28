@@ -3,11 +3,11 @@
 	"versions": {
 		"libevent": "2.0.1+2.0.16",
 		"libev": "5.0.0+4.04",
-		"userman": "0.3.0",
+		"userman": "0.3.1",
 		"dub": "0.9.24+commit.35.ge65f132",
 		"openssl": "1.1.4+1.0.1g",
-		"memutils": "0.4.1",
-		"vibe-d": "0.7.26-alpha.2",
+		"memutils": "0.4.3",
+		"vibe-d": "0.7.26",
 		"backtrace-d": "~master",
 		"libasync": "0.7.5"
 	}
