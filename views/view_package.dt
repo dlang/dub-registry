@@ -74,6 +74,21 @@ block body
 			td Registered by
 			td= user.fullName.length ? user.fullName : user.name
 
+		- if (versionInfo["subPackages"].opt!(Json[]).length)
+			tr
+				td Sub packages
+				td
+					dl
+						- foreach (sp; versionInfo["subPackages"])
+							- if (sp.type == Json.Type.object)
+								dt #{packageName}:#{sp["name"].get!string}
+								dd= sp["description"].opt!string
+							- else
+								- auto dir = sp.get!string;
+								- if (!dir.endsWith("/")) dir ~= "/";
+								dt= dir
+								dd [directory based sub package]
+
 		tr
 			td Dependencies
 				- auto pd = "dependencies" in versionInfo;
