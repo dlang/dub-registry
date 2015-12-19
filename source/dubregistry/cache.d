@@ -50,6 +50,7 @@ class URLCache {
 	{
 		import std.datetime : Clock, UTC;
 		import vibe.http.auth.basic_auth;
+		import dubregistry.internal.utils : black;
 
 		auto user = url.username;
 		auto password = url.password;
@@ -96,7 +97,7 @@ class URLCache {
 				(scope res){
 					switch (res.statusCode) {
 						default:
-							throw new Exception("Unexpected reply for '"~url.toString()~"': "~httpStatusText(res.statusCode));
+							throw new Exception("Unexpected reply for '"~url.toString().black~"': "~httpStatusText(res.statusCode));
 						case HTTPStatus.notModified:
 							logDiagnostic("Cache HIT: %s", url.toString());
 							res.dropBody();
@@ -105,7 +106,7 @@ class URLCache {
 							break;
 						case HTTPStatus.notFound:
 							res.dropBody();
-							throw new FileNotFoundException("File '"~url.toString()~"' does not exist.");
+							throw new FileNotFoundException("File '"~url.toString().black~"' does not exist.");
 						case HTTPStatus.movedPermanently, HTTPStatus.found, HTTPStatus.temporaryRedirect:
 							auto pv = "Location" in res.headers;
 							enforce(pv !is null, "Server responded with redirect but did not specify the redirect location for "~url.toString());
@@ -150,7 +151,7 @@ class URLCache {
 			}
 		}
 
-		throw new Exception("Too many redirects for "~url.toString());
+		throw new Exception("Too many redirects for "~url.toString().black);
 	}
 }
 

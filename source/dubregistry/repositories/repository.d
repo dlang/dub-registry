@@ -58,8 +58,10 @@ struct RefInfo {
 
 package Json readJson(string url, bool sanitize = false, bool cache_priority = false)
 {
+	import dubregistry.internal.utils : black;
+
 	Json ret;
-	logDiagnostic("Getting JSON response from %s", url);
+	logDiagnostic("Getting JSON response from %s", url.black);
 	Exception ex;
 	foreach (i; 0 .. 2) {
 		try {
@@ -74,7 +76,7 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 			ex = e;
 		}
 	}
-	throw new Exception(format("Failed to read JSON from %s: %s", url, ex.msg), __FILE__, __LINE__, ex);
+	throw new Exception(format("Failed to read JSON from %s: %s", url.black, ex.msg), __FILE__, __LINE__, ex);
 }
 
 private {
