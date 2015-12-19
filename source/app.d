@@ -39,6 +39,14 @@ shared static this()
 {
 	setLogFile("log.txt", LogLevel.diagnostic);
 
+	version (linux) {
+		logInfo("Enforcing certificate trust.");
+		HTTPClient.setTLSSetupCallback((ctx) {
+			ctx.useTrustedCertificateFile("/etc/ssl/certs/ca-certificates.crt");
+			ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
+		});
+	}
+
 	import dub.internal.utils : jsonFromFile;
 	auto regsettingsjson = jsonFromFile(Path("settings.json"), true);
 	auto ghuser = regsettingsjson["github-user"].opt!string;
