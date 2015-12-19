@@ -11,7 +11,7 @@ block body
 
 	p Every DUB package <em>should</em> contain a <code>dub.sdl</code> (or <code>dub.json</code>) file in its root folder. This file contains meta-information about the project and its dependencies. This information is used for building the project and for deploying it using the registry. The following sections give an overview of the recognized settings and their meaning. Note that any unknown settings are ignored for backwards compatibility reasons.
 
-	p The package format described here is based on <a href="http://sdl.ikayzo.org/">SDLang</a>, a simple declarative language with a lean syntax and an XML-like structure with tags, attributes, and values. In contrast to the JSON based format, all the directives described in the following section can be used multiple times and will override or append values, depending on their meaning.
+	p The package format described here is based on <a href="https://sdlang.org/">SDLang</a>, a simple declarative language with a lean syntax and an XML-like structure with tags, attributes, and values. In contrast to the JSON based format, all the directives described in the following section can be used multiple times and will override or append values, depending on their meaning.
 
 	p A typical example of a simple application that requires no platform specific setup:
 
