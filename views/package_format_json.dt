@@ -369,12 +369,12 @@ block body
 			td preBuildCommands
 			td
 				code string[]
-			td A list of shell commands that is executed always before the project is built
+			td A list of shell commands that is executed always before the project is built. Can be specific per compiler by appending <code>-&lt;compiler&gt;</code> (i.e. preBuildCommands-dmd, preBuildCommands-ldc, etc.).
 		tr
 			td postBuildCommands
 			td
 				code string[]
-			td A list of shell commands that is executed always after the project is built
+			td A list of shell commands that is executed always after the project is built. Can be specific per compiler similar to <code>preBuildCommands</code>.
 
 		tr
 			td dflags
