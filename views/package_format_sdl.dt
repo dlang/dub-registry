@@ -378,6 +378,12 @@ block body
 		tr
 			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
 			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
+		tr
+			td <code>$DC</code>
+			td Compiler binary name (i.e. dmd/ldc2/..) 
+		tr
+			td <code>$DC_BASE</code>
+			td Base name of the compiler (i.e. dmd/ldc/..) 
 
 
 	h3#platform-specs Platform specifications
