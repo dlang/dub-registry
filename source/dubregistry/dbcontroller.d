@@ -69,9 +69,14 @@ class DbController {
 		return deserializeBson!DbPackage(bpack);
 	}
 
-	auto getAllPackages()
+	auto getAllPackageNames()
 	{
 		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p.name.get!string)();
+	}
+
+	auto getAllPackages()
+	{
+		return m_packages.find().map!(p => p.deserializeBson!DbPackage);
 	}
 
 	auto getUserPackages(BsonObjectID user_id)
