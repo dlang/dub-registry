@@ -28,19 +28,22 @@ class DbController {
 
 		// update package format
 		foreach(p; m_packages.find()){
+			bool any_change = false;
 			if (p.branches.type == Bson.Type.object) {
 				Bson[] branches;
 				foreach( b; p.branches )
 					branches ~= b;
 				p.branches = branches;
+				any_change = true;
 			}
 			if (p.branches.type == Bson.Type.array) {
 				auto versions = p.versions.get!(Bson[]);
 				foreach (b; p.branches) versions ~= b;
 				p.branches = Bson(null);
 				p.versions = Bson(versions);
+				any_change = true;
 			}
-			m_packages.update(["_id": p._id], p);
+			if (any_change) m_packages.update(["_id": p._id], p);
 		}
 
 		// add updateCounter field for packages that don't have it yet
@@ -285,12 +288,13 @@ class DbController {
 	{
 		foreach( bp; m_packages.find() ){
 			auto p = deserializeBson!DbPackage(bp);
-			p.versions = p.versions
+			auto newversions = p.versions
 				.filter!(v => v.version_.startsWith("~") || v.version_.isValidVersion)
 				.array
 				.sort!((a, b) => vcmp(a, b))
 				.array;
-			m_packages.update(["_id": p._id], ["$set": ["versions": p.versions]]);
+			if (p.versions != newversions)
+				m_packages.update(["_id": p._id], ["$set": ["versions": newversions]]);
 		}
 	}
 }
