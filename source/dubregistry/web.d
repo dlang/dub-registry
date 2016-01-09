@@ -63,14 +63,12 @@ class DubRegistryWebFrontend {
 	@path("/")
 	void getHome(string sort = "updated", string category = null)
 	{
-		auto allpacks = m_registry.getAllPackageInfos();
-		Json[] packages;
-
 		// collect the package list
 		auto packapp = appender!(Json[])();
 		packapp.reserve(200);
 		if (category.length) {
-			foreach (pack; allpacks) {
+			foreach (pname; m_registry.availablePackages) {
+				auto pack = m_registry.getPackageInfo(pname);
 				foreach (c; pack.categories) {
 					if (c.get!string.startsWith(category)) {
 						packapp.put(pack);
@@ -78,10 +76,11 @@ class DubRegistryWebFrontend {
 					}
 				}
 			}
-			packages = packapp.data;
 		} else {
-			packages = allpacks.array;
+			foreach (pack; m_registry.availablePackages)
+				packapp.put(m_registry.getPackageInfo(pack));
 		}
+		auto packages = packapp.data;
 
 		// sort by date of last version
 		string getDate(Json p) {

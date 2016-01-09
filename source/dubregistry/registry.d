@@ -59,12 +59,7 @@ class DubRegistry {
 
 	@property auto availablePackages()
 	{
-		return m_db.getAllPackageNames();
-	}
-
-	auto getAllPackageInfos()
-	{
-		return m_db.getAllPackages().map!(p => getPackageInfo(p));
+		return m_db.getAllPackages();
 	}
 
 	void triggerPackageUpdate(string pack_name)
@@ -183,18 +178,14 @@ class DubRegistry {
 
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
-		DbPackage pack;
-		try pack = m_db.getPackage(packname);
-		catch (Exception) return Json(null);
-		return getPackageInfo(pack, include_errors);
-	}
-
-	Json getPackageInfo(DbPackage pack, bool include_errors = false)
-	{
 		if (!include_errors) {
-			if (auto ppi = pack.name in m_packageInfos)
+			if (auto ppi = packname in m_packageInfos)
 				return *ppi;
 		}
+
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
+		catch(Exception) return Json(null);
 
 		auto rep = getRepository(pack.repository);
 
@@ -209,7 +200,7 @@ class DubRegistry {
 				try {
 					rep.readFile(v.commitID, Path(v.readme), (scope data) { nfo.readme = data.readAllUTF8(); });
 				} catch (Exception e) {
-					logDebug("Failed to read README file (%s) for %s %s", v.readme, pack.name, v.version_);
+					logDebug("Failed to read README file (%s) for %s %s", v.readme, packname, v.version_);
 				}
 			}
 			vers ~= nfo;
@@ -219,12 +210,12 @@ class DubRegistry {
 		ret.id = pack._id.toString();
 		ret.dateAdded = pack._id.timeStamp.toISOExtString();
 		ret.owner = pack.owner.toString();
-		ret.name = pack.name;
+		ret.name = packname;
 		ret.versions = Json(vers);
 		ret.repository = pack.repository;
 		ret.categories = serializeToJson(pack.categories);
 		if( include_errors ) ret.errors = serializeToJson(pack.errors);
-		else m_packageInfos[pack.name] = ret;
+		else m_packageInfos[packname] = ret;
 		return ret;
 	}
 
