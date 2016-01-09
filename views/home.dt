@@ -60,7 +60,7 @@ block body
 							- if (auto pc = pl.categories[0].get!string in categoryMap)
 								- image = pc.imageName;
 						- if (!image.length) image = "unknown";
-						img.category-icon(src="images/categories/#{image}.png")
+						img.category-icon(src="images/categories/#{image}.png", title=image.replace(".", "/"))
 						a(href="packages/#{pl.name.get!string}")= pl.name.get!string
 					td.nobreak
 						- if (ver.length <= 20)
