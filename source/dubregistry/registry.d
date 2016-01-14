@@ -111,6 +111,12 @@ class DubRegistry {
 			Info(p.name, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
 	}
 
+	RepositoryInfo getRepositoryInfo(Json repository)
+	{
+		auto rep = getRepository(repository);
+		return rep.getInfo();
+	}
+
 	void addPackage(Json repository, User.ID user)
 	{
 		auto pack_name = validateRepository(repository);
