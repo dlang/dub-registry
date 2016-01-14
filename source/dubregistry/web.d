@@ -376,21 +376,30 @@ class DubRegistryWebFrontend {
 	}
 
 	@auth @path("/register_package")
-	void getRegisterPackage(User _user, string _error = null)
+	void getRegisterPackage(User _user, string kind = null, string owner = null, string project = null, string _error = null)
 	{
 		auto user = _user;
 		string error = _error;
 		auto registry = m_registry;
-		render!("my_packages.register.dt", user, error, registry);
+		render!("my_packages.register.dt", user, kind, owner, project, error, registry);
 	}
 
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
-	void postRegisterPackage(string kind, string owner, string project, User _user)
+	void postRegisterPackage(string kind, string owner, string project, User _user, bool ignore_fork = false)
 	{
 		Json rep = Json.emptyObject;
 		rep["kind"] = kind;
 		rep["owner"] = owner;
 		rep["project"] = project;
+
+		if (!ignore_fork) {
+			auto info = m_registry.getRepositoryInfo(rep);
+			if (info.isFork) {
+				render!("my_packages.register.warn_fork.dt", kind, owner, project);
+				return;
+			}
+		}
+
 		m_registry.addPackage(rep, _user.id);
 		redirect("/my_packages");
 	}
