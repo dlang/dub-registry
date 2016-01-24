@@ -7,15 +7,15 @@ block body
 
 	form(method="POST", action="#{req.rootDir}register_package")
 		select(name="kind", size="1")
-			option(value="github", selected=req.form.get("kind", "") == "github") GitHub project
-			option(value="bitbucket", selected=req.form.get("kind", "") == "bitbucket") Bitbucket project
-			//-option(value="gitlab", selected=req.form.get("kind", "") == "gitlab") GitLab project
+			option(value="github", selected=kind == "github") GitHub project
+			option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
+			//-option(value="gitlab", selected=kind == "gitlab") GitLab project
 		p
 			label(for="owner") Repository owner:
-			input(type="text", name="owner", value=req.form.get("owner", ""))
+			input(type="text", name="owner", value=owner)
 		p
 			label(for="project") Repository name:
-			input(type="text", name="project", value=req.form.get("project", ""))
+			input(type="text", name="project", value=project)
 		- if (error.length)
 			p.error
 				- foreach (ln; error.splitLines)

@@ -75,6 +75,14 @@ class GithubRepository : Repository {
 		return ret;
 	}
 
+	RepositoryInfo getInfo()
+	{
+		auto nfo = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project);
+		RepositoryInfo ret;
+		ret.isFork = nfo["fork"].opt!bool;
+		return ret;
+	}
+
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");

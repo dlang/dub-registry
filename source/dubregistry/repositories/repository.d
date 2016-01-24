@@ -38,9 +38,14 @@ alias RepositoryFactory = Repository delegate(Json);
 interface Repository {
 	RefInfo[] getTags();
 	RefInfo[] getBranches();
+	RepositoryInfo getInfo();
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
 	string getDownloadUrl(string tag_or_branch);
 	void download(string tag_or_branch, scope void delegate(scope InputStream) del);
+}
+
+struct RepositoryInfo {
+	bool isFork;
 }
 
 struct RefInfo {
