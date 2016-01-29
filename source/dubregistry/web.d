@@ -511,8 +511,8 @@ class DubRegistryWebFrontend {
 				cat.indentedDescription = "\u00a0└ " ~ cat.description;
 			else cat.indentedDescription = cat.description;
 			foreach_reverse (i; 0 .. path.length)
-				if (existsFile("public/images/categories/"~path[0 .. i].join(".")~".png")) {
-					cat.imageName = path[0 .. i].join(".");
+				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
+					cat.imageName = path[0 .. i+1].join(".");
 					break;
 				}
 
