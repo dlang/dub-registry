@@ -345,12 +345,12 @@ block body
 			td preBuildCommands
 			td
 				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
-			td A list of shell commands that is executed always before the project is built
+			td A list of shell commands that is executed always before the project is built. Can be specific per compiler by appending <code>-&lt;compiler&gt;</code> (i.e. preBuildCommands-dmd, preBuildCommands-ldc, etc.).
 		tr
 			td postBuildCommands
 			td
 				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
-			td A list of shell commands that is executed always after the project is built
+			td A list of shell commands that is executed always after the project is built. Can be specific per compiler similar to <code>preBuildCommands</code>.
 
 		tr
 			td dflags
@@ -378,6 +378,12 @@ block body
 		tr
 			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
 			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
+		tr
+			td <code>$DC</code>
+			td Compiler binary name (i.e. dmd/ldc2/..) 
+		tr
+			td <code>$DC_BASE</code>
+			td Base name of the compiler (i.e. dmd/ldc/..) 
 
 
 	h3#platform-specs Platform specifications
