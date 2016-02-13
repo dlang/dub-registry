@@ -4,6 +4,8 @@ block title
 	- auto title = "Package file format (JSON)";
 
 block body
+	- enum iff = `<a href="https://en.wikipedia.org/wiki/If_and_only_if" class="blind"><em>iff</em></a>`;
+
 	h2 Introduction
 
 	p
@@ -425,7 +427,7 @@ block body
 				li
 					p <code>"optional": true</code> - Indicates an optional dependency.
 					p With this set to <code>true</code>, the dependency will only be used if explicitly selected in dub.selections.json. If omitted, this attribute defaults to <code>false</code>.
-					p Note that versions prior to 0.9.25 used to choose an optional dependency <em>iff</em> is was available on the local machine.
+					p Note that versions prior to 0.9.25 used to choose an optional dependency !{iff} it was available on the local machine.
 				li
 					p <code>"default": true</code> - Choose an optional dependency by default.
 					p With this set to <code>true</code>, the dependency will be chosen by default if no dub.selections.json exists yet. If omitted, this attribute defaults to <code>false</code>. Note that this only has an effect if the "optional" attribute is set to <code>true</code>.
