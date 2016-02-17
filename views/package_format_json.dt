@@ -403,7 +403,7 @@ block body
 			td Path to the root package of the build dependency tree
 		tr
 			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
-			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
+			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree). Hyphens in <code>&lt;name&gt;</code> are not valid; use underscores in their place.
 
 
 	h3#version-specs Version specifications
