@@ -379,7 +379,7 @@ block body
 			td Path to the root package of the build dependency tree
 		tr
 			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
-			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree)
+			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree). The package name must be written in upper case and hyphens need to be replaced by underscores (e.g. "vibe-d" becomes <code>$VIBE_D_PACKAGE_DIR</code>).
 
 
 	h3#platform-specs Platform specifications
