@@ -110,6 +110,6 @@ class GithubRepository : Repository {
 	}
 
 	private string getContentURLPrefix() {
-		return "http://raw.github.com";
+		return "https://raw.github.com";
 	}
 }
