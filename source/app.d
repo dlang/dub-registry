@@ -9,6 +9,7 @@ import dubregistry.dbcontroller;
 import dubregistry.mirror;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
+import dubregistry.repositories.gitlab;
 import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
@@ -87,9 +88,12 @@ shared static this()
 	auto regsettingsjson = jsonFromFile(Path("settings.json"), true);
 	auto ghuser = regsettingsjson["github-user"].opt!string;
 	auto ghpassword = regsettingsjson["github-password"].opt!string;
+	auto glurl = regsettingsjson["gitlab-url"].opt!string;
+	auto glauth = regsettingsjson["gitlab-auth"].opt!string;
 
 	GithubRepository.register(ghuser, ghpassword);
 	BitbucketRepository.register();
+	if (glurl.length) GitLabRepository.register(glauth, glurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });

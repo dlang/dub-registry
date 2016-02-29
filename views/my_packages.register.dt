@@ -8,9 +8,13 @@ block body
 
 	form(method="POST", action="#{req.rootDir}register_package")
 		select(name="kind", size="1")
-			option(value="github", selected=kind == "github") GitHub project
-			option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
-			//-option(value="gitlab", selected=kind == "gitlab") GitLab project
+			- import dubregistry.repositories.repository;
+			- if (supportsRepositoryKind("github"))
+				option(value="github", selected=kind == "github") GitHub project
+			- if (supportsRepositoryKind("bitbucket"))
+				option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
+			- if (supportsRepositoryKind("gitlab"))
+				option(value="gitlab", selected=kind == "gitlab") GitLab project
 		p
 			label(for="owner") Repository owner:
 			input(type="text", name="owner", value=owner)
