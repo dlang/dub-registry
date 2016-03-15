@@ -117,6 +117,9 @@ block body
 		|	}
 		|}
 
+	p You can directly install it:
+	pre.code dub fetch #{packageName}
+
 	- if (versionInfo.readme.opt!string.length)
 		h2 Readme
 
