@@ -1,0 +1,16 @@
+
+span#search-query {
+    width: 13em;
+}
+
+table {
+    border: 0px;
+}
+
+#content th {
+	border-right: 1px solid #98312A;
+}
+
+h2 {
+    margin-top: 0.5em;
+}

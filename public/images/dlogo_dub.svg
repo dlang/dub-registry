@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This version is meant to be centered and cropped left/right as needed. -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   height="38"
+   viewBox="0 0 481 89"
+   id="svg4326"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="dlogo_dub.svg">
+  <metadata
+     id="metadata4349">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="723"
+     id="namedview4347"
+     showgrid="false"
+     inkscape:zoom="10.677755"
+     inkscape:cx="222.73849"
+     inkscape:cy="24.547059"
+     inkscape:window-x="0"
+     inkscape:window-y="22"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4326" />
+  <defs
+     id="defs4328">
+    <linearGradient
+       x1="66"
+       y1="50"
+       x2="60"
+       y2="99"
+       id="gradient"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         style="stop-color: white; stop-opacity: 1"
+         offset="0"
+         id="stop4331" />
+      <stop
+         style="stop-color: white; stop-opacity: 0"
+         offset="1"
+         id="stop4333" />
+    </linearGradient>
+  </defs>
+  <!-- background -->
+  <rect
+     width="100%"
+     height="100%"
+     style="fill: #C25454; fill: #B03931"
+     id="rect4335" />
+  <g
+     transform="translate(181,0)"
+     id="g4337">
+    <!-- planet (originally a shiny effect, I guess) -->
+    <ellipse
+       cx="-4.5"
+       cy="308"
+       rx="310"
+       ry="266"
+       style="fill: url(#gradient); opacity: 0.3;"
+       id="ellipse4339" />
+    <!-- bigger moon -->
+    <!-- smaller moon -->
+    <!-- D -->
+  </g>
+  <g
+     transform="matrix(0.20730076,0,0,0.20730075,174.43599,-4.9342456)"
+     id="g4841"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-opacity:1">
+    <path
+       id="path4766-8"
+       d="m 145.93384,275.92153 a 115.71429,115.71429 0 0 1 -0.0801,-2.27735 115.71429,115.71429 0 0 1 115.71487,-115.71484 115.71429,115.71429 0 0 1 115.71484,115.71484 115.71429,115.71429 0 0 1 -0.11328,2.27735 l -39.96679,0 a 75.714287,75.714287 0 0 0 0.0801,-2.27735 75.714287,75.714287 0 0 0 -75.71487,-75.71484 75.714287,75.714287 0 0 0 -75.71484,75.71484 75.714287,75.714287 0 0 0 0.11328,2.27735 l -40.03321,0 z"
+       style="opacity:0.62999998;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:connector-curvature="0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4709"
+       d="M 70,158.07617 A 115.71429,115.71429 0 0 0 -45.71484,273.79102 115.71429,115.71429 0 0 0 70,389.50586 115.71429,115.71429 0 0 0 185.71484,273.79102 115.71429,115.71429 0 0 0 70,158.07617 Z m 0,40 A 75.714287,75.714287 0 0 1 145.71484,273.79102 75.714287,75.714287 0 0 1 70,349.50586 75.714287,75.714287 0 0 1 -5.7148401,273.79102 75.714287,75.714287 0 0 1 70,198.07617 Z"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4766"
+       d="m 146.36523,271.51367 a 115.71429,115.71429 0 0 0 -0.0801,2.27735 A 115.71429,115.71429 0 0 0 262,389.50586 115.71429,115.71429 0 0 0 377.71484,273.79102 a 115.71429,115.71429 0 0 0 -0.11328,-2.27735 l -39.96679,0 a 75.714287,75.714287 0 0 1 0.0801,2.27735 A 75.714287,75.714287 0 0 1 262,349.50586 a 75.714287,75.714287 0 0 1 -75.71484,-75.71484 75.714287,75.714287 0 0 1 0.11328,-2.27735 l -40.03321,0 z"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4768"
+       d="M 454,158.07617 A 115.71429,115.71429 0 0 0 338.28516,273.79102 115.71429,115.71429 0 0 0 454,389.50586 115.71429,115.71429 0 0 0 569.71484,273.79102 115.71429,115.71429 0 0 0 454,158.07617 Z m 0,40 A 75.714287,75.714287 0 0 1 529.71484,273.79102 75.714287,75.714287 0 0 1 454,349.50586 75.714287,75.714287 0 0 1 378.28516,273.79102 75.714287,75.714287 0 0 1 454,198.07617 Z"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       y="80.734154"
+       x="154.43285"
+       height="242.24593"
+       width="21.971119"
+       id="rect4770"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:19.20677376;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:19.20677376;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4820"
+       width="21.971119"
+       height="242.24593"
+       x="346.43286"
+       y="80.734154" />
+  </g>
+  <g
+     transform="translate(34.242713,-0.26741994)"
+     id="g4188"
+     style="opacity:1;fill:#ffffff;fill-opacity:1">
+    <ellipse
+       transform="matrix(0.99996902,0.00787158,0,1,0,0)"
+       ry="5.0650673"
+       rx="5.5953293"
+       cy="13.263641"
+       cx="283.76694"
+       id="path4186"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <ellipse
+       cx="264.02783"
+       cy="32.773602"
+       rx="17.315531"
+       ry="15.784226"
+       id="path4158"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+  </g>
+</svg>

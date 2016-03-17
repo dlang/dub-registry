@@ -3,56 +3,74 @@ html
 	head
 		block css
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top_p.css")
 
 		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
+		meta(name="viewport",content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0")
 		block title
 		title= title ~ " - DUB - The D package registry"
-	body
-		#header
-			#profile
-				- if( req.session )
-					p
-						a(href="#{req.rootDir}logout") Log out
-					p
-						a(href="#{req.rootDir}profile") Edit profile
-				- else
-					p
-						a(href="#{req.rootDir}register") Register
-					p
-						a(href='#{req.rootDir}login?redirect=#{req.requestURL == "/" ? "/my_packages" : req.requestURL}') Log in
-			a.blind(href="#{req.rootDir}")
-				img#logo(src="#{req.rootDir}images/logo-small.png", alt="DUB logo", width="75", height="48")
-			div#title
-				| DUB - The D package registry
-				h1= title
+	body#Home.doc
+		script document.body.className += ' have-javascript'
+		#top
+			.helper
+				.helper.expand-container.active
+					.logo
+						a(href=".")
+							img(id="logo", alt="D Logo", src="/images/dlogo_dub.svg")
+					a(href="menu.html", title="Menu", class="hamburger expand-toggle")
+						span Menu
+					#cssmenu
+						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-formati?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/D-Programming-Language/dub-registry/issues", "Bug tracker (DUB);https://github.com/D-Programming-Language/dub/issues", "Github repository (website);https://github.com/D-Programming-Language/dub-registry", "GitHub repository (DUB);https://github.com/D-Programming-Language/dub"])];
+						- if( req.session )
+							- listitems ~= tuple("My account", ["Log out;logout", "Edit profile;profile"]);
+						- else
+							- listitems ~= tuple("Register", ["register"]);
+							- auto loginURL = req.requestURL;
+							- if( loginURL == "/")
+								- loginURL = "/my_packages";
+							- listitems ~= tuple("Log in", ["login?redirect=" ~ loginURL]);
+						ul
+							- foreach(items; listitems)
+								- if(items[1].length < 2)
+									- bool active = startsWith(req.path[1..$], items[1][0]);
+									- if( items[1][0].empty ) active = req.path == "/";
+									li(class=(active ? "active" : ""))
+										- if (!(items[1][0].length > 4 && items[1][0][0..4] == "http"))
+											- items[1][0] = req.rootDir ~ items[1][0];
+										a(href="#{items[1][0]}")
+											span=items[0]
+								- else
+									- bool active = false;
+									- foreach(itm; items[1])
+										- if (startsWith(req.path[1..$], split(itm, ";")[1])) active = true;
+									li(class=(active ? "expand-container active" : "expand-container"))
+										a.expand-toggle(href="#")
+											span=items[0]
+										ul.expand-content
+											- foreach(itm; items[1])
+												- auto parts = split(itm, ";");
+												- bool active_item = startsWith(req.path[1..$], parts[1]);
+												li(class=(active_item ? "active" : ""))
+													- if (!(parts[1].length > 4 && parts[1][0..4] == "http"))
+														- parts[1] = req.rootDir ~ parts[1];
+													a(href="#{parts[1]}")
+														span=parts[0]
 
-		nav#topnav
-			form(method="GET", action="#{req.rootDir}search")
-				input(name="q", type="text", placeholder="search for package")
-				button(type="submit") Search
 
-			- auto items = ["Packages;", "Getting Started;getting_started", "Development;develop", "Package format;package-format", "Download;download"];
-			- if (req.session) items ~= "My packages;my_packages";
-			ul
-			- foreach(itm; items)
-				- auto parts = split(itm, ";");
-				- bool active = startsWith(req.path[1..$], parts[1]);
-				- if( parts[1].empty ) active = req.path == "/";
-				li(class=(active ? "active" : ""))
-					a(href="#{req.rootDir}#{parts[1]}")= parts[0]
+					.search-container.expand-container
+						a.expand-toggle(href="search.html", title="Search")
+							span Search
+						#search-box
+							form(method="GET", action="#{req.rootDir}search")
+								span#search-query
+									input#q(name="q", placeholder="Search for a package")
+								span#search-submit
+									button(type="submit")
+										i.fa.fa-search Go
 
 		#content
 			block body
 
-		nav#footer
-			ul
-				li
-					a(href="http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub/") Forums
-				li
-					a(href="https://github.com/D-Programming-Language/dub-registry/issues") Bug tracker (website)
-				li
-					a(href="https://github.com/D-Programming-Language/dub/issues") Bug tracker (DUB)
-				li
-					a(href="https://github.com/D-Programming-Language/dub-registry") GitHub repository (website)
-				li
-					a(href="https://github.com/D-Programming-Language/dub") GitHub repository (DUB)
+	script(type="application/javascript", src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js")
+	script(type="application/javascript", src="/scripts/menu.js")
