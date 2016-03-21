@@ -18,10 +18,10 @@ html
 					.logo
 						a(href=".")
 							img(id="logo", alt="D Logo", src="/images/dlogo_dub.svg")
-					a(href="menu.html", title="Menu", class="hamburger expand-toggle")
+					a(href="#", title="Menu", class="hamburger expand-toggle")
 						span Menu
 					#cssmenu
-						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-formati?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/D-Programming-Language/dub-registry/issues", "Bug tracker (DUB);https://github.com/D-Programming-Language/dub/issues", "Github repository (website);https://github.com/D-Programming-Language/dub-registry", "GitHub repository (DUB);https://github.com/D-Programming-Language/dub"])];
+						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/D-Programming-Language/dub-registry/issues", "Bug tracker (DUB);https://github.com/D-Programming-Language/dub/issues", "Github repository (website);https://github.com/D-Programming-Language/dub-registry", "GitHub repository (DUB);https://github.com/D-Programming-Language/dub"])];
 						- if( req.session )
 							- listitems ~= tuple("My account", ["Log out;logout", "Edit profile;profile"]);
 						- else
@@ -72,5 +72,4 @@ html
 		#content
 			block body
 
-	script(type="application/javascript", src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js")
 	script(type="application/javascript", src="/scripts/menu.js")

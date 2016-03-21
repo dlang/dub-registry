@@ -1,57 +1,41 @@
-(function($) {
-    $(function() {
-        if (typeof cssmenu_no_js === 'undefined') {
-            // add subnav toggle
-            $('.subnav').addClass('expand-container');
-            $('.subnav').prepend(
-                $('.subnav h2').clone().addClass('expand-toggle')
-            );
+if (typeof cssmenu_no_js === 'undefined') {
+    var open_main_item = null;
 
-            // highlight menu entry of the current page
-            var href = window.location.href.split('#')[0];
-            var current;
-            var res = $('#top a, .subnav a').each(function (_, a) {
-                if (a.href == href) {
-                    current = a;
-                    return false;
-                }
-            });
-            current = $(current);
-            // direct li parent containing the link
-            current.parent('li').addClass('active');
-            // topmost li parent, e.g. 'std'
-            current.parents('#top .expand-container').addClass('active');
-            current.parents('.subnav .expand-container')
-                .addClass('open');
+    function handleMenuClick(container, e, isHamburger){
+        container.classList.toggle('open');
 
-            var open_main_item = null;
-            $('.expand-toggle').click(function(e) {
-                var container = $(this).parent('.expand-container');
-                container.toggleClass('open');
-
-                /* In the main menu, let only one dropdown be open at a
-                time. Also close any open main menu dropdown when clicking
-                elsewhere. */
-                if (open_main_item !== container && open_main_item !== null) {
-                    open_main_item.removeClass("open");
-                }
-                var clicking_main_bar = container.parents("#top").length > 0;
-                var clicking_hamburger = this === $('.hamburger')[0];
-                if (clicking_main_bar && !clicking_hamburger) {
-                    open_main_item = container.hasClass('open')
-                        ? container : null;
-                }
-                return false;
-            });
-
-            $('html').click(function(e) {
-                var clicking_main_bar = $(e.target).parents("#top").length > 0;
-                if (clicking_main_bar) return;
-                if (open_main_item !== null) {
-                    open_main_item.removeClass('open');
-                }
-                open_main_item = null;
-            });
+        // Only one dropdown can be open at a time
+        if (open_main_item !== container && open_main_item !== null) {
+            open_main_item.classList.remove("open");
         }
+
+        // On mobiles devices the hamburger toggles the menu
+        if (!isHamburger) {
+            open_main_item = container.classList.contains('open') ? container: null;
+        }
+        e.stopPropagation();
+        return false;
+    }
+
+    // menu button for mobile devices
+    var dom_hamburger = document.body.querySelector(".hamburger.expand-toggle");
+    dom_hamburger.addEventListener('click', function(evt){
+        return handleMenuClick(dom_hamburger.parentNode, evt, true);
     });
-})(jQuery);
+
+    var expandToggles = document.body.querySelectorAll("#cssmenu .expand-toggle");
+    // HTMLCollections don't expose a forEach
+    [].forEach.call(expandToggles, function(expandToggle){
+        expandToggle.addEventListener("click", function(e) {
+            return handleMenuClick(expandToggle.parentNode, e, false);
+        });
+    });
+
+    // close window on clicks to other regions
+    window.addEventListener("click", function(e) {
+        if (open_main_item !== null) {
+            open_main_item.classList.remove("open");
+        }
+        open_main_item = null;
+    });
+}
