@@ -107,15 +107,22 @@ block body
 
 	h2 Installation
 
-	p To use this package, put the following dependency into your project's dub.json into the dependencies section:
+	p To use this package, put the following dependency into your project's dependencies section:
 	- string expr = versionInfo["version"].get!string;
 	- if( !expr.startsWith("~") ) expr = "~>" ~ expr;
-	pre.code {
-		|	...
-		|	"dependencies": {
-		|		"#{packageName}": "#{expr}"
-		|	}
-		|}
+
+	.clipboard-pkg
+		.clipboard-pkg-row
+			.clipboard-pkg-title dub.json
+			input(id="package-clipboard-json",value='"#{packageName}": "#{expr}"')
+			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-json")
+				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
+
+		.clipboard-pkg-row
+			.clipboard-pkg-title dub.sdl
+			input(id="package-clipboard-sdl",value='dependency "#{packageName}" version="#{expr}"')
+			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
+				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
 	- if (versionInfo.readme.opt!string.length)
 		h2 Readme
@@ -137,3 +144,5 @@ block body
 		- else
 			a(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')= vs
 
+	script(type="application/javascript", src="/scripts/clipboard.min.js")
+	:javascript new Clipboard('.btn-clipboard');
