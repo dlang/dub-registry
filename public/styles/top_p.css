@@ -28,11 +28,22 @@ table {
 }
 
 #top img#logo {
-	height: initial;
+	height: 32px;
 	width: initial;
+	margin-top: 3px;
 }
 
 /* no background highlight for the logo */
 #top .logo > a:hover {
 	background: inherit;
+}
+
+
+/* thinner font */
+body, .d_decl .quickindex {
+    font-weight: 300;
+}
+
+h2 {
+    margin-top: 1.5em;
 }
