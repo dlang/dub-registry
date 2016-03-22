@@ -14,8 +14,17 @@ table {
 /* fixup weird dlang logo */
 #top .logo {
 	float: none;
-	margin-left: 0;
 	margin-right: 0;
+	display: inline-block;
+	margin-left: -15px;
+	padding-right: 15px;
+}
+
+@media only screen and (max-width:54em) {
+    #top .logo {
+	    margin-left: 0;
+        padding-right: 0px;
+    }
 }
 
 #top img#logo {
