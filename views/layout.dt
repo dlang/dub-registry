@@ -17,7 +17,7 @@ html
 				.helper.expand-container.active
 					.logo
 						a(href=".")
-							img(id="logo", alt="D Logo", src="/images/dlogo_dub.svg")
+							img(id="logo", alt="D Logo", src="/images/dub-logo.png")
 					a(href="#", title="Menu", class="hamburger expand-toggle")
 						span Menu
 					#cssmenu

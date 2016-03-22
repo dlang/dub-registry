@@ -11,6 +11,23 @@ table {
 	border-right: 1px solid #98312A;
 }
 
+/* fixup weird dlang logo */
+#top .logo {
+	float: none;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+#top img#logo {
+	height: initial;
+	width: initial;
+}
+
+/* no background highlight for the logo */
+#top .logo > a:hover {
+	background: inherit;
+}
+
 h2 {
     margin-top: 0.5em;
 }
