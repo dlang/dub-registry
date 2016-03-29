@@ -47,3 +47,10 @@ body, .d_decl .quickindex {
 h2 {
     margin-top: 1.5em;
 }
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../fonts/fontello.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
