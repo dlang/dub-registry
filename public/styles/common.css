@@ -59,20 +59,6 @@ dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt; }
 /* HEADER           */
 /********************/
 
-div#header {
-	padding: 6pt 12pt;
-	background-color: #eee;
-	background-image: -webkit-linear-gradient(top, #fff, #eee);
-	background-image:    -moz-linear-gradient(top, #fff, #eee);
-	background-image:     -ms-linear-gradient(top, #fff, #eee);
-	background-image:      -o-linear-gradient(top, #fff, #eee);
-	border-bottom: 1px solid #ddd;
-}
-
-div#header #logo {
-	vertical-align: bottom;
-}
-
 a.blind {
 	text-decoration: none;
 }
@@ -104,51 +90,6 @@ p.warn {
 #title > h1 {
 	margin-top: 6pt;
 }
-
-/********************/
-/* HEADER NAV       */
-/********************/
-
-nav#topnav {
-	background-color: #444;
-	background-image: -webkit-linear-gradient(top, #444, #222);
-	background-image:    -moz-linear-gradient(top, #444, #222);
-	background-image:     -ms-linear-gradient(top, #444, #222);
-	background-image:      -o-linear-gradient(top, #444, #222);
-	border-bottom: 1px solid #ddd;
-	color: white;
-}
-
-nav#topnav a {
-	color: white;
-	text-decoration: none;
-}
-
-nav#topnav li {
-	margin: 0;
-	padding: 3pt 12pt;
-	display: inline-block;
-	/*border-left: 1px solid #666;
-	border-right: 1px solid #666;*/
-}
-
-nav#topnav li.active {
-	background-color: #666;
-}
-
-nav#topnav form { float: right; }
-nav#topnav form input, nav#topnav form button {
-	padding: 0;
-	margin: 0;
-	margin-top: 1pt;
-	height: 16pt;
-	-webkit-box-sizing: border-box;
-	   -moz-box-sizing: border-box;
-	     -o-box-sizing: border-box;
-	        box-sizing: border-box;
-}
-nav#topnav form button { padding: 0 4pt; margin-right: 12pt; }
-
 
 
 /********************/
@@ -192,11 +133,11 @@ h3 {
 }
 
 #content td, #content th {
-	border: 1px dotted #aaa;
+	border: 1px dotted #98312A;
 	padding: 3pt;
 }
 #content th {
-	background-color: #666;
+	background-color: #B03931;
 	color: #eee;
 	text-align: left;
 	font-weight: bold;
@@ -221,35 +162,24 @@ h3 {
 }*/
 
 
-/********************/
-/* FOOTER           */
-/********************/
-
-nav#footer {
-	padding: 0pt 12pt;
-	background-color: #eee;
-	background-image: -webkit-linear-gradient(top, #eee, #fff);
-	background-image:    -moz-linear-gradient(top, #eee, #fff);
-	background-image:     -ms-linear-gradient(top, #eee, #fff);
-	background-image:      -o-linear-gradient(top, #eee, #fff);
-	border-top: 1px solid #ddd;
-}
-
-nav#footer li {
-	margin: 0;
-	padding: 6pt 0pt;
-	padding-right: 12pt;
-	display: inline-block;
-	border-right: 1px solid #ddd;
-}
-
-
 @media (min-width: 600pt) {
-	div#header { padding: 6pt 10%; }
-	nav#topnav { padding-left: 10%; }
-	nav#topnav form { margin-right: 10%; }
 	div#content { padding: 12pt 10%; }
-	nav#footer { padding-left: 10%; }
+}
+
+
+/********************/
+/* Buttons          */
+/********************/
+
+button {
+    color: #333;
+    background: white;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding: 0.3em 0.6em;
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 /*********************/
