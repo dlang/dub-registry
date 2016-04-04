@@ -16,8 +16,19 @@ table {
 	float: none;
 	margin-right: 0;
 	display: inline-block;
-	margin-left: -15px;
+	margin-left: 0px;
 	padding-right: 15px;
+}
+
+/* let dlang header have same padding as content */
+
+@media (min-width: 600pt) {
+    #top > .helper {
+        padding-left: 10%;
+        padding-right: 10%;
+        margin: 0;
+        max-width: initial;
+    }
 }
 
 @media only screen and (max-width:54em) {
