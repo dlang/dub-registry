@@ -67,7 +67,7 @@ html
 									input#q(name="q", placeholder="Search for a package")
 								span#search-submit
 									button(type="submit")
-										i.fa.fa-search Go
+										i.fa.fa-search
 
 		#content
 			block body
