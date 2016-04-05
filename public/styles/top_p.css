@@ -16,8 +16,19 @@ table {
 	float: none;
 	margin-right: 0;
 	display: inline-block;
-	margin-left: -15px;
+	margin-left: 0px;
 	padding-right: 15px;
+}
+
+/* let dlang header have same padding as content */
+
+@media (min-width: 600pt) {
+    #top > .helper {
+        padding-left: 10%;
+        padding-right: 10%;
+        margin: 0;
+        max-width: initial;
+    }
 }
 
 @media only screen and (max-width:54em) {
@@ -53,4 +64,18 @@ h2 {
   src: url('../fonts/fontello.woff') format('woff');
   font-weight: normal;
   font-style: normal;
+}
+
+/* minimal font awesome CSS */
+
+.fa {
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.fa-search:before {
+  content: "\f002";
 }
