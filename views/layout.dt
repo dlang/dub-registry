@@ -21,11 +21,10 @@ html
 					a(href="#", title="Menu", class="hamburger expand-toggle")
 						span Menu
 					#cssmenu
-						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/D-Programming-Language/dub-registry/issues", "Bug tracker (DUB);https://github.com/D-Programming-Language/dub/issues", "Github repository (website);https://github.com/D-Programming-Language/dub-registry", "GitHub repository (DUB);https://github.com/D-Programming-Language/dub"])];
+						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/D-Programming-Language/dub-registry/issues", "Bug tracker (DUB);https://github.com/D-Programming-Language/dub/issues", "Github repository (website);https://github.com/D-Programming-Language/dub-registry", "GitHub repository (DUB);https://github.com/D-Programming-Language/dub"]), tuple("Download", ["download"])];
 						- if( req.session )
 							- listitems ~= tuple("My account", ["Log out;logout", "Edit profile;profile"]);
 						- else
-							- listitems ~= tuple("Register", ["register"]);
 							- auto loginURL = req.requestURL;
 							- if( loginURL == "/")
 								- loginURL = "/my_packages";
