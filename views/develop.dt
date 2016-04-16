@@ -17,9 +17,9 @@ block body
 
 	ul
 		li
-			a(href="https://github.com/D-Programming-Language/dub") DUB command line tool
+			a(href="https://github.com/dlang/dub") DUB command line tool
 		li
-			a(href="https://github.com/D-Programming-Language/dub-registry") DUB registry website
+			a(href="https://github.com/dlang/dub-registry") DUB registry website
 
 
 	h3 Development focus
