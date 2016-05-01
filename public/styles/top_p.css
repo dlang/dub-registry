@@ -16,8 +16,7 @@ table {
 	float: none;
 	margin-right: 0;
 	display: inline-block;
-	margin-left: 0px;
-	padding-right: 15px;
+	margin-left: -70px;
 }
 
 /* let dlang header have same padding as content */
@@ -31,17 +30,9 @@ table {
     }
 }
 
-@media only screen and (max-width:54em) {
-    #top .logo {
-	    margin-left: 0;
-        padding-right: 0px;
-    }
-}
-
 #top img#logo {
-	height: 32px;
+	height: 40px;
 	width: initial;
-	margin-top: 3px;
 }
 
 /* no background highlight for the logo */
