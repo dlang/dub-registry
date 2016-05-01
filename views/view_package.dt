@@ -128,7 +128,7 @@ block body
 		h2 Readme
 
 		.repositoryReadme.markdown-body
-			- import vibe.textfilter.markdown;
+			- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
 			- scope msettings = new MarkdownSettings;
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
 			- msettings.headingBaseLevel = 2;

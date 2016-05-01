@@ -44,6 +44,8 @@ class PersistentScheduler {
 
 	this(Path persistent_file)
 	{
+		import std.conv : to;
+
 		m_persistentFilePath = persistent_file;
 
 		if (existsFile(persistent_file)) {
@@ -174,15 +176,17 @@ class PersistentScheduler {
 
 	private void writePersistentFile()
 	{
+		import std.conv : to;
+		
 		if (m_deferUpdates) return;
 
 		Json jevents = Json.emptyObject;
 		foreach (name, desc; m_events) {
 			auto jdesc = Json.emptyObject;
-			jdesc.kind = desc.kind.to!string;
-			jdesc.next = desc.next.toISOExtString();
+			jdesc["kind"] = desc.kind.to!string;
+			jdesc["next"] = desc.next.toISOExtString();
 			if (desc.kind == EventKind.periodic)
-				jdesc.period = desc.period.total!"usecs";
+				jdesc["period"] = desc.period.total!"usecs";
 			jevents[name] = jdesc;
 		}
 		m_persistentFilePath.writeJsonFile(jevents);
