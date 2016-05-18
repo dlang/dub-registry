@@ -53,7 +53,6 @@ class DbController {
 
 		// create indices
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
-		m_packages.ensureIndex(["searchTerms": 1]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 
 		Bson[string] doc;
@@ -77,7 +76,6 @@ class DbController {
 		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 		pack._id = BsonObjectID.generate();
 		m_packages.insert(pack);
-		updateKeywords(pack.name);
 	}
 
 	DbPackage getPackage(string packname)
@@ -146,11 +144,6 @@ class DbController {
 				["name": Bson(packname), "updateCounter": Bson(counter)],
 				["$set": ["versions": serializeToBson(new_versions), "updateCounter": Bson(counter+1)]],
 				["_id": true]);
-			
-			if (!res.isNull) {
-				updateKeywords(packname);
-				return;
-			}
 
 			enforce(nretrys++ < 20, format("Failed to store updated version list for %s", packname));
 			logDebug("Failed to update version list atomically, retrying...");
@@ -167,7 +160,6 @@ class DbController {
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
 		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
-		updateKeywords(packname);
 	}
 
 	bool hasVersion(string packname, string ver)
@@ -247,30 +239,6 @@ class DbController {
 		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
 	}
 
-	private void updateKeywords(string package_name)
-	{
-		auto p = getPackage(package_name);
-		bool[string] keywords;
-		void processString(string str) {
-			if (str.length == 0) return;
-			foreach (w; splitAlphaNumParts(str))
-				if (w.count >= 2)
-					keywords[w.toLower()] = true;
-		}
-		void processVer(Json info) {
-			if (auto pv = "description" in info) processString(pv.opt!string);
-			if (auto pv = "authors" in info) processString(pv.opt!string);
-			if (auto pv = "homepage" in info) processString(pv.opt!string);
-		}
-
-		processString(p.name);
-		foreach (ver; p.versions) processVer(ver.info);
-
-		Appender!(string[]) kwarray;
-		foreach (kw; keywords.byKey) kwarray ~= kw;
-		m_packages.update(["name": package_name], ["$set": ["searchTerms": kwarray.data]]);
-	}
-
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
@@ -294,7 +262,6 @@ struct DbPackage {
 	DbPackageVersion[] versions;
 	string[] errors;
 	string[] categories;
-	string[] searchTerms;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
 }
 
