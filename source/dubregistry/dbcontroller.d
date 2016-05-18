@@ -55,6 +55,21 @@ class DbController {
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
 		m_packages.ensureIndex(["searchTerms": 1]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
+
+		Bson[string] doc;
+		doc["v"] = 1;
+		doc["key"] = ["_fts": Bson("text"), "_ftsx": Bson(1)];
+		doc["ns"] = db.name ~ "." ~ m_packages.name;
+		doc["name"] = "packages_full_text_search_index";
+		doc["weights"] = [
+			"name": Bson(4),
+			"versions.info.description" : Bson(3),
+			// TODO: try to index readme
+			"versions.info.homepage" : Bson(1),
+			"versions.info.author" : Bson(1),
+		];
+		doc["background"] = true;
+		db["system.indexes"].insert(doc);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -177,41 +192,13 @@ class DbController {
 		return deserializeBson!(DbPackageVersion)(pack.versions[0]);
 	}
 
-	DbPackage[] searchPackages(string[] keywords)
+	DbPackage[] searchPackages(string query)
 	{
-		Appender!(string[]) barekeywords;
-		foreach( kw; keywords ) {
-			kw = kw.strip();
-			//kw = kw.normalize(); // separate character from diacritics
-			string[] parts = splitAlphaNumParts(kw.toLower());
-			barekeywords ~= parts.filter!(p => p.count >= 2).map!(p => p.toLower).array;
-		}
-		logInfo("search for %s %s", keywords, barekeywords.data);
-
-		static if (0) {
-			// performs only exact matches - we should implement something more
-			// flexible, for example based on elastic search
-			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
-		} else {
-			// in the meantime, we'll perform a brute force search instead
-			Appender!(DbPackage[]) pkgs;
-			Appender!(size_t[]) scores;
-			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
-				size_t score = 0;
-				foreach (t; p.searchTerms)
-					foreach (kw; barekeywords.data) {
-						auto dist = levenshteinDistance(t, kw);
-						if (dist <= 3 && dist+1 < kw.length) score += 3 - dist;
-					}
-				if (score > 0) {
-					pkgs ~= p;
-					scores ~= score;
-				}
-			}
-			import std.range : zip;
-			sort!((a, b) => a[1] > b[1])(zip(pkgs.data, scores.data));
-			return pkgs.data;
-		}
+		return m_packages
+			.find(["$text": ["$search": query]], ["score": ["$meta": "textScore"]])
+			.sort(["score": ["$meta": "textScore"]])
+			.map!(deserializeBson!DbPackage)
+			.array;
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)
