@@ -53,8 +53,22 @@ class DbController {
 
 		// create indices
 		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
-		m_packages.ensureIndex(["searchTerms": 1]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
+
+		Bson[string] doc;
+		doc["v"] = 1;
+		doc["key"] = ["_fts": Bson("text"), "_ftsx": Bson(1)];
+		doc["ns"] = db.name ~ "." ~ m_packages.name;
+		doc["name"] = "packages_full_text_search_index";
+		doc["weights"] = [
+			"name": Bson(4),
+			"versions.info.description" : Bson(3),
+			// TODO: try to index readme
+			"versions.info.homepage" : Bson(1),
+			"versions.info.author" : Bson(1),
+		];
+		doc["background"] = true;
+		db["system.indexes"].insert(doc);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -62,7 +76,6 @@ class DbController {
 		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 		pack._id = BsonObjectID.generate();
 		m_packages.insert(pack);
-		updateKeywords(pack.name);
 	}
 
 	DbPackage getPackage(string packname)
@@ -131,11 +144,6 @@ class DbController {
 				["name": Bson(packname), "updateCounter": Bson(counter)],
 				["$set": ["versions": serializeToBson(new_versions), "updateCounter": Bson(counter+1)]],
 				["_id": true]);
-			
-			if (!res.isNull) {
-				updateKeywords(packname);
-				return;
-			}
 
 			enforce(nretrys++ < 20, format("Failed to store updated version list for %s", packname));
 			logDebug("Failed to update version list atomically, retrying...");
@@ -152,7 +160,6 @@ class DbController {
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
 		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
-		updateKeywords(packname);
 	}
 
 	bool hasVersion(string packname, string ver)
@@ -177,41 +184,13 @@ class DbController {
 		return deserializeBson!(DbPackageVersion)(pack.versions[0]);
 	}
 
-	DbPackage[] searchPackages(string[] keywords)
+	DbPackage[] searchPackages(string query)
 	{
-		Appender!(string[]) barekeywords;
-		foreach( kw; keywords ) {
-			kw = kw.strip();
-			//kw = kw.normalize(); // separate character from diacritics
-			string[] parts = splitAlphaNumParts(kw.toLower());
-			barekeywords ~= parts.filter!(p => p.count >= 2).map!(p => p.toLower).array;
-		}
-		logInfo("search for %s %s", keywords, barekeywords.data);
-
-		static if (0) {
-			// performs only exact matches - we should implement something more
-			// flexible, for example based on elastic search
-			return m_packages.find(["searchTerms": ["$all": barekeywords.data]]).map!(b => deserializeBson!DbPackage(b))();
-		} else {
-			// in the meantime, we'll perform a brute force search instead
-			Appender!(DbPackage[]) pkgs;
-			Appender!(size_t[]) scores;
-			foreach (p; m_packages.find().map!(b => deserializeBson!DbPackage(b))) {
-				size_t score = 0;
-				foreach (t; p.searchTerms)
-					foreach (kw; barekeywords.data) {
-						auto dist = levenshteinDistance(t, kw);
-						if (dist <= 3 && dist+1 < kw.length) score += 3 - dist;
-					}
-				if (score > 0) {
-					pkgs ~= p;
-					scores ~= score;
-				}
-			}
-			import std.range : zip;
-			sort!((a, b) => a[1] > b[1])(zip(pkgs.data, scores.data));
-			return pkgs.data;
-		}
+		return m_packages
+			.find(["$text": ["$search": query]], ["score": ["$meta": "textScore"]])
+			.sort(["score": ["$meta": "textScore"]])
+			.map!(deserializeBson!DbPackage)
+			.array;
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)
@@ -260,30 +239,6 @@ class DbController {
 		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
 	}
 
-	private void updateKeywords(string package_name)
-	{
-		auto p = getPackage(package_name);
-		bool[string] keywords;
-		void processString(string str) {
-			if (str.length == 0) return;
-			foreach (w; splitAlphaNumParts(str))
-				if (w.count >= 2)
-					keywords[w.toLower()] = true;
-		}
-		void processVer(Json info) {
-			if (auto pv = "description" in info) processString(pv.opt!string);
-			if (auto pv = "authors" in info) processString(pv.opt!string);
-			if (auto pv = "homepage" in info) processString(pv.opt!string);
-		}
-
-		processString(p.name);
-		foreach (ver; p.versions) processVer(ver.info);
-
-		Appender!(string[]) kwarray;
-		foreach (kw; keywords.byKey) kwarray ~= kw;
-		m_packages.update(["name": package_name], ["$set": ["searchTerms": kwarray.data]]);
-	}
-
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
@@ -307,7 +262,6 @@ struct DbPackage {
 	DbPackageVersion[] versions;
 	string[] errors;
 	string[] categories;
-	string[] searchTerms;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
 }
 
