@@ -94,7 +94,7 @@ block body
 			td authors
 			td
 				code string[]
-			td List of project authors
+			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lt;pparker@example.com&gt;"</code>)
 
 		tr
 			td copyright

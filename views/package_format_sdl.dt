@@ -94,7 +94,7 @@ block body
 			td authors
 			td
 				code "&lt;author1&gt;" ["&lt;author2&gt;" [...]]
-			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lg;pparker@example.com&gt;"</code>)
+			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lt;pparker@example.com&gt;"</code>)
 
 		tr
 			td copyright
