@@ -23,7 +23,7 @@ html
 					#cssmenu
 						- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/dlang/dub-registry/issues", "Bug tracker (DUB);https://github.com/dlang/dub/issues", "Github repository (website);https://github.com/dlang/dub-registry", "GitHub repository (DUB);https://github.com/dlang/dub"]), tuple("Download", ["download"])];
 						- if( req.session )
-							- listitems ~= tuple("My account", ["Log out;logout", "Edit profile;profile"]);
+							- listitems ~= tuple("My account", ["Manage packages;my_packages", "Edit profile;profile", "Log out;logout"]);
 						- else
 							- auto loginURL = req.requestURL;
 							- if( loginURL == "/")
