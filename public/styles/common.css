@@ -32,17 +32,14 @@ em { font-style: italic; }
 
 code {
 	font-family: 'Courier New', monospace;
-	background-color: #f8f8f8;
-	border: 1px solid #d8d8d8;
-	padding: 0 2pt;
 }
 
 pre.code, pre > code {
 	display: block;
-	border: 1px solid #bbb;
+	border: 1px solid #e0e0e0;
 	margin: 6pt 0;
 	padding: 3pt;
-	background-color: #F0F0F0;
+	background-color: #F4F4F4;
 	font-family: 'Courier New', monospace;
     -moz-tab-size: 4;
     -o-tab-size:   4;
