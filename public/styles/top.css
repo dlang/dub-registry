@@ -48,10 +48,11 @@ body, .d_decl .quickindex
 pre, code, .tt, .d_inlinecode, td.param_id, .CodeMirror pre, .d_decl
 {
     font-family: Consolas, "Bitstream Vera Sans Mono", "Andale Mono", Monaco, "DejaVu Sans Mono", "Lucida Console", monospace;
+    font-weight: bold;
 }
-pre, .CodeMirror pre
+pre, .CodeMirror pre, code
 {
-    font-size: small;
+    font-size: 90%;
 }
 
 body
