@@ -16,7 +16,7 @@ html
 			.helper
 				.helper.expand-container.active
 					.logo
-						a(href=".")
+						a(href="..")
 							img(id="logo", alt="DUB Logo", src="/images/dub-header.png")
 					a(href="#", title="Menu", class="hamburger expand-toggle")
 						span Menu
