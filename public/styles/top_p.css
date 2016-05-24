@@ -41,11 +41,6 @@ table {
 }
 
 
-/* thinner font */
-body, .d_decl .quickindex {
-    font-weight: 300;
-}
-
 h2 {
     margin-top: 1.5em;
 }
