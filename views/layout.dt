@@ -17,7 +17,7 @@ html
 				.helper.expand-container.active
 					.logo
 						a(href="#{req.rootDir}")
-							img(id="logo", alt="DUB Logo", src="/images/dub-header.png")
+							img(id="logo", alt="DUB Logo", src="#{req.rootDir}images/dub-header.png")
 					a(href="#", title="Menu", class="hamburger expand-toggle")
 						span Menu
 					#cssmenu
@@ -26,7 +26,7 @@ html
 							- listitems ~= tuple("My account", ["Manage packages;my_packages", "Edit profile;profile", "Log out;logout"]);
 						- else
 							- auto loginURL = req.requestURL;
-							- if( loginURL == "/")
+							- if (loginURL == "/")
 								- loginURL = "/my_packages";
 							- listitems ~= tuple("Log in", ["login?redirect=" ~ loginURL]);
 						ul
