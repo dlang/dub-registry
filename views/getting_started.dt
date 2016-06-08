@@ -72,6 +72,24 @@ block body
 
 	p After you have your new package in place, you can <a href="publish">publish it here</a>.
 
+
+	h3#single-file-packages Single-file packages
+
+	p For small applications or scripts, DUB supports a special mode where the whole package is contained in a single .d file (it <em>must</em> have that extension). The contents that would otherwise go into the package recipe file (<code>dub.sdl</code>/<code>dub.json</code>) are embedded in a <code>/+ &hellip; +/</code> comment within the file itself:
+	
+	pre.code.lang-d.
+		#!/usr/bin/env dub
+		/+ dub.sdl:
+			name "hello"
+		+/
+		void main() {
+			import std.stdio : writeln;
+			writeln("Hello, World!");
+		}
+
+	p This can now be executed with <code>dub run --single hello.d</code> (append <code>-- &lt;app arguments&gt;</code> to pass arguments to the generated executable), or using the short syntax <code>dub hello.d &lt;app arguments&gt;</code>. The latter also enables execution as a script using just <code>./hello.d</code> with the optional shebang line at the top of the example (needs <code>chmod +x hello.d</code> first). Single-file packages cannot be used to create library packages.
+
+
 	h2#local-packages Using dependencies that are not on the public registry
 
 	In cases where certain dependencies are not available in the package registry, for example because they are in closed source repositories, or because they are modified forks of the official packages, there are several possibilities to choose from:
