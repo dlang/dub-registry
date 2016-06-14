@@ -124,6 +124,9 @@ block body
 			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
 				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
+	p You can directly install it:
+	pre.code dub fetch #{packageName}
+
 	- if (versionInfo.readme.opt!string.length)
 		h2 Readme
 
