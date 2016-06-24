@@ -250,6 +250,7 @@ class DbController {
 				.filter!(v => v.version_.startsWith("~") || v.version_.isValidVersion)
 				.array
 				.sort!((a, b) => vcmp(a, b))
+				.uniq!((a, b) => a.version_ == b.version_)
 				.array;
 			if (p.versions != newversions)
 				m_packages.update(["_id": p._id], ["$set": ["versions": newversions]]);
