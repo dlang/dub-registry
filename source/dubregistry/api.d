@@ -8,7 +8,14 @@ module dubregistry.api;
 import dubregistry.dbcontroller;
 import dubregistry.registry;
 
-import vibe.d;
+import std.algorithm.iteration : map;
+import std.array : array;
+import std.exception : enforce;
+import vibe.data.json : Json;
+import vibe.http.router;
+import vibe.textfilter.urlencode;
+import vibe.web.rest;
+
 
 void registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
 {

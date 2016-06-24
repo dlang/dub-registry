@@ -11,10 +11,11 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : countUntil, filter, map, sort, swap;
+import std.algorithm : canFind, countUntil, filter, map, sort, swap;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
+import std.exception : enforce;
 import std.range : chain, walkLength;
 import std.string : format, startsWith, toLower;
 import std.typecons;
@@ -198,12 +199,12 @@ class DubRegistry {
 		foreach (v; pack.versions) {
 			auto nfo = v.info;
 			nfo["version"] = v.version_;
-			nfo.date = v.date.toISOExtString();
-			nfo.url = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
-			nfo.downloadUrl = nfo.url; // obsolete, will be removed in april 2013
+			nfo["date"] = v.date.toISOExtString();
+			nfo["url"] = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
+			nfo["downloadUrl"] = nfo["url"]; // obsolete, will be removed in april 2013
 			if (v.readme.length && v.readme.length < 256 && v.readme[0] == '/') {
 				try {
-					rep.readFile(v.commitID, Path(v.readme), (scope data) { nfo.readme = data.readAllUTF8(); });
+					rep.readFile(v.commitID, Path(v.readme), (scope data) { nfo["readme"] = data.readAllUTF8(); });
 				} catch (Exception e) {
 					logDebug("Failed to read README file (%s) for %s %s", v.readme, packname, v.version_);
 				}
@@ -212,14 +213,14 @@ class DubRegistry {
 		}
 
 		Json ret = Json.emptyObject;
-		ret.id = pack._id.toString();
-		ret.dateAdded = pack._id.timeStamp.toISOExtString();
-		ret.owner = pack.owner.toString();
-		ret.name = packname;
-		ret.versions = Json(vers);
-		ret.repository = pack.repository;
-		ret.categories = serializeToJson(pack.categories);
-		if( include_errors ) ret.errors = serializeToJson(pack.errors);
+		ret["id"] = pack._id.toString();
+		ret["dateAdded"] = pack._id.timeStamp.toISOExtString();
+		ret["owner"] = pack.owner.toString();
+		ret["name"] = packname;
+		ret["versions"] = Json(vers);
+		ret["repository"] = pack.repository;
+		ret["categories"] = serializeToJson(pack.categories);
+		if( include_errors ) ret["errors"] = serializeToJson(pack.errors);
 		else m_packageInfos[packname] = ret;
 		return ret;
 	}
@@ -277,19 +278,19 @@ class DubRegistry {
 			"Failed to find a branch containing a valid package description file:" ~ branch_errors);
 
 		// derive package name and perform various sanity checks
-		auto name = info.info.name.get!string;
-		string package_desc_file = info.info.packageDescriptionFile.get!string;
+		auto name = info.info["name"].get!string;
+		string package_desc_file = info.info["packageDescriptionFile"].get!string;
 		string package_check_string = format(`Check your %s.`, package_desc_file);
 		enforce(name.length <= 60,
 			"Package names must not be longer than 60 characters: \""~name[0 .. 60]~"...\" - "~package_check_string);
 		enforce(name == name.toLower(),
 			"Package names must be all lower case, not \""~name~"\". "~package_check_string);
-		enforce(info.info.license.opt!string.length > 0,
+		enforce(info.info["license"].opt!string.length > 0,
 			`A "license" field in the package description file is missing or empty. `~package_check_string);
-		enforce(info.info.description.opt!string.length > 0,
+		enforce(info.info["description"].opt!string.length > 0,
 			`A "description" field in the package description file is missing or empty. `~package_check_string);
 		checkPackageName(name, format(`Check the "name" field of your %s.`, package_desc_file));
-		foreach (string n, vspec; info.info.dependencies.opt!(Json[string])) {
+		foreach (string n, vspec; info.info["dependencies"].opt!(Json[string])) {
 			auto parts = n.split(":").array;
 			// allow shortcut syntax ":subpack"
 			if (parts.length > 1 && parts[0].length == 0) parts = parts[1 .. $];
@@ -317,7 +318,7 @@ class DubRegistry {
 		string deffile;
 		foreach (t; dbpack.versions)
 			if (t.version_ == ver) {
-				deffile = t.info.packageDescriptionFile.opt!string;
+				deffile = t.info["packageDescriptionFile"].opt!string;
 				break;
 			}
 		auto info = getVersionInfo(rep, reference, deffile);
@@ -326,10 +327,10 @@ class DubRegistry {
 		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
 		//assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
-		info.info.name = info.info.name.get!string.toLower();
-		enforce(info.info.name == packname,
+		info.info["name"] = info.info["name"].get!string.toLower();
+		enforce(info.info["name"] == packname,
 			format("Package name (%s) does not match the original package name (%s). Check %s.",
-				info.info.name.get!string, packname, info.info.packageDescriptionFile.get!string));
+				info.info["name"].get!string, packname, info.info["packageDescriptionFile"].get!string));
 
 		if ("description" !in info.info || "license" !in info.info) {
 		//enforce("description" in info.info && "license" in info.info,
@@ -337,9 +338,9 @@ class DubRegistry {
 			"Published packages must contain \"description\" and \"license\" fields.");
 		}
 
-		foreach( string n, vspec; info.info.dependencies.opt!(Json[string]) )
+		foreach( string n, vspec; info.info["dependencies"].opt!(Json[string]) )
 			foreach (p; n.split(":"))
-				checkPackageName(p, "Check "~info.info.packageDescriptionFile.get!string~".");
+				checkPackageName(p, "Check "~info.info["packageDescriptionFile"].get!string~".");
 
 		DbPackageVersion dbver;
 		dbver.date = info.date;
@@ -416,7 +417,7 @@ class DubRegistry {
 		}
 
 		Repository rep;
-		try rep = getRepository(pack.repository);
+		try rep = getRepository(pack["repository"]);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
@@ -465,7 +466,7 @@ class DubRegistry {
 			}
 		}
 		if (got_all_tags_and_branches) {
-			foreach (v; pack.versions) {
+			foreach (v; pack["versions"]) {
 				auto ver = v["version"].get!string;
 				if (ver !in existing) {
 					logInfo("Removing version %s as the branch/tag was removed.", ver);
@@ -494,7 +495,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 				ret.info = recipe.toJson();
 			});
 
-			ret.info.packageDescriptionFile = filename;
+			ret.info["packageDescriptionFile"] = filename;
 			logDebug("Found package description file %s.", filename);
 			break;
 		} catch (FileNotFoundException) {

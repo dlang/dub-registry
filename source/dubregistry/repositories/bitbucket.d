@@ -24,7 +24,7 @@ class BitbucketRepository : Repository {
 	static void register()
 	{
 		Repository factory(Json info){
-			return new BitbucketRepository(info.owner.get!string, info.project.get!string);
+			return new BitbucketRepository(info["owner"].get!string, info["project"].get!string);
 		}
 		addRepositoryFactory("bitbucket", &factory);
 	}
@@ -43,12 +43,12 @@ class BitbucketRepository : Repository {
 		RefInfo[] ret;
 		foreach( string tagname, tag; tags ){
 			try {
-				auto commit_hash = tag.raw_node.get!string();
-				auto commit_date = bbToIsoDate(tag.utctimestamp.get!string());
+				auto commit_hash = tag["raw_node"].get!string();
+				auto commit_date = bbToIsoDate(tag["utctimestamp"].get!string());
 				ret ~= RefInfo(tagname, commit_hash, commit_date);
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
-				throw new Exception("Failed to process tag "~tag.name.get!string~": "~e.msg);
+				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
 			}
 		}
 		return ret;
@@ -59,8 +59,8 @@ class BitbucketRepository : Repository {
 		Json branches = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
 		RefInfo[] ret;
 		foreach( string branchname, branch; branches ){
-			auto commit_hash = branch.raw_node.get!string();
-			auto commit_date = bbToIsoDate(branch.utctimestamp.get!string());
+			auto commit_hash = branch["raw_node"].get!string();
+			auto commit_date = bbToIsoDate(branch["utctimestamp"].get!string());
 			ret ~= RefInfo(branchname, commit_hash, commit_date);
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}

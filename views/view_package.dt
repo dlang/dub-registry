@@ -10,7 +10,7 @@ block title
 
 block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-	- if (versionInfo.readme.opt!string.length)
+	- if (versionInfo["readme"].opt!string.length)
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
 
 block body
@@ -21,7 +21,7 @@ block body
 
 	h2 Description
 
-	p= versionInfo.description.opt!string
+	p= versionInfo["description"].opt!string
 
 	h2 Package Information
 
@@ -32,11 +32,11 @@ block body
 			tr
 				td Root package
 				td
-					a(href="#{req.rootDir}packages/#{urlEncode(packageInfo.name.get!string)}")= packageInfo.name.get!string
+					a(href='#{req.rootDir}packages/#{urlEncode(packageInfo["name"].get!string)}')= packageInfo["name"].get!string
 
 		tr
 			td Version
-			td #{versionInfo["version"].get!string} (#{formatDate(versionInfo.date)})
+			td #{versionInfo["version"].get!string} (#{formatDate(versionInfo["date"])})
 
 		- if( auto ph = "homepage" in versionInfo )
 			tr
@@ -45,10 +45,10 @@ block body
 					a(href="#{ph.get!string}")= ph.get!string
 
 		- if( auto pr = "repository" in packageInfo )
-			- if( pr.kind == "github" )
-				- repo_url = "https://github.com/"~pr.owner.get!string~"/"~pr.project.get!string;
-			- else if( pr.kind == "bitbucket" )
-				- repo_url = "https://bitbucket.org/"~pr.owner.get!string~"/"~pr.project.get!string;
+			- if( (*pr)["kind"] == "github" )
+				- repo_url = "https://github.com/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
+			- else if( (*pr)["kind"] == "bitbucket" )
+				- repo_url = "https://bitbucket.org/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
 			- if (repo_url.length)
 				tr
 					td Repository
@@ -124,7 +124,7 @@ block body
 			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
 				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
-	- if (versionInfo.readme.opt!string.length)
+	- if (versionInfo["readme"].opt!string.length)
 		h2 Readme
 
 		.repositoryReadme.markdown-body
@@ -133,11 +133,11 @@ block body
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
 			- msettings.headingBaseLevel = 2;
 			- msettings.urlFilter = &urlFilter;
-			!= filterMarkdown(versionInfo.readme.get!string, msettings)
+			!= filterMarkdown(versionInfo["readme"].get!string, msettings)
 
 	h2 Available versions
 
-	- foreach_reverse (v; packageInfo.versions)
+	- foreach_reverse (v; packageInfo["versions"])
 		- auto vs = v["version"].get!string;
 		- if (vs == versionInfo["version"])
 			em= vs

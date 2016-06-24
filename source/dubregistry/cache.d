@@ -13,6 +13,7 @@ import vibe.stream.memory;
 import core.time;
 import std.algorithm : startsWith;
 import std.exception;
+import std.typecons : tuple;
 
 
 enum CacheMatchMode {
@@ -33,7 +34,7 @@ class URLCache {
 	{
 		m_db = connectMongoDB("127.0.0.1");
 		m_entries = m_db.getCollection("urlcache.entries");
-		m_entries.ensureIndex(["url": true]);
+		m_entries.ensureIndex([tuple("url", 1)]);
 	}
 
 	void clearEntry(URL url)
@@ -67,8 +68,8 @@ class URLCache {
 			CacheEntry entry;
 			if (!be.isNull()) {
 				// invalidate out of date cache entries
-				if (be._id.get!BsonObjectID.timeStamp < now - m_maxCacheTime)
-					m_entries.remove(["_id": be._id]);
+				if (be["_id"].get!BsonObjectID.timeStamp < now - m_maxCacheTime)
+					m_entries.remove(["_id": be["_id"]]);
 				
 				deserializeBson(entry, be);
 				if (mode == CacheMatchMode.always) {

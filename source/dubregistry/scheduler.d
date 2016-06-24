@@ -52,11 +52,11 @@ class PersistentScheduler {
 			m_deferUpdates = true;
 			auto data = readJsonFile(persistent_file);
 			foreach (string name, desc; data) {
-				auto tp = desc.kind.get!string.to!EventKind;
-				auto next = SysTime.fromISOExtString(desc.next.get!string);
+				auto tp = desc["kind"].get!string.to!EventKind;
+				auto next = SysTime.fromISOExtString(desc["next"].get!string);
 				final switch (tp) with (EventKind) {
 					case singular: scheduleEvent(name, next); break;
-					case periodic: scheduleEvent(name, next, desc.period.get!long.usecs); break;
+					case periodic: scheduleEvent(name, next, desc["period"].get!long.usecs); break;
 					case daily: scheduleDailyEvent(name, next); break;
 					case weekly: scheduleWeeklyEvent(name, next); break;
 					case monthly: scheduleMonthlyEvent(name, next); break;

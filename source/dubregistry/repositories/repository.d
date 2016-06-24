@@ -19,8 +19,8 @@ Repository getRepository(Json repinfo)
 		return *pr;
 
 	logDebug("Returning new repository: %s", ident);
-	auto pf = repinfo.kind.get!string in s_repositoryFactories;
-	enforce(pf, "Unknown repository type: "~repinfo.kind.get!string);
+	auto pf = repinfo["kind"].get!string in s_repositoryFactories;
+	enforce(pf, "Unknown repository type: "~repinfo["kind"].get!string);
 	auto rep = (*pf)(repinfo);
 	s_repositories[ident] = rep;
 	return rep;

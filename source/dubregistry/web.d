@@ -63,13 +63,16 @@ class DubRegistryWebFrontend {
 	@path("/")
 	void getHome(string sort = "updated", string category = null)
 	{
+		static import std.algorithm.sorting;
+		import std.algorithm.searching : any;
+
 		// collect the package list
 		auto packapp = appender!(Json[])();
 		packapp.reserve(200);
 		if (category.length) {
 			foreach (pname; m_registry.availablePackages) {
 				auto pack = m_registry.getPackageInfo(pname);
-				foreach (c; pack.categories) {
+				foreach (c; pack["categories"]) {
 					if (c.get!string.startsWith(category)) {
 						packapp.put(pack);
 						break;
@@ -85,22 +88,22 @@ class DubRegistryWebFrontend {
 		// sort by date of last version
 		string getDate(Json p) {
 			if( p.type != Json.Type.Object || "versions" !in p ) return null;
-			if( p.versions.length == 0 ) return null;
-			return p.versions[p.versions.length-1].date.get!string;
+			if( p["versions"].length == 0 ) return null;
+			return p["versions"][p["versions"].length-1]["date"].get!string;
 		}
 		SysTime getDateAdded(Json p) {
-			return SysTime.fromISOExtString(p.dateAdded.get!string);
+			return SysTime.fromISOExtString(p["dateAdded"].get!string);
 		}
 		bool compare(Json a, Json b) {
-			bool a_has_ver = a.versions.get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
-			bool b_has_ver = b.versions.get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
+			bool a_has_ver = a["versions"].get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
+			bool b_has_ver = b["versions"].get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
 		switch (sort) {
-			default: std.algorithm.sort!((a, b) => compare(a, b))(packages); break;
-			case "name": std.algorithm.sort!((a, b) => a.name < b.name)(packages); break;
-			case "added": std.algorithm.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
+			default: std.algorithm.sorting.sort!((a, b) => compare(a, b))(packages); break;
+			case "name": std.algorithm.sorting.sort!((a, b) => a["name"] < b["name"])(packages); break;
+			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
 		auto categories = m_categories;
@@ -255,6 +258,8 @@ class DubRegistryWebFrontend {
 	@path("/packages/:packname/:version")
 	void getPackageVersion(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
 	{
+		import std.algorithm : canFind;
+
 		auto pname = _packname;
 		auto ver = _version.replace(" ", "+");
 		string ext;
@@ -273,7 +278,7 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
 			return;
 
-		auto user = m_userman.getUser(User.ID.fromString(packageInfo.owner.get!string));
+		auto user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
 
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
@@ -283,10 +288,10 @@ class DubRegistryWebFrontend {
 			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["downloadUrl"].toString());
 
 			// add download to statistic
-			m_registry.addDownload(BsonObjectID.fromString(packageInfo.id.get!string), ver, req.headers.get("User-agent", null));
+			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
 			if (versionInfo["downloadUrl"].get!string.length > 0) {
 				// redirect to hosting service specific URL
-				redirect(versionInfo.downloadUrl.get!string);
+				redirect(versionInfo["downloadUrl"].get!string);
 			} else {
 				// directly forward from hoster
 				res.headers["Content-Disposition"] = "attachment; filename=\""~pname~"-"~(ver.startsWith("~") ? ver[1 .. $] : ver) ~ ".zip\"";
@@ -333,7 +338,7 @@ class DubRegistryWebFrontend {
 		if (pkg_info.type == Json.Type.null_) return false;
 
 		if (pack_version.length) {
-			foreach (v; pkg_info.versions) {
+			foreach (v; pkg_info["versions"]) {
 				if (v["version"].get!string == pack_version) {
 					ver_info = v;
 					break;
@@ -342,15 +347,15 @@ class DubRegistryWebFrontend {
 			if (ver_info.type != Json.Type.Object) return false;
 		} else {
 			import dubregistry.viewutils;
-			if (pkg_info.versions.length == 0) return false;
-			ver_info = getBestVersion(pkg_info.versions);
+			if (pkg_info["versions"].length == 0) return false;
+			ver_info = getBestVersion(pkg_info["versions"]);
 		}
 
 		foreach (i; 1 .. ppath.length) {
 			if ("subPackages" !in ver_info) return false;
 			bool found = false;
-			foreach (sp; ver_info.subPackages) {
-				if (sp.name == ppath[i]) {
+			foreach (sp; ver_info["subPackages"]) {
+				if (sp["name"] == ppath[i]) {
 					Json newv = Json.emptyObject;
 					// inherit certain fields
 					foreach (field; ["version", "date", "license", "authors", "homepage"])
@@ -501,10 +506,10 @@ class DubRegistryWebFrontend {
 
 		Category processNode(Json node, string[] path)
 		{
-			path ~= node.name.get!string;
+			path ~= node["name"].get!string;
 			auto cat = new Category;
 			cat.name = path.join(".");
-			cat.description = node.description.get!string;
+			cat.description = node["description"].get!string;
 			if (path.length > 2)
 				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
 			else if (path.length == 2)
@@ -519,7 +524,7 @@ class DubRegistryWebFrontend {
 			catmap[cat.name] = cat;
 
 			if ("categories" in node)
-				foreach (subcat; node.categories)
+				foreach (subcat; node["categories"])
 					cat.subCategories ~= processNode(subcat, path);
 
 			return cat;

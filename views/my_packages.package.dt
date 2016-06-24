@@ -15,7 +15,7 @@ block body
 		dd
 			a(href="#{req.rootDir}packages/#{packageName}")= packageName
 
-		- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
+		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 		dt Latest version
 		dd= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 
@@ -42,7 +42,7 @@ block body
 		- foreach (i; 0 .. 4)
 			p Category #{i+1}:
 				- string selected;
-				- if (i < pack.categories.length) selected = pack.categories[i].get!string;
+				- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
 				select(name="categories_#{i}", id="category#{i}", size="1")
 					- void outputCat(Category cat)
 						- if (!cat)
@@ -55,10 +55,10 @@ block body
 					- outputCat(null);
 		button(type="submit") Apply
 
-	- if (pack.errors.length)
+	- if (pack["errors"].length)
 		h2 Package errors:
 		ul
-			- foreach_reverse (e; pack.errors)
+			- foreach_reverse (e; pack["errors"])
 				li.error= e.get!string
 
 	h2 Repository
@@ -68,14 +68,14 @@ block body
 
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
 		select(name="kind", size="1")
-			option(value="github", selected=pack.repository.kind == "github") GitHub project
-			option(value="bitbucket", selected=pack.repository.kind == "bitbucket") Bitbucket project
+			option(value="github", selected=pack["repository"]["kind"] == "github") GitHub project
+			option(value="bitbucket", selected=pack["repository"]["kind"] == "bitbucket") Bitbucket project
 		p
 			label(for="owner") Repository owner:
-			input(type="text", name="owner", value=pack.repository.owner.get!string)
+			input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
 		p
 			label(for="project") Repository name:
-			input(type="text", name="project", value=pack.repository.project.get!string)
+			input(type="text", name="project", value=pack["repository"]["project"].get!string)
 		p
 			button(type="submit") Apply
 

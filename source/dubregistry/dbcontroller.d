@@ -10,6 +10,7 @@ import std.array;
 import std.algorithm;
 import std.exception;
 //import std.string;
+import std.typecons : tuple;
 import std.uni;
 import vibe.vibe;
 
@@ -29,21 +30,21 @@ class DbController {
 		// update package format
 		foreach(p; m_packages.find()){
 			bool any_change = false;
-			if (p.branches.type == Bson.Type.object) {
+			if (p["branches"].type == Bson.Type.object) {
 				Bson[] branches;
-				foreach( b; p.branches )
+				foreach( b; p["branches"] )
 					branches ~= b;
-				p.branches = branches;
+				p["branches"] = branches;
 				any_change = true;
 			}
-			if (p.branches.type == Bson.Type.array) {
-				auto versions = p.versions.get!(Bson[]);
-				foreach (b; p.branches) versions ~= b;
-				p.branches = Bson(null);
-				p.versions = Bson(versions);
+			if (p["branches"].type == Bson.Type.array) {
+				auto versions = p["versions"].get!(Bson[]);
+				foreach (b; p["branches"]) versions ~= b;
+				p["branches"] = Bson(null);
+				p["versions"] = Bson(versions);
 				any_change = true;
 			}
-			if (any_change) m_packages.update(["_id": p._id], p);
+			if (any_change) m_packages.update(["_id": p["_id"]], p);
 		}
 
 		// add updateCounter field for packages that don't have it yet
@@ -52,7 +53,7 @@ class DbController {
 		repairVersionOrder();
 
 		// create indices
-		m_packages.ensureIndex(["name": 1], IndexFlags.Unique);
+		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 
 		Bson[string] doc;
@@ -87,12 +88,12 @@ class DbController {
 
 	auto getAllPackages()
 	{
-		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p.name.get!string)();
+		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p["name"].get!string)();
 	}
 
 	auto getUserPackages(BsonObjectID user_id)
 	{
-		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p.name.get!string)();
+		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p["name"].get!string)();
 	}
 
 	bool isUserPackage(BsonObjectID user_id, string package_name)
@@ -128,8 +129,8 @@ class DbController {
 
 		while (true) {
 			auto pack = m_packages.findOne(["name": packname], ["versions": true, "updateCounter": true]);
-			auto counter = pack.updateCounter.get!long;
-			auto versions = deserializeBson!(DbPackageVersion[])(pack.versions);
+			auto counter = pack["updateCounter"].get!long;
+			auto versions = deserializeBson!(DbPackageVersion[])(pack["versions"]);
 			auto new_versions = versions ~ ver;
 			new_versions.sort!((a, b) => vcmp(a, b));
 
@@ -172,16 +173,16 @@ class DbController {
 	{
 		auto slice = serializeToBson(["$slice": -1]);
 		auto pack = m_packages.findOne(["name": packname], ["_id": Bson(true), "versions": slice]);
-		if (pack.isNull() || pack.versions.isNull() || pack.versions.length != 1) return null;
-		return deserializeBson!(string)(pack.versions[0]["version"]);
+		if (pack.isNull() || pack["versions"].isNull() || pack["versions"].length != 1) return null;
+		return deserializeBson!(string)(pack["versions"][0]["version"]);
 	}
 
 	DbPackageVersion getVersionInfo(string packname, string ver)
 	{
 		auto pack = m_packages.findOne(["name": packname, "versions.version": ver], ["versions.$": true]);
 		enforce(!pack.isNull(), "unknown package/version");
-		assert(pack.versions.length == 1);
-		return deserializeBson!(DbPackageVersion)(pack.versions[0]);
+		assert(pack["versions"].length == 1);
+		return deserializeBson!(DbPackageVersion)(pack["versions"][0]);
 	}
 
 	DbPackage[] searchPackages(string query)

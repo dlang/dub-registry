@@ -19,16 +19,16 @@ block body
 		- foreach (p; sort!((a, b) => a < b)(registry.getPackages(user.id).array))
 			- have_pack = true;
 			- auto pack = registry.getPackageInfo(p, true);
-			- auto latest = pack.versions.length ? pack.versions[pack.versions.length-1] : Json(null);
+			- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 			tr
 				td
 					a(href="#{req.rootDir}my_packages/#{p}")= p
 				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
-				td= latest.type == Json.Type.Object ? latest.description.opt!string : "-"
-					- if (pack.errors.length)
-						- auto err = pack.errors[pack.errors.length-1].get!string;
+				td= latest.type == Json.Type.Object ? latest["description"].opt!string : "-"
+					- if (pack["errors"].length)
+						- auto err = pack["errors"][pack["errors"].length-1].get!string;
 						span.error= err[0 .. min($, 40)]
-							- if (pack.errors.length > 1 || err.length > 40)
+							- if (pack["errors"].length > 1 || err.length > 40)
 								| (<a href="#{req.rootDir}my_packages/#{p}">more...</a>)
 		- if (!have_pack)
 			tr
