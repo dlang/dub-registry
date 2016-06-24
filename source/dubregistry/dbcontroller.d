@@ -146,6 +146,8 @@ class DbController {
 				["$set": ["versions": serializeToBson(new_versions), "updateCounter": Bson(counter+1)]],
 				["_id": true]);
 
+			if (!res.isNull) return;
+
 			enforce(nretrys++ < 20, format("Failed to store updated version list for %s", packname));
 			logDebug("Failed to update version list atomically, retrying...");
 		}
