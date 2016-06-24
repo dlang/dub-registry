@@ -285,13 +285,13 @@ class DubRegistryWebFrontend {
 
 			// This log line is a weird workaround to make otherwise undefined Json fields
 			// available. Smells like a compiler bug.
-			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["downloadUrl"].toString());
+			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["url"].toString());
 
 			// add download to statistic
 			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
-			if (versionInfo["downloadUrl"].get!string.length > 0) {
+			if (versionInfo["url"].get!string.length > 0) {
 				// redirect to hosting service specific URL
-				redirect(versionInfo["downloadUrl"].get!string);
+				redirect(versionInfo["url"].get!string);
 			} else {
 				// directly forward from hoster
 				res.headers["Content-Disposition"] = "attachment; filename=\""~pname~"-"~(ver.startsWith("~") ? ver[1 .. $] : ver) ~ ".zip\"";

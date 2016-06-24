@@ -201,7 +201,6 @@ class DubRegistry {
 			nfo["version"] = v.version_;
 			nfo["date"] = v.date.toISOExtString();
 			nfo["url"] = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
-			nfo["downloadUrl"] = nfo["url"]; // obsolete, will be removed in april 2013
 			if (v.readme.length && v.readme.length < 256 && v.readme[0] == '/') {
 				try {
 					rep.readFile(v.commitID, Path(v.readme), (scope data) { nfo["readme"] = data.readAllUTF8(); });
