@@ -2,13 +2,13 @@
 	"fileVersion": 1,
 	"versions": {
 		"backtrace-d": "~master",
-		"dub": "0.9.25-beta.2+commit.10.g85ed67f",
+		"dub": "1.0.0",
 		"libasync": "0.7.9",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.1+2.0.16",
-		"memutils": "0.4.5",
+		"memutils": "0.4.6",
 		"openssl": "1.1.4+1.0.1g",
-		"userman": "0.3.2",
-		"vibe-d": "0.7.29-beta.1+commit.5.g354f001"
+		"userman": "0.3.3",
+		"vibe-d": "0.7.30-alpha.2"
 	}
 }
