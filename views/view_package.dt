@@ -130,7 +130,7 @@ block body
 		.repositoryReadme.markdown-body
 			- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
 			- scope msettings = new MarkdownSettings;
-			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml;
+			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
 			- msettings.headingBaseLevel = 2;
 			- msettings.urlFilter = &urlFilter;
 			!= filterMarkdown(versionInfo["readme"].get!string, msettings)
