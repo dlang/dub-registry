@@ -189,6 +189,13 @@ class DbController {
 
 	DbPackage[] searchPackages(string query)
 	{
+		if (!query.strip.length) {
+			return m_packages.find()
+				.sort(["name": 1])
+				.map!(deserializeBson!DbPackage)
+				.array;
+		}
+
 		return m_packages
 			.find(["$text": ["$search": query]], ["score": ["$meta": "textScore"]])
 			.sort(["score": ["$meta": "textScore"]])
