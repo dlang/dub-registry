@@ -1,5 +1,5 @@
 /**
-	Copyright: © 2013 rejectedsoftware e.K.
+	Copyright: © 2013-2016 rejectedsoftware e.K.
 	License: Subject to the terms of the GNU GPLv3 license, as written in the included LICENSE.txt file.
 	Authors: Colden Cullen
 */
@@ -13,14 +13,41 @@ import std.array : array;
 import std.exception : enforce;
 import vibe.data.json : Json;
 import vibe.http.router;
+import vibe.inet.url;
 import vibe.textfilter.urlencode;
 import vibe.web.rest;
 
 
-void registerDubRegistryWebApi(URLRouter router, DubRegistry registry)
+/** Registers the DUB registry REST API endpoints in the given router.
+*/
+void registerDubRegistryAPI(URLRouter router, DubRegistry registry)
 {
-	auto pkgs = new Packages(registry);
-	router.registerRestInterface(pkgs, "/api/packages");
+	auto pkgs = new LocalDubRegistryAPI(registry);
+	router.registerRestInterface(pkgs, "/api");
+}
+
+/// Compatibility alias.
+deprecated("Use registerDubRegistryAPI instead.")
+alias registerDubRegistryWebApi = registerDubRegistryAPI;
+
+
+/** Returns a REST client instance for communicating with a DUB registry's API.
+
+	Params:
+		url = URL of the DUB registry (e.g. "https://code.dlang.org/")
+*/
+DubRegistryAPI connectDubRegistryAPI(URL url)
+{
+	return new RestInterfaceClient!DubRegistryAPI(url);
+}
+/// ditto
+DubRegistryAPI connectDubRegistry(string url)
+{
+	return connectDubRegistryAPI(URL(url));
+}
+
+interface DubRegistryAPI {
+	@property IPackages packages();
 }
 
 struct SearchResult { string name, description, version_; }
@@ -43,6 +70,19 @@ interface IPackages {
 
 	@path(":name/:version/info")
 	Json getInfo(string _name, string _version);
+}
+
+class LocalDubRegistryAPI : DubRegistryAPI {
+	private {
+		Packages m_packages;
+	}
+
+	this(DubRegistry registry)
+	{
+		m_packages = new Packages(registry);
+	}
+
+	@property Packages packages() { return m_packages; }
 }
 
 class Packages : IPackages {
