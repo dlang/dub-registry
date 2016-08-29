@@ -54,7 +54,7 @@ struct SearchResult { string name, description, version_; }
 
 interface IPackages {
 	@method(HTTPMethod.GET)
-	SearchResult[] search(string q);
+	SearchResult[] search(string q = "");
 
 	@path(":name/latest")
 	string getLatestVersion(string _name);
