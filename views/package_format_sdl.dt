@@ -225,13 +225,13 @@ block body
 			td dependency
 			td
 				code "&lt;name&gt;" ...
-			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like. Use multiple <code>dependency</code> directives to add more than one dependency.
+			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like. Use multiple <code>dependency</code> directives to add more than one dependency - this setting does not support the platform attribute
 
 		tr
 			td systemDependencies
 			td
 				code "&lt;text&gt;"
-			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors.
+			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors - this setting does not support the platform attribute
 
 		tr
 			td targetType
