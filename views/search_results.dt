@@ -7,7 +7,7 @@ block title
 block body
 	p Search results for: <em>#{queryString}</em>
 
-	p Found #{results.length} packages.
+	- size_t count = 0;
 
 	table
 		tr
@@ -18,6 +18,7 @@ block body
 		- foreach (p; results)
 			- auto desc = p.info["description"].opt!string;
 			- auto ver = p.version_;
+			- count++;
 			tr
 				td
 					a(href="packages/#{p.name}")= p.name
@@ -31,3 +32,5 @@ block body
 					td= desc
 				- else
 					td #{desc[0 .. 98]}&hellip;
+
+	p Found #{count} packages.
