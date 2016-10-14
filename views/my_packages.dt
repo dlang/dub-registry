@@ -6,6 +6,7 @@ block title
 block body
 	- import vibe.data.json;
 	- import std.algorithm;
+	- import std.array : array;
 
 	form(method="GET", action="#{req.rootDir}register_package")
 		button(type="submit") Register new package

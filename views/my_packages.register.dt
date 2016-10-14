@@ -4,6 +4,7 @@ block title
 	- auto title = "Add new package";
 	
 block body
+	- import std.string : splitLines;
 
 	form(method="POST", action="#{req.rootDir}register_package")
 		select(name="kind", size="1")

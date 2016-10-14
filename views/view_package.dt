@@ -2,6 +2,7 @@ extends layout
 
 block title
 	- import std.algorithm;
+	- import std.array : join;
 	- import vibe.data.json;
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;

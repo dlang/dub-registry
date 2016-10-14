@@ -2,6 +2,7 @@
 	"fileVersion": 1,
 	"versions": {
 		"backtrace-d": "~master",
+		"diet-ng": "1.1.0",
 		"dub": "1.1.0-beta.1",
 		"libasync": "0.7.9",
 		"libev": "5.0.0+4.04",

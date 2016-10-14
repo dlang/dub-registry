@@ -4,6 +4,7 @@ block title
 	- import dubregistry.viewutils;
 	- import dubregistry.web;
 	- import vibe.data.json;
+	- import std.string : replace;
 	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
