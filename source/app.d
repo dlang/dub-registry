@@ -73,7 +73,7 @@ shared static this()
 
 	// web front end
 	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb);
-	router.registerDubRegistryWebApi(s_registry);
+	router.registerDubRegistryAPI(s_registry);
 
 	// start the web server
  	auto settings = new HTTPServerSettings;
