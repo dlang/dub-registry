@@ -578,6 +578,10 @@ block body
 			td Emit profiling code
 			td -profile
 		tr
+			td "profileGC"
+			td Emit GC profiling information
+			td -profile=gc
+		tr
 			td "unittests"
 			td Compile unit tests
 			td -unittest
@@ -714,6 +718,12 @@ block body
 			td release
 			td <code>["releaseMode", "optimize", "inline"]</code>
 		tr
+			td release-debug
+			td <code>["releaseMode", "optimize", "inline", "debugInfo"]</code>
+		tr
+			td release-noboundscheck
+			td <code>["releaseMode", "optimize", "inline", "noBoundsCheck"]</code>
+		tr
 			td unittest
 			td <code>["unittests", "debugMode", "debugInfo"]</code>
 		tr
@@ -725,6 +735,9 @@ block body
 		tr
 			td profile
 			td <code>["profile", "optimize", "inline", "debugInfo"]</code>
+		tr
+			td profile-gc
+			td <code>["profileGC", "debugInfo"]</code>
 		tr
 			td cov
 			td <code>["coverage", "debugInfo"]</code>
