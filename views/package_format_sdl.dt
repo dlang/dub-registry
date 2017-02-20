@@ -52,6 +52,8 @@ block body
 						a(href="#build-requirements") Build requirements
 					li
 						a(href="#build-options") Build options
+					li
+						a(href="#environment-variables") Environment variables
 			li
 				a(href="#configurations") Configurations
 				ul
@@ -367,8 +369,6 @@ block body
 				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
-	include inc.package_format.envvars
-
 
 	h3#platform-specs Platform specifications
 
@@ -593,6 +593,9 @@ block body
 			td "property"
 			td Enforce property syntax - <span style="color: red;">deprecated</span>
 			td -property
+
+	h3#environment-variables Environment variables
+	include inc.package_format.envvars
 
 
 	h2#configurations Configurations
