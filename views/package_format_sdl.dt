@@ -367,26 +367,7 @@ block body
 				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
-	p Inside of build setting values, it is possible to use variables using dollar notation. Any variable not matching a predefined name will be taken from the program environment. To denote a literal dollar sign, use <code>$$</code>. The predefined variables are:
-	table
-		tr
-			th Variable
-			th Contents
-		tr
-			td <code>$PACKAGE_DIR</code>
-			td Path to the package itself
-		tr
-			td <code>$ROOT_PACKAGE_DIR</code>
-			td Path to the root package of the build dependency tree
-		tr
-			td <code>$&lt;name&gt;_PACKAGE_DIR</code>
-			td Path to the package named <code>&lt;name&gt;</code> (needs to be part of the build dependency tree). The package name must be written in upper case and hyphens need to be replaced by underscores (e.g. "vibe-d" becomes <code>$VIBE_D_PACKAGE_DIR</code>).
-		tr
-			td <code>$DC</code>
-			td Compiler binary name (i.e. dmd/ldc2/..) 
-		tr
-			td <code>$DC_BASE</code>
-			td Base name of the compiler (i.e. dmd/ldc/..) 
+	include inc.package_format.envvars
 
 
 	h3#platform-specs Platform specifications

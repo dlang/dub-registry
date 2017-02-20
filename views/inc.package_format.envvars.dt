@@ -1,0 +1,20 @@
+p Inside of build setting values, it is possible to use variables using dollar notation. Any variable not matching a predefined name will be taken from the program environment. To denote a literal dollar sign, use <code>$$</code>. The predefined variables are:
+table
+	tr
+		th Variable
+		th Contents
+	tr
+		td <code>$PACKAGE_DIR</code>
+		td Path to the package itself
+	tr
+		td <code>$ROOT_PACKAGE_DIR</code>
+		td Path to the root package of the build dependency tree
+	tr
+		td <code>$&lt;name&gt;_PACKAGE_DIR</code>
+		td Path a specific package that is part of the package's dependency graph
+	tr
+		td <code>$DC</code>
+		td Compiler binary name (i.e. dmd/ldc2/..) 
+	tr
+		td <code>$DC_BASE</code>
+		td Base name of the compiler (i.e. dmd/ldc/..) 
