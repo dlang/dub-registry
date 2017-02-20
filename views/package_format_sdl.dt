@@ -367,7 +367,7 @@ block body
 		li Require a certain version: <code>"==1.3.0"</code>
 		li Require a minimum version: <code>"&gt;=1.3.0"</code>
 		li Require a version range: <code>"&gt;=1.3.0 &lt;=1.3.4"</code>
-		li Match any released version (equivalent to <code>">=0.0.0"</code>): <code>"*"</code>
+		li Match any released version (equivalent to <code>"&gt;=0.0.0"</code>): <code>"*"</code>
 		li Use a GIT branch (deprecated): <code>"~master"</code>
 	
 	p Numbered versions are formatted and compared according to the <a href="http://semver.org/">SemVer specification</a>. The recommended way to specify versions is using the <code>~&gt;</code> operator as a way to balance between flexible upgrades and reducing the risk of code breakage.
@@ -592,7 +592,7 @@ block body
 
 	pre.code
 		|	...
-		|	dependency "somepackage" version=">=1.0.0"
+		|	dependency "somepackage" version="&gt;=1.0.0"
 		|	subConfiguration "somepackage" "glut-app"
 
 	p If no configuration is specified for a package, the first one that matches the current platform is chosen (see the "platforms" setting below).
