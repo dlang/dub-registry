@@ -24,7 +24,7 @@ block body
 		|authors "Peter Parker"
 		|homepage "http://myproject.example.com"
 		|license "GPL-2.0"
-		|dependency "vibe-d" version="~>0.7.23"
+		|dependency "vibe-d" version="~&gt;0.7.23"
 
 	p Please keep the description concise (not more than 100 characters) and avoid including unspecific information such as the fact that the package is written in D. The same goes for the package name - since <em>all</em> DUB packages are written in D, it's usually better to avoid mentioning D explicitly, unless the package is for example a high-level wrapper around a C/C++ library.
 
@@ -35,30 +35,21 @@ block body
 			li
 				a(href="#standard-settings") Global settings
 				ul
-					li
-						a(href="#sub-packages") Sub packages
-					li
-						a(href="#licenses") License specifications
+					li: a(href="#sub-packages") Sub packages
+					li: a(href="#licenses") License specifications
 			li
 				a(href="#build-settings") Build settings
 				ul
-					li
-						a(href="#platform-specs") Platform specifications
-					li
-						a(href="#version-specs") Version specifications
-					li
-						a(href="#target-types") Target types
-					li
-						a(href="#build-requirements") Build requirements
-					li
-						a(href="#build-options") Build options
-					li
-						a(href="#environment-variables") Environment variables
+					li: a(href="#platform-specs") Platform specifications
+					li: a(href="#version-specs") Version specifications
+					li: a(href="#target-types") Target types
+					li: a(href="#build-requirements") Build requirements
+					li: a(href="#build-options") Build options
+					li: a(href="#environment-variables") Environment variables
 			li
 				a(href="#configurations") Configurations
 				ul
-					li
-						a(href="#configuration-settings") Specific settings
+					li: a(href="#configuration-settings") Specific settings
 			li
 				a(href="#build-types") Build types
 
@@ -76,64 +67,52 @@ block body
 
 		tr
 			td name [required]
-			td
-				code "&lt;name&gt;"
+			td: code "&lt;name&gt;"
 			td Name of the package, used to uniquely identify the package. Must be comprised of only lower case ASCII alpha-numeric characters, "-" or "_".
 
 		tr
 			td description [required for publishing]
-			td
-				code "&lt;text&gt;"
+			td: code "&lt;text&gt;"
 			td Brief description of the package
 
 		tr
 			td homepage
-			td
-				code "&lt;url&gt;"
+			td: code "&lt;url&gt;"
 			td URL of the project website
 
 		tr
 			td authors
-			td
-				code "&lt;author1&gt;" ["&lt;author2&gt;" [...]]
+			td: code "&lt;author1&gt;" ["&lt;author2&gt;" [...]]
 			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lt;pparker@example.com&gt;"</code>)
 
 		tr
 			td copyright
-			td
-				code "&lt;text&gt;"
+			td: code "&lt;text&gt;"
 			td Copyright declaration string
 
 		tr
 			td license [required for publishing]
-			td
-				code "&lt;license spec&gt;"
+			td: code "&lt;license spec&gt;"
 			td License(s) under which the project can be used - see the <a href="#licenses">license specification</a> section for possible values
 
 		tr
 			td subPackage
-			td
-				code "&lt;path&gt;"
-				| or
-				code { ... }
+			td #[code "&lt;path&gt;"] or #[code { ... }]
 			td Defines a sub-package using either a path to a sub directory, or in-place - see the <a href="#sub-packages">sub package section</a> for more information
 
 		tr
 			td configuration
-			td
-				code "&lt;name&gt;" { ... }
+			td: code "&lt;name&gt;" { ... }
 			td Speficies a build configuration (chosen on the command line using <code>--config=...</code>) - see the <a href="#configurations">configurations section</a> for more details
 
 		tr
 			td buildType
-			td
-				code "&lt;name&gt;" { ... }
+			td: code "&lt;name&gt;" { ... }
 			td Defines an additional custom build type or overrides one of the default ones (chosen on the command line using <code>--build=...</code>) - see the <a href="#build-types">build types section</a> for an example
 
 		tr
 			td x:ddoxFilterArgs
-			td
-				code "&lt;arg1&gt;" ["&lt;arg2&gt;" [...]]
+			td: code "&lt;arg1&gt;" ["&lt;arg2&gt;" [...]]
 			td Specifies a list of command line flags usable for controlling filter behavior for --build=ddox <span style="color: red;">[experimental]</span>
 
 
@@ -150,12 +129,12 @@ block body
 		|dependency "mylib:component2" version="*"
 		|subPackage "./component1/"
 		|subPackage "./component2/"
-	p <code>/dub.sdl</code>
+	p: code /dub.sdl
 
 	pre.code
 		|name "component1"
 		|targetType "library"
-	p <code>/component1/dub.sdl</code>
+	p: code /component1/dub.sdl
 
 	p The sub directories /component1 and /component2 then contain normal packages and can be referred to as "mylib:component1" and "mylib:component2" from outside projects. To refer to sub packages within the same repository use the <code>"*"</code> version specifier.
 
@@ -171,7 +150,7 @@ block body
 		|	sourcePaths "component1/source"
 		|	importPaths "component1/source"
 		|}
-	p <code>/dub.sdl</code>
+	p: code /dub.sdl
 
 
 	h3#licenses License specifications
@@ -225,148 +204,123 @@ block body
 
 		tr
 			td dependency
-			td
-				code "&lt;name&gt;" ...
+			td: code "&lt;name&gt;" ...
 			td Adds a single dependency of the given name, attributes are used to configure the version/path to use - see <a href="#version-specs">next section</a> for how version specifications look like. Use multiple <code>dependency</code> directives to add more than one dependency - this setting does not support the platform attribute
 
 		tr
 			td systemDependencies
-			td
-				code "&lt;text&gt;"
+			td: code "&lt;text&gt;"
 			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors - this setting does not support the platform attribute
 
 		tr
 			td targetType
-			td
-				code "&lt;type&gt;"
+			td: code "&lt;type&gt;"
 			td Specifies a specific <a href="#target-types">target type</a> - this setting does not support the platform attribute
 
 		tr
 			td targetName
-			td
-				code "&lt;name&gt;"
+			td: code "&lt;name&gt;"
 			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this setting does not support the platform attribute
 
 		tr
 			td targetPath
-			td
-				code "&lt;path&gt;"
+			td: code "&lt;path&gt;"
 			td The destination path of the output binary - this setting does not support the platform attribute
 
 		tr
 			td workingDirectory
-			td
-				code "&lt;path&gt;"
+			td: code "&lt;path&gt;"
 			td A fixed working directory from which the generated executable will be run - this setting does not support the platform attribute
 
 		tr
 			td subConfiguration
-			td
-				code "&lt;dependency&gt;" "&lt;configuration&gt;"
+			td: code "&lt;dependency&gt;" "&lt;configuration&gt;"
 			td Locks a dependency (first argument) to a specific configuration (second argument); see also the <a href="#configurations">configurations section</a> - this setting does not support the platform attribute
 
 		tr
 			td buildRequirements
-			td
-				code "&lt;requirement1&gt;" ["&lt;requirement2&gt;" [...]]
+			td: code "&lt;requirement1&gt;" ["&lt;requirement2&gt;" [...]]
 			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
 
 		tr
 			td buildOptions
-			td
-				code "&lt;option1&gt;" ["&lt;option2&gt;" [...]]
+			td: code "&lt;option1&gt;" ["&lt;option2&gt;" [...]]
 			td List of build option identifiers (corresponding to compiler flags) - see the <a href="#build-options">build options section</a> for details.
 
 		tr
 			td libs
-			td
-				code "&lt;lib1&gt;" ["&lt;lib2&gt;" [...]]
+			td: code "&lt;lib1&gt;" ["&lt;lib2&gt;" [...]]
 			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
 
 		tr
 			td sourceFiles
-			td
-				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td: code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
 
 		tr
 			td sourcePaths
-			td
-				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td: code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
 			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> setting is specified) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
 
 		tr
 			td excludedSourceFiles
-			td
-				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td: code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
 			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths") - <a href="http://dlang.org/phobos/std_path.html#.globMatch">Glob matching</a> can be used to pattern match multiple files at once
 
 		tr
 			td mainSourceFile
-			td
-				code "&lt;path&gt;"
+			td: code "&lt;path&gt;"
 			td Determines the file that contains the <code>main()</code> function. This setting can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this setting does not support platform suffixes
 
 		tr
 			td copyFiles
-			td
-				code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
+			td: code "&lt;pattern1&gt;" ["&lt;pattern2&gt;" [...]]
 			td A list of <a href="http://dlang.org/phobos/std_path.html#.globMatch">globs</a> matching files or directories to be copied to <code>targetPath</code>. Matching directories are copied recursively, i.e. <code>"copyFiles": ["path/to/dir"]"</code> recursively copies <code>dir</code>, while <code>"copyFiles": ["path/to/dir/*"]"</code> only copies files within <code>dir</code>.
 
 		tr
 			td versions
-			td
-				code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
+			td: code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
 			td A list of D versions to be defined during compilation
 
 		tr
 			td debugVersions
-			td
-				code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
+			td: code "&lt;version1&gt;" ["&lt;version2&gt;" [...]]
 			td A list of D debug identifiers to be defined during compilation
 
 		tr
 			td importPaths
-			td
-				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td: code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
 			td Additional import paths to search for D modules (the <code>source/</code> folder is used by default as a source folder, if it exists)
 
 		tr
 			td stringImportPaths
-			td
-				code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
+			td: code "&lt;path1&gt;" ["&lt;path2&gt;" [...]]
 			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
 		tr
 			td preGenerateCommands
-			td
-				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td: code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
 			td A list of shell commands that is executed before project generation is started
 		tr
 			td postGenerateCommands
-			td
-				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td: code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
 			td A list of shell commands that is executed after project generation is finished
 		tr
 			td preBuildCommands
-			td
-				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td: code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
 			td A list of shell commands that is executed always before the project is built
 		tr
 			td postBuildCommands
-			td
-				code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
+			td: code "&lt;cmd1&gt;" ["&lt;cmd2&gt;" [...]]
 			td A list of shell commands that is executed always after the project is built
 
 		tr
 			td dflags
-			td
-				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
+			td: code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
 			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
 
 		tr
 			td lflags
-			td
-				code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
+			td: code "&lt;flag1&gt;" ["&lt;flag2&gt;" [...]]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
 
@@ -656,8 +610,7 @@ block body
 
 		tr
 			td platforms
-			td
-				code "&lt;spec1&gt; ["&lt;spec2&gt;" [...]]
+			td: code "&lt;spec1&gt; ["&lt;spec2&gt;" [...]]
 			td A list of <a href="#platform-specs">platform specifiers</a> to limit on which platforms the configuration applies
 
 	h2#build-types Build types

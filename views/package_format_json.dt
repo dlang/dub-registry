@@ -36,30 +36,21 @@ block body
 			li
 				a(href="#standard-settings") Global settings
 				ul
-					li
-						a(href="#sub-packages") Sub packages
-					li
-						a(href="#licenses") License specifications
+					li: a(href="#sub-packages") Sub packages
+					li: a(href="#licenses") License specifications
 			li
 				a(href="#build-settings") Build settings
 				ul
-					li
-						a(href="#version-specs") Version specifications
-					li
-						a(href="#target-types") Target types
-					li
-						a(href="#build-requirements") Build requirements
-					li
-						a(href="#build-options") Build options
-					li
-						a(href="#environment-variables") Environment variables
+					li: a(href="#version-specs") Version specifications
+					li: a(href="#target-types") Target types
+					li: a(href="#build-requirements") Build requirements
+					li: a(href="#build-options") Build options
+					li: a(href="#environment-variables") Environment variables
 			li
 				a(href="#configurations") Configurations
 				ul
-					li
-						a(href="#configuration-settings") Specific settings
-			li
-				a(href="#build-types") Build types
+					li: a(href="#configuration-settings") Specific settings
+			li: a(href="#build-types") Build types
 
 
 
@@ -76,62 +67,52 @@ block body
 
 		tr
 			td name [required]
-			td
-				code string
+			td: code string
 			td Name of the package, used to uniquely identify the package. Must be comprised of only lower case ASCII alpha-numeric characters, "-" or "_".
 
 		tr
 			td description [required for publishing]
-			td
-				code string
+			td: code string
 			td Brief description of the package
 
 		tr
 			td homepage
-			td
-				code string
+			td: code string
 			td URL of the project website
 
 		tr
 			td authors
-			td
-				code string[]
+			td: code string[]
 			td List of project authors (the suggested format is either <code>"Peter Parker"</code> or <code>"Peter Parker &lt;pparker@example.com&gt;"</code>)
 
 		tr
 			td copyright
-			td
-				code string
+			td: code string
 			td Copyright declaration string
 
 		tr
 			td license [required for publishing]
-			td
-				code string
+			td: code string
 			td License(s) under which the project can be used - see the <a href="#licenses">license specification</a> section for possible values
 
 		tr
 			td subPackages
-			td
-				code T[]
+			td: code T[]
 			td Defines an array of sub-packages defined in the same directory as the root project, where each entry is either a path of a sub folder or an object of the same formatas a dub.json file - see the <a href="#sub-packages">sub package section</a> for more information
 
 		tr
 			td configurations
-			td
-				code T[]
+			td: code T[]
 			td Speficies an optional list of build configurations (chosen on the command line using <code>--config=...</code>) - see the <a href="#configurations">configurations section</a> for more details
 
 		tr
 			td buildTypes
-			td
-				code T[string]
+			td: code T[string]
 			td Defines additional custom build types or overrides the default ones (chosen on the command line using <code>--build=...</code>) - see the <a href="#build-types">build types section</a> for an example
 
 		tr
 			td -ddoxFilterArgs
-			td
-				code string[]
+			td: code string[]
 			td Specifies a list of command line flags usable for controlling filter behavior for --build=ddox <span style="color: red;">[experimental]</span>
 
 
@@ -249,148 +230,123 @@ block body
 
 		tr
 			td dependencies
-			td
-				code T[string]
+			td: code T[string]
 			td List of project dependencies given as pairs of <code>"&lt;name&gt;" : &lt;version-spec&gt;</code> - see <a href="#version-specs">next section</a> for how version specifications look like - this setting does not support platform suffixes
 
 		tr
 			td systemDependencies
-			td
-				code string
+			td: code string
 			td A textual description of the required system dependencies (external C libraries) required by the package. This will be visible on the registry and will be displayed in case of linker errors - this setting does not support platform suffixes
 
 		tr
 			td targetType
-			td
-				code string
+			td: code string
 			td Specifies a specific <a href="#target-types">target type</a> - this setting does not support platform suffixes
 
 		tr
 			td targetName
-			td
-				code string
+			td: code string
 			td Sets the base name of the output file; type and platform specific pre- and suffixes are added automatically - this setting does not support platform suffixes
 
 		tr
 			td targetPath
-			td
-				code string
+			td: code string
 			td The destination path of the output binary - this setting does not support platform suffixes
 
 		tr
 			td workingDirectory
-			td
-				code string
+			td: code string
 			td A fixed working directory from which the generated executable will be run - this setting does not support platform suffixes
 
 		tr
 			td subConfigurations
-			td
-				code string[string]
+			td: code string[string]
 			td Locks the dependencies to specific configurations; a map from package name to configuration name, see also the <a href="#configurations">configurations section</a> - this setting does not support platform suffixes
 
 		tr
 			td buildRequirements
-			td
-				code string[]
+			td: code string[]
 			td List of required settings for the build process. See the <a href="#build-requirements">build requirements section</a> for details.
 
 		tr
 			td buildOptions
-			td
-				code string[]
+			td: code string[]
 			td List of build option identifiers (corresponding to compiler flags) - see the <a href="#build-options">build options section</a> for details.
 
 		tr
 			td libs
-			td
-				code string[]
+			td: code string[]
 			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
 
 		tr
 			td sourceFiles
-			td
-				code string[]
+			td: code string[]
 			td Additional files passed to the compiler - can be useful to add certain configuration dependent source files that are not contained in the general source folder
 
 		tr
 			td sourcePaths
-			td
-				code string[]
+			td: code string[]
 			td Allows to customize the path where to look for source files (any folder "source" or "src" is automatically used as a source path if no <code>sourcePaths</code> setting is specified) - note that you usually also need to define <code>"importPaths"</code> as <code>"sourcePaths"</code> don't influence those
 
 		tr
 			td excludedSourceFiles
-			td
-				code string[]
+			td: code string[]
 			td Files that should be removed for the set of already added source files (takes precedence over "sourceFiles" and "sourcePaths") - <a href="http://dlang.org/phobos/std_path.html#.globMatch">Glob matching</a> can be used to pattern match multiple files at once
 
 		tr
 			td mainSourceFile
-			td
-				code string
+			td: code string
 			td Determines the file that contains the <code>main()</code> function. This setting can be used by dub to exclude this file in situations where a different main function is defined (e.g. for "dub test") - this setting does not support platform suffixes
 
 		tr
 			td copyFiles
-			td
-				code string[]
+			td: code string[]
 			td A list of <a href="http://dlang.org/phobos/std_path.html#.globMatch">globs</a> matching files or directories to be copied to <code>targetPath</code>. Matching directories are copied recursively, i.e. <code>"copyFiles": ["path/to/dir"]"</code> recursively copies <code>dir</code>, while <code>"copyFiles": ["path/to/dir/*"]"</code> only copies files within <code>dir</code>.
 
 		tr
 			td versions
-			td
-				code string[]
+			td: code string[]
 			td A list of D versions to be defined during compilation
 
 		tr
 			td debugVersions
-			td
-				code string[]
+			td: code string[]
 			td A list of D debug identifiers to be defined during compilation
 
 		tr
 			td importPaths
-			td
-				code string[]
+			td: code string[]
 			td Additional import paths to search for D modules (the <code>source/</code> folder is used by default as a source folder, if it exists)
 
 		tr
 			td stringImportPaths
-			td
-				code string[]
+			td: code string[]
 			td Additional import paths to search for string imports/views (the <code>views/</code> folder is used by default as a string import folder, if it exists)
 		tr
 			td preGenerateCommands
-			td
-				code string[]
+			td: code string[]
 			td A list of shell commands that is executed before project generation is started
 		tr
 			td postGenerateCommands
-			td
-				code string[]
+			td: code string[]
 			td A list of shell commands that is executed after project generation is finished
 		tr
 			td preBuildCommands
-			td
-				code string[]
+			td: code string[]
 			td A list of shell commands that is executed always before the project is built
 		tr
 			td postBuildCommands
-			td
-				code string[]
+			td: code string[]
 			td A list of shell commands that is executed always after the project is built
 
 		tr
 			td dflags
-			td
-				code string[]
+			td: code string[]
 			td Additional flags passed to the D compiler - note that these flags are usually specific to the compiler in use, but a set of flags is automatically translated from DMD to the selected compiler
 
 		tr
 			td lflags
-			td
-				code string[]
+			td: code string[]
 			td Additional flags passed to the linker - note that these flags are usually specific to the linker in use
 
 	h3#version-specs Version specifications
@@ -398,11 +354,11 @@ block body
 
 	ul
 		li Simple variant:
-			p <code>"&lt;name&gt;" : "&lt;version-specifier&gt;"</code>
+			p: code "&lt;name&gt;" : "&lt;version-specifier&gt;"
 			p This is the usual way to specify a dependency.
 
 		li Complex variant:
-			p <code>"&lt;name&gt;" : { "&lt;attribute&gt;": "&lt;value&gt;"[, ...] }</code>
+			p: code "&lt;name&gt;" : { "&lt;attribute&gt;": "&lt;value&gt;"[, ...] }
 			p The following attributes can be used to to control how a dependency is resolved:
 			ul
 				li
@@ -680,13 +636,11 @@ block body
 
 		tr
 			td name [required]
-			td
-				code string
+			td: code string
 			td Name of the configuration
 		tr
 			td platforms
-			td
-				code string[]
+			td: code string[]
 			td A list of platform suffixes (as used for the build settings) to limit on which platforms the configuration applies
 
 	h2#build-types Build types
