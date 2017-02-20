@@ -230,7 +230,7 @@ block body
 
 	p Build settings influence the command line options passed to the compiler and linker. All settings are optional.
 
-	p Platform specific settings are supported through the use of field name suffixes. Suffixes are dash separated platform identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
+	p Platform specific settings are supported through the use of field name suffixes. Suffixes are dash separated list of operating system/architecture/compiler identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
 
 	pre.code
 		|{

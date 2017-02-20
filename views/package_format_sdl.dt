@@ -372,7 +372,7 @@ block body
 
 	h3#platform-specs Platform specifications
 
-	p Platform specific settings are supported through the use of the "platform" attribute. Platform attributes contain dash separated platform identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
+	p Platform specific settings are supported through the use of the "platform" attribute. Platform attributes contain dash separated list of operating system/architecture/compiler identifiers, as defined in the <a href="http://dlang.org/version.html#PredefinedVersions">D language reference</a>, but converted to lower case. The order of these suffixes is <code>os-architecture-compiler</code>, where any of these parts can be left off. Examples:
 
 	pre.code
 		|// used on all platforms
