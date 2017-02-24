@@ -48,6 +48,10 @@ shared static this()
 	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
 	readOption("hostname", &hostname, "Domain name of this instance (default: code.dlang.org)");
 
+	// validate provided mirror URL
+	if (s_mirror.length)
+		validateMirrorURL(s_mirror);
+
 	version (linux) {
 		logInfo("Enforcing certificate trust.");
 		HTTPClient.setTLSSetupCallback((ctx) {

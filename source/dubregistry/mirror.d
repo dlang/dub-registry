@@ -14,6 +14,30 @@ import std.datetime : SysTime;
 import std.encoding : sanitize;
 import std.format : format;
 
+void validateMirrorURL(ref string base_url)
+{
+	import std.exception : enforce;
+	import std.algorithm.searching : endsWith;
+
+	// ensure the URL has a trailing slash
+	if (!base_url.endsWith('/')) base_url ~= '/';
+
+	// check two characteristic API endpoints
+	enum urls = ["packages/index.json", "api/packages/search?q=foobar"];
+	foreach (url; urls) {
+		try {
+			requestHTTP(base_url ~ url,
+				(scope req) { req.method = HTTPMethod.HEAD; },
+				(scope res) {
+					enforce(res.statusCode < 400,
+						format("Endpoint '%s' could not be accessed: %s", url, httpStatusText(res.statusCode)));
+				}
+			);
+		} catch (Exception e) {
+			throw new Exception("The provided mirror URL does not appear to point to a valid DUB registry root: "~e.msg);
+		}
+	}
+}
 
 void mirrorRegistry(DubRegistry registry, URL url)
 nothrow {
