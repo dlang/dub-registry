@@ -278,7 +278,8 @@ class DubRegistryWebFrontend {
 		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
 			return;
 
-		auto user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
+		User user;
+		if (m_userman) user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
 
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
