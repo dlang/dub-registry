@@ -63,6 +63,11 @@ class DubRegistry {
 		return m_db.getAllPackages();
 	}
 
+	auto getPackageDump()
+	{
+		return m_db.getPackageDump();
+	}
+
 	void triggerPackageUpdate(string pack_name)
 	{
 		synchronized (m_updateQueueMutex) {
