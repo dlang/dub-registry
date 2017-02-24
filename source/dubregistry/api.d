@@ -24,12 +24,31 @@ void registerDubRegistryAPI(URLRouter router, DubRegistry registry)
 {
 	auto pkgs = new LocalDubRegistryAPI(registry);
 	router.registerRestInterface(pkgs, "/api");
+	router.get("/api/packages/dump", delegate(req, res) => dumpPackages(req, res, registry));
 }
 
 /// Compatibility alias.
 deprecated("Use registerDubRegistryAPI instead.")
 alias registerDubRegistryWebApi = registerDubRegistryAPI;
 
+
+private void dumpPackages(HTTPServerRequest req, HTTPServerResponse res, DubRegistry registry)
+{
+	import vibe.data.json : serializeToPrettyJson;
+	import vibe.stream.wrapper : StreamOutputRange;
+
+	res.contentType = "application/json; charset=UTF-8";
+	res.headers["Content-Encoding"] = "gzip"; // force GZIP compressed response
+	auto dst = StreamOutputRange(res.bodyWriter);
+	dst.put('[');
+	bool first = true;
+	foreach (p; registry.getPackageDump()) {
+		if (!first) dst.put(',');
+		else first = false;
+		serializeToPrettyJson(&dst, p);
+	}
+	dst.put(']');
+}
 
 /** Returns a REST client instance for communicating with a DUB registry's API.
 

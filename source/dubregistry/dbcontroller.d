@@ -98,6 +98,11 @@ class DbController {
 		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p["name"].get!string)();
 	}
 
+	auto getPackageDump()
+	{
+		return m_packages.find(Bson.emptyObject).map!(p => p.deserializeBson!DbPackage);
+	}
+
 	auto getUserPackages(BsonObjectID user_id)
 	{
 		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p["name"].get!string)();
