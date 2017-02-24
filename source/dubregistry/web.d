@@ -25,12 +25,14 @@ DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegis
 {
 	DubRegistryWebFrontend webfrontend;
 	if (userman) {
-		webfrontend = new DubRegistryFullWebFrontend(registry, userman);
+		auto ff = new DubRegistryFullWebFrontend(registry, userman);
+		webfrontend = ff;
+		router.registerWebInterface(ff);
 		router.registerUserManWebInterface(userman);
 	} else {
 		webfrontend = new DubRegistryWebFrontend(registry, userman);
+		router.registerWebInterface(webfrontend);
 	}
-	router.registerWebInterface(webfrontend);
 	router.get("*", serveStaticFiles("./public"));
 	return webfrontend;
 }
