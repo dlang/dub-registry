@@ -1,0 +1,57 @@
+.helper
+	.helper.expand-container.active
+		.logo
+			a(href="#{req.rootDir}")
+				img(id="logo", alt="DUB Logo", src="#{req.rootDir}images/dub-header.png")
+		a(href="#", title="Menu", class="hamburger expand-toggle")
+			span Menu
+		#cssmenu
+			- import std.algorithm.searching : startsWith;
+			- import std.range : empty;
+			- import std.string : split;
+			- import std.typecons : tuple;
+			- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Command line documentation;docs/commandline", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/dlang/dub-registry/issues", "Bug tracker (DUB);https://github.com/dlang/dub/issues", "Github repository (website);https://github.com/dlang/dub-registry", "GitHub repository (DUB);https://github.com/dlang/dub"]), tuple("Download", ["download"])];
+			- if( req.session )
+				- listitems ~= tuple("My account", ["Manage packages;my_packages", "Edit profile;profile", "Log out;logout"]);
+			- else
+				- auto loginURL = req.requestURL;
+				- if (loginURL == "/")
+					- loginURL = "/my_packages";
+				- listitems ~= tuple("Log in", ["login?redirect=" ~ loginURL]);
+			ul
+				- foreach(items; listitems)
+					- if(items[1].length < 2)
+						- bool active = startsWith(req.path[1..$], items[1][0]);
+						- if( items[1][0].empty ) active = req.path == "/";
+						li(class=(active ? "active" : ""))
+							- if (!(items[1][0].length > 4 && items[1][0][0..4] == "http"))
+								- items[1][0] = req.rootDir ~ items[1][0];
+							a(href="#{items[1][0]}")
+								span=items[0]
+					- else
+						- bool active = false;
+						- foreach(itm; items[1])
+							- if (startsWith(req.path[1..$], split(itm, ";")[1])) active = true;
+						li(class=(active ? "expand-container active" : "expand-container"))
+							a.expand-toggle(href="#")
+								span=items[0]
+							ul.expand-content
+								- foreach(itm; items[1])
+									- auto parts = split(itm, ";");
+									- bool active_item = startsWith(req.path[1..$], parts[1]);
+									li(class=(active_item ? "active" : ""))
+										- if (!(parts[1].length > 4 && parts[1][0..4] == "http"))
+											- parts[1] = req.rootDir ~ parts[1];
+										a(href="#{parts[1]}")
+											span=parts[0]
+
+		.search-container.expand-container
+			a.expand-toggle(href="search.html", title="Search")
+				span Search
+			#search-box
+				form(method="GET", action="#{req.rootDir}search")
+					span#search-query
+						input#q(name="q", placeholder="Search for a package")
+					span#search-submit
+						button(type="submit")
+							i.fa.fa-search
