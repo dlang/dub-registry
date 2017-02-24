@@ -23,18 +23,22 @@ import vibe.d;
 
 DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
 {
-	auto webfrontend = new DubRegistryWebFrontend(registry, userman);
-	router.registerUserManWebInterface(userman);
+	DubRegistryWebFrontend webfrontend;
+	if (userman) {
+		webfrontend = new DubRegistryFullWebFrontend(registry, userman);
+		router.registerUserManWebInterface(userman);
+	} else {
+		webfrontend = new DubRegistryWebFrontend(registry, userman);
+	}
 	router.registerWebInterface(webfrontend);
 	router.get("*", serveStaticFiles("./public"));
 	return webfrontend;
 }
 
 class DubRegistryWebFrontend {
-	private {
+	protected {
 		DubRegistry m_registry;
 		UserManController m_userman;
-		UserManWebAuthenticator m_usermanauth;
 		Category[] m_categories;
 		Category[string] m_categoryMap;
 	}
@@ -43,21 +47,7 @@ class DubRegistryWebFrontend {
 	{
 		m_registry = registry;
 		m_userman = userman;
-		m_usermanauth = new UserManWebAuthenticator(userman);
-
 		updateCategories();
-	}
-
-	// compatibility route
-	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
-	{
-		res.writeJsonBody(m_registry.availablePackages.array);
-	}
-
-	@path("/packages/index.json")
-	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
-	{
-		res.writeJsonBody(m_registry.availablePackages.array);
 	}
 
 	@path("/")
@@ -111,6 +101,201 @@ class DubRegistryWebFrontend {
 		render!("home.dt", categories, categoryMap, packages);
 	}
 
+	// compatibility route
+	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
+	{
+		res.redirect("/packages/index.json");
+	}
+
+	@path("/packages/index.json")
+	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
+	{
+		res.writeJsonBody(m_registry.availablePackages.array);
+	}
+
+	@path("/view_package/:packname")
+	void getRedirectViewPackage(string _packname)
+	{
+		redirect("/packages/"~_packname);
+	}
+
+	@path("/packages/:packname")
+	void getPackage(HTTPServerRequest req, HTTPServerResponse res, string _packname)
+	{
+		getPackageVersion(req, res, _packname, null);
+	}
+
+	@path("/packages/:packname/:version")
+	void getPackageVersion(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
+	{
+		import std.algorithm : canFind;
+
+		auto pname = _packname;
+		auto ver = _version.replace(" ", "+");
+		string ext;
+
+		if (_version.length) {
+			if (ver.endsWith(".zip")) ext = "zip", ver = ver[0 .. $-4];
+			else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
+		} else {
+			if (pname.endsWith(".json")) {
+				pname = pname[0 .. $-5];
+				ext = "json";
+			}
+		}
+
+		Json packageInfo, versionInfo;
+		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
+			return;
+
+		User user;
+		if (m_userman) user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
+
+		if (ext == "zip") {
+			if (pname.canFind(":")) return;
+
+			// This log line is a weird workaround to make otherwise undefined Json fields
+			// available. Smells like a compiler bug.
+			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["url"].toString());
+
+			// add download to statistic
+			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
+			if (versionInfo["url"].get!string.length > 0) {
+				// redirect to hosting service specific URL
+				redirect(versionInfo["url"].get!string);
+			} else {
+				// directly forward from hoster
+				res.headers["Content-Disposition"] = "attachment; filename=\""~pname~"-"~(ver.startsWith("~") ? ver[1 .. $] : ver) ~ ".zip\"";
+				m_registry.downloadPackageZip(pname, ver.startsWith("~") ? ver : "v"~ver, (scope data) {
+					res.writeBody(data, "application/zip");
+				});
+			}
+		} else if (ext == "json") {
+			if (pname.canFind(":")) return;
+			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
+		} else {
+			auto gitVer = versionInfo["version"].get!string;
+			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
+			string urlFilter(string url, bool is_image)
+			{
+				if (url.startsWith("http://") || url.startsWith("https://"))
+					return url;
+
+				if (auto pr = "repository" in packageInfo) {
+					auto owner = (*pr)["owner"].get!string;
+					auto project = (*pr)["project"].get!string;
+					switch ((*pr)["kind"].get!string) {
+						default: return url;
+						// TODO: BitBucket + GitLab
+						case "github":
+							if (is_image) return format("https://github.com/%s/%s/raw/%s/%s", owner, project, gitVer, url);
+							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url);
+					}
+				}
+
+				return url;
+			}
+
+			auto packageName = pname;
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo, urlFilter);
+		}
+	}
+
+	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
+	{
+		auto ppath = pack_name.urlDecode().split(":");
+
+		pkg_info = m_registry.getPackageInfo(ppath[0]);
+		if (pkg_info.type == Json.Type.null_) return false;
+
+		if (pack_version.length) {
+			foreach (v; pkg_info["versions"]) {
+				if (v["version"].get!string == pack_version) {
+					ver_info = v;
+					break;
+				}
+			}
+			if (ver_info.type != Json.Type.Object) return false;
+		} else {
+			import dubregistry.viewutils;
+			if (pkg_info["versions"].length == 0) return false;
+			ver_info = getBestVersion(pkg_info["versions"]);
+		}
+
+		foreach (i; 1 .. ppath.length) {
+			if ("subPackages" !in ver_info) return false;
+			bool found = false;
+			foreach (sp; ver_info["subPackages"]) {
+				if (sp["name"] == ppath[i]) {
+					Json newv = Json.emptyObject;
+					// inherit certain fields
+					foreach (field; ["version", "date", "license", "authors", "homepage"])
+						if (auto pv = field in ver_info) newv[field] = *pv;
+					// copy/overwrite the rest frmo the sub package
+					foreach (string name, value; sp) newv[name] = value;
+					ver_info = newv;
+					found = true;
+					break;
+				}
+			}
+			if (!found) return false;
+		}
+		return true;
+	}
+
+	private void updateCategories()
+	{
+		auto catfile = openFile("categories.json");
+		scope(exit) catfile.close();
+		auto json = parseJsonString(catfile.readAllUTF8());
+
+		Category[string] catmap;
+
+		Category processNode(Json node, string[] path)
+		{
+			path ~= node["name"].get!string;
+			auto cat = new Category;
+			cat.name = path.join(".");
+			cat.description = node["description"].get!string;
+			if (path.length > 2)
+				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
+			else if (path.length == 2)
+				cat.indentedDescription = "\u00a0└ " ~ cat.description;
+			else cat.indentedDescription = cat.description;
+			foreach_reverse (i; 0 .. path.length)
+				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
+					cat.imageName = path[0 .. i+1].join(".");
+					break;
+				}
+
+			catmap[cat.name] = cat;
+
+			if ("categories" in node)
+				foreach (subcat; node["categories"])
+					cat.subCategories ~= processNode(subcat, path);
+
+			return cat;
+		}
+
+		Category[] cats;
+		foreach (top_level_cat; json)
+			cats ~= processNode(top_level_cat, null);
+
+		m_categories = cats;
+		m_categoryMap = catmap;
+	}
+}
+
+class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
+	private {
+		UserManWebAuthenticator m_usermanauth;
+	}
+
+	this(DubRegistry registry, UserManController userman)
+	{
+		super(registry, userman);
+		m_usermanauth = new UserManWebAuthenticator(userman);
+	}
 
 	void querySearch(string q = "")
 	{
@@ -243,134 +428,6 @@ class DubRegistryWebFrontend {
 		res.writeBody(info.latest);
 	}
 
-	@path("/view_package/:packname")
-	void getRedirectViewPackage(string _packname)
-	{
-		redirect("/packages/"~_packname);
-	}
-
-	@path("/packages/:packname")
-	void getPackage(HTTPServerRequest req, HTTPServerResponse res, string _packname)
-	{
-		getPackageVersion(req, res, _packname, null);
-	}
-
-	@path("/packages/:packname/:version")
-	void getPackageVersion(HTTPServerRequest req, HTTPServerResponse res, string _packname, string _version)
-	{
-		import std.algorithm : canFind;
-
-		auto pname = _packname;
-		auto ver = _version.replace(" ", "+");
-		string ext;
-
-		if (_version.length) {
-			if (ver.endsWith(".zip")) ext = "zip", ver = ver[0 .. $-4];
-			else if( ver.endsWith(".json") ) ext = "json", ver = ver[0 .. $-5];
-		} else {
-			if (pname.endsWith(".json")) {
-				pname = pname[0 .. $-5];
-				ext = "json";
-			}
-		}
-
-		Json packageInfo, versionInfo;
-		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
-			return;
-
-		auto user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
-
-		if (ext == "zip") {
-			if (pname.canFind(":")) return;
-
-			// This log line is a weird workaround to make otherwise undefined Json fields
-			// available. Smells like a compiler bug.
-			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["url"].toString());
-
-			// add download to statistic
-			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
-			if (versionInfo["url"].get!string.length > 0) {
-				// redirect to hosting service specific URL
-				redirect(versionInfo["url"].get!string);
-			} else {
-				// directly forward from hoster
-				res.headers["Content-Disposition"] = "attachment; filename=\""~pname~"-"~(ver.startsWith("~") ? ver[1 .. $] : ver) ~ ".zip\"";
-				m_registry.downloadPackageZip(pname, ver.startsWith("~") ? ver : "v"~ver, (scope data) {
-					res.writeBody(data, "application/zip");
-				});
-			}
-		} else if (ext == "json") {
-			if (pname.canFind(":")) return;
-			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
-		} else {
-			auto gitVer = versionInfo["version"].get!string;
-			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
-			string urlFilter(string url, bool is_image)
-			{
-				if (url.startsWith("http://") || url.startsWith("https://"))
-					return url;
-
-				if (auto pr = "repository" in packageInfo) {
-					auto owner = (*pr)["owner"].get!string;
-					auto project = (*pr)["project"].get!string;
-					switch ((*pr)["kind"].get!string) {
-						default: return url;
-						// TODO: BitBucket + GitLab
-						case "github":
-							if (is_image) return format("https://github.com/%s/%s/raw/%s/%s", owner, project, gitVer, url);
-							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url);
-					}
-				}
-
-				return url;
-			}
-
-			auto packageName = pname;
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, urlFilter);
-		}
-	}
-
-	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
-	{
-		auto ppath = pack_name.urlDecode().split(":");
-
-		pkg_info = m_registry.getPackageInfo(ppath[0]);
-		if (pkg_info.type == Json.Type.null_) return false;
-
-		if (pack_version.length) {
-			foreach (v; pkg_info["versions"]) {
-				if (v["version"].get!string == pack_version) {
-					ver_info = v;
-					break;
-				}
-			}
-			if (ver_info.type != Json.Type.Object) return false;
-		} else {
-			import dubregistry.viewutils;
-			if (pkg_info["versions"].length == 0) return false;
-			ver_info = getBestVersion(pkg_info["versions"]);
-		}
-
-		foreach (i; 1 .. ppath.length) {
-			if ("subPackages" !in ver_info) return false;
-			bool found = false;
-			foreach (sp; ver_info["subPackages"]) {
-				if (sp["name"] == ppath[i]) {
-					Json newv = Json.emptyObject;
-					// inherit certain fields
-					foreach (field; ["version", "date", "license", "authors", "homepage"])
-						if (auto pv = field in ver_info) newv[field] = *pv;
-					// copy/overwrite the rest frmo the sub package
-					foreach (string name, value; sp) newv[name] = value;
-					ver_info = newv;
-					found = true;
-					break;
-				}
-			}
-			if (!found) return false;
-		}
-		return true;
-	}
 
 	@auth
 	void getMyPackages(User _user)
@@ -494,48 +551,6 @@ class DubRegistryWebFrontend {
 	private void enforceUserPackage(User user, string package_name)
 	{
 		enforceHTTP(m_registry.isUserPackage(user.id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
-	}
-
-	private void updateCategories()
-	{
-		auto catfile = openFile("categories.json");
-		scope(exit) catfile.close();
-		auto json = parseJsonString(catfile.readAllUTF8());
-
-		Category[string] catmap;
-
-		Category processNode(Json node, string[] path)
-		{
-			path ~= node["name"].get!string;
-			auto cat = new Category;
-			cat.name = path.join(".");
-			cat.description = node["description"].get!string;
-			if (path.length > 2)
-				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
-			else if (path.length == 2)
-				cat.indentedDescription = "\u00a0└ " ~ cat.description;
-			else cat.indentedDescription = cat.description;
-			foreach_reverse (i; 0 .. path.length)
-				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
-					cat.imageName = path[0 .. i+1].join(".");
-					break;
-				}
-
-			catmap[cat.name] = cat;
-
-			if ("categories" in node)
-				foreach (subcat; node["categories"])
-					cat.subCategories ~= processNode(subcat, path);
-
-			return cat;
-		}
-
-		Category[] cats;
-		foreach (top_level_cat; json)
-			cats ~= processNode(top_level_cat, null);
-
-		m_categories = cats;
-		m_categoryMap = catmap;
 	}
 
 	// Attribute for authenticated routes

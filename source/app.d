@@ -6,6 +6,7 @@
 module app;
 
 import dubregistry.dbcontroller;
+import dubregistry.mirror;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
@@ -22,13 +23,16 @@ import vibe.d;
 Task s_checkTask;
 DubRegistry s_registry;
 DubRegistryWebFrontend s_web;
+string s_mirror;
 
 void startMonitoring()
 {
 	void monitorNewVersions()
 	{
+		sleep(2.minutes());
 		while(true){
-			s_registry.checkForNewVersions();
+			if (s_mirror.length) s_registry.mirrorRegistry(URL(s_mirror));
+			else s_registry.checkForNewVersions();
 			sleep(30.minutes());
 		}
 	}
@@ -38,6 +42,15 @@ void startMonitoring()
 shared static this()
 {
 	setLogFile("log.txt", LogLevel.diagnostic);
+
+	string hostname = "code.dlang.org";
+
+	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
+	readOption("hostname", &hostname, "Domain name of this instance (default: code.dlang.org)");
+
+	// validate provided mirror URL
+	if (s_mirror.length)
+		validateMirrorURL(s_mirror);
 
 	version (linux) {
 		logInfo("Enforcing certificate trust.");
@@ -56,20 +69,25 @@ shared static this()
 	BitbucketRepository.register();
 
 	auto router = new URLRouter;
+	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
 	router.get("*", (req, res) { if (!s_checkTask.running) startMonitoring(); });
-
-	// user management
-	auto udbsettings = new UserManSettings;
-	udbsettings.serviceName = "DUB - The D package registry";
-	udbsettings.serviceUrl = URL("http://code.dlang.org/");
-	udbsettings.serviceEmail = "noreply@vibed.org";
-	udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
-	udbsettings.requireAccountValidation = false;
-	auto userdb = createUserManController(udbsettings);
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
 	s_registry = new DubRegistry(regsettings);
+
+	UserManController userdb;
+
+	if (!s_mirror.length) {
+		// user management
+		auto udbsettings = new UserManSettings;
+		udbsettings.serviceName = "DUB - The D package registry";
+		udbsettings.serviceUrl = URL("http://code.dlang.org/");
+		udbsettings.serviceEmail = "noreply@vibed.org";
+		udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
+		udbsettings.requireAccountValidation = false;
+		userdb = createUserManController(udbsettings);
+	}
 
 	// web front end
 	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb);
@@ -77,7 +95,7 @@ shared static this()
 
 	// start the web server
  	auto settings = new HTTPServerSettings;
-	settings.hostName = "code.dlang.org";
+	settings.hostName = hostname;
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
 	settings.sessionStore = new MemorySessionStore;

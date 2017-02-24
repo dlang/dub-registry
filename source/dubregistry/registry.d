@@ -58,6 +58,8 @@ class DubRegistry {
 		m_updateQueueTask = runTask(&processUpdateQueue);
 	}
 
+	@property DbController db() nothrow { return m_db; }
+
 	@property auto availablePackages()
 	{
 		return m_db.getAllPackages();

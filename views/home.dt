@@ -4,36 +4,42 @@ block title
 	- import dubregistry.viewutils;
 	- import dubregistry.web;
 	- import vibe.data.json;
-	- import std.string : replace;
+	- import std.string : replace, split;
 	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
 		window.categories = #{serializeToJson(categories).toString()};
 
 block body
-	p Welcome to DUB, the D package registry. The following list shows all available packages:
-
 	- auto category = req.query.get("category", null);
 	- auto sort_mode = req.query.get("sort", "updated");
-	form#category-form(method="GET", action="")
-		input(type="hidden", name="sort", value=sort_mode)
-		p Select category:
-			select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
-				- void outputCat(Category cat)
-					- if (!cat)
-						option(value="") All packages
-					- else
-						option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
-					- if (!cat || cat.subCategories.length)
-						- foreach (c; cat ? cat.subCategories : categories)
-							- outputCat(c);
-				- outputCat(null);
-			button#category-submit(type="submit") Update
-	#category-dynamic-form(style="display: none")
-		p Select category:
-			- foreach (i; 0 .. 6)
-				select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
-		:javascript setupCategoryForm();
+
+	- auto mirror = req.params.get("mirror", "");
+	- if (mirror.length)
+		p This is a mirror of #[a(href=mirror)= mirror].
+	- else
+		p Welcome to DUB, the D package registry. The following list shows all available packages:
+
+		form#category-form(method="GET", action="")
+			input(type="hidden", name="sort", value=sort_mode)
+			p Select category:
+				select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
+					- void outputCat(Category cat)
+						- if (!cat)
+							option(value="") All packages
+						- else
+							option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
+						- if (!cat || cat.subCategories.length)
+							- foreach (c; cat ? cat.subCategories : categories)
+								- outputCat(c);
+					- outputCat(null);
+				button#category-submit(type="submit") Update
+		#category-dynamic-form(style="display: none")
+			p Select category:
+				- foreach (i; 0 .. 6)
+					select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
+			:javascript
+				setupCategoryForm();
 
 	table
 
@@ -77,10 +83,8 @@ block body
 
 	p Found #{packages.length} packages.
 
-	- if( req.session )
-		p
-			a(href="my_packages") Manage my packages
-	- else
-		p Please
-			a(href="login?redirect=/my_packages") log in
-			| to manage your own packages.
+	- if (!mirror.length)
+		- if (req.session)
+			p: a(href="my_packages") Manage my packages
+		- else
+			p Please #[a(href="login?redirect=/my_packages") log in] to manage your own packages.

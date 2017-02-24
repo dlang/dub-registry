@@ -71,9 +71,10 @@ block body
 				td Authors
 				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
 
-		tr
-			td Registered by
-			td= user.fullName.length ? user.fullName : user.name
+		- if (user.id != User.ID.init)
+			tr
+				td Registered by
+				td= user.fullName.length ? user.fullName : user.name
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
 			tr
@@ -144,6 +145,8 @@ block body
 			em= vs
 		- else
 			a(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')= vs
+		|  
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
-	:javascript new Clipboard('.btn-clipboard');
+	:javascript
+		new Clipboard('.btn-clipboard');
