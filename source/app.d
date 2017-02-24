@@ -29,6 +29,7 @@ void startMonitoring()
 {
 	void monitorNewVersions()
 	{
+		sleep(2.minutes());
 		while(true){
 			if (s_mirror.length) s_registry.mirrorRegistry(URL(s_mirror));
 			else s_registry.checkForNewVersions();
