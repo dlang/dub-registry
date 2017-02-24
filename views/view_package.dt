@@ -71,9 +71,10 @@ block body
 				td Authors
 				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
 
-		tr
-			td Registered by
-			td= user.fullName.length ? user.fullName : user.name
+		- if (user.id != User.ID.init)
+			tr
+				td Registered by
+				td= user.fullName.length ? user.fullName : user.name
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
 			tr
