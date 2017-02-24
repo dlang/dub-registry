@@ -64,6 +64,7 @@ shared static this()
 	BitbucketRepository.register();
 
 	auto router = new URLRouter;
+	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
 	router.get("*", (req, res) { if (!s_checkTask.running) startMonitoring(); });
 
 	// VPM registry

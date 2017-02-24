@@ -13,7 +13,8 @@ html
 	body#Home.doc
 		script document.body.className += ' have-javascript'
 		#top
-			include layout.inc.menu
+			- if ("mirror" !in req.params)
+				include layout.inc.menu
 		#content
 			block body
 

@@ -23,18 +23,22 @@ import vibe.d;
 
 DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
 {
-	auto webfrontend = new DubRegistryWebFrontend(registry, userman);
-	router.registerUserManWebInterface(userman);
+	DubRegistryWebFrontend webfrontend;
+	if (userman) {
+		webfrontend = new DubRegistryFullWebFrontend(registry, userman);
+		router.registerUserManWebInterface(userman);
+	} else {
+		webfrontend = new DubRegistryWebFrontend(registry, userman);
+	}
 	router.registerWebInterface(webfrontend);
 	router.get("*", serveStaticFiles("./public"));
 	return webfrontend;
 }
 
 class DubRegistryWebFrontend {
-	private {
+	protected {
 		DubRegistry m_registry;
 		UserManController m_userman;
-		UserManWebAuthenticator m_usermanauth;
 		Category[] m_categories;
 		Category[string] m_categoryMap;
 	}
@@ -43,21 +47,7 @@ class DubRegistryWebFrontend {
 	{
 		m_registry = registry;
 		m_userman = userman;
-		m_usermanauth = new UserManWebAuthenticator(userman);
-
 		updateCategories();
-	}
-
-	// compatibility route
-	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
-	{
-		res.writeJsonBody(m_registry.availablePackages.array);
-	}
-
-	@path("/packages/index.json")
-	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
-	{
-		res.writeJsonBody(m_registry.availablePackages.array);
 	}
 
 	@path("/")
@@ -111,136 +101,16 @@ class DubRegistryWebFrontend {
 		render!("home.dt", categories, categoryMap, packages);
 	}
 
-
-	void querySearch(string q = "")
+	// compatibility route
+	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		auto results = m_registry.searchPackages(q);
-		auto queryString = q;
-		render!("search_results.dt", queryString, results);
+		res.redirect("/packages/index.json");
 	}
 
-	void getGettingStarted() { render!("getting_started.dt"); }
-	void getAbout() { redirect("/getting_started"); }
-	void getUsage() { redirect("/getting_started"); }
-
-	void getPublish() { render!("publish.dt"); }
-	void getDevelop() { render!("develop.dt"); }
-
-	@path("/package-format")
-	void getPackageFormat(string lang = null)
+	@path("/packages/index.json")
+	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
 	{
-		switch (lang) {
-			default: redirect("package-format?lang=json"); break;
-			case "json": render!("package_format_json.dt"); break;
-			case "sdl": render!("package_format_sdl.dt"); break;
-		}
-	}
-
-	private auto downloadInfo()
-	{
-		static struct DownloadFile {
-			string fileName;
-			string platformCaption;
-			string typeCaption;
-		}
-
-		static struct DownloadVersion {
-			string id;
-			DownloadFile[][string] files;
-		}
-
-		static struct Info {
-			DownloadVersion[] versions;
-			string latest = "";
-
-			void addFile(string ver, string platform, string filename)
-			{
-
-				auto df = DownloadFile(filename);
-				switch (platform) {
-					default:
-						auto pts = platform.split("-");
-						df.platformCaption = format("%s%s (%s)", pts[0][0 .. 1].toUpper(), pts[0][1 .. $], pts[1].replace("_", "-").toUpper());
-						break;
-					case "osx-x86": df.platformCaption = "OS X (X86)"; break;
-					case "osx-x86_64": df.platformCaption = "OS X (X86-64)"; break;
-				}
-
-				if (filename.endsWith(".tar.gz")) df.typeCaption = "binary tarball";
-				else if (filename.endsWith(".zip")) df.typeCaption = "zipped binaries";
-				else if (filename.endsWith(".rpm")) df.typeCaption = "binary RPM package";
-				else if (filename.endsWith("setup.exe")) df.typeCaption = "installer";
-				else df.typeCaption = "Unknown";
-
-				foreach(ref v; versions)
-					if( v.id == ver ){
-						v.files[platform] ~= df;
-						return;
-					}
-				DownloadVersion dv = DownloadVersion(ver);
-				dv.files[platform] = [df];
-				versions ~= dv;
-				if (!isPreReleaseVersion(ver) && (latest.empty || compareVersions(ver, latest) > 0))
-					latest = ver;
-			}
-		}
-
-		Info info;
-
-		if (!"public/files".exists || !"public/files".isDir)
-			return info;
-
-		import std.regex;
-		Regex!char[][string] platformPatterns;
-		platformPatterns["windows-x86"] = [
-			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.*))?(?:-setup\\.exe|-windows-x86\\.zip)$")
-		];
-		platformPatterns["linux-x86_64"] = [
-			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86_64\\.tar\\.gz$"),
-			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86_64\\.rpm$")
-		];
-		platformPatterns["linux-x86"] = [
-			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
-			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
-		];
-		platformPatterns["linux-arm"] = [
-			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-arm\\.tar\\.gz$"),
-			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.arm\\.rpm$")
-		];
-		platformPatterns["osx-x86_64"] = [
-			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
-		];
-
-		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)) {
-			auto name = Path(de.name).head.toString();
-
-			foreach (platform, rexes; platformPatterns) {
-				foreach (rex; rexes) {
-					auto match = match(name, rex).captures;//matchFirst(name, rex);
-					if (match.empty) continue;
-					auto ver = match["version"] ~ (match["prerelease"].length ? "-" ~ match["prerelease"] : "");
-					if (!ver.isValidVersion()) continue;
-					info.addFile(ver, platform, name);
-				}
-			}
-		}
-
-		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
-		return info;
-	}
-
-	void getDownload()
-	{
-		auto info = downloadInfo();
-		render!("download.dt", info);
-	}
-
-	@path("/download/LATEST")
-	void getLatest(HTTPServerResponse res)
-	{
-		auto info = downloadInfo();
-		enforceHTTP(!info.latest.empty, HTTPStatus.notFound, "No version available.");
-		res.writeBody(info.latest);
+		res.writeJsonBody(m_registry.availablePackages.array);
 	}
 
 	@path("/view_package/:packname")
@@ -373,6 +243,192 @@ class DubRegistryWebFrontend {
 		return true;
 	}
 
+	private void updateCategories()
+	{
+		auto catfile = openFile("categories.json");
+		scope(exit) catfile.close();
+		auto json = parseJsonString(catfile.readAllUTF8());
+
+		Category[string] catmap;
+
+		Category processNode(Json node, string[] path)
+		{
+			path ~= node["name"].get!string;
+			auto cat = new Category;
+			cat.name = path.join(".");
+			cat.description = node["description"].get!string;
+			if (path.length > 2)
+				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
+			else if (path.length == 2)
+				cat.indentedDescription = "\u00a0└ " ~ cat.description;
+			else cat.indentedDescription = cat.description;
+			foreach_reverse (i; 0 .. path.length)
+				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
+					cat.imageName = path[0 .. i+1].join(".");
+					break;
+				}
+
+			catmap[cat.name] = cat;
+
+			if ("categories" in node)
+				foreach (subcat; node["categories"])
+					cat.subCategories ~= processNode(subcat, path);
+
+			return cat;
+		}
+
+		Category[] cats;
+		foreach (top_level_cat; json)
+			cats ~= processNode(top_level_cat, null);
+
+		m_categories = cats;
+		m_categoryMap = catmap;
+	}
+}
+
+class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
+	private {
+		UserManWebAuthenticator m_usermanauth;
+	}
+
+	this(DubRegistry registry, UserManController userman)
+	{
+		super(registry, userman);
+		m_usermanauth = new UserManWebAuthenticator(userman);
+	}
+
+	void querySearch(string q = "")
+	{
+		auto results = m_registry.searchPackages(q);
+		auto queryString = q;
+		render!("search_results.dt", queryString, results);
+	}
+
+	void getGettingStarted() { render!("getting_started.dt"); }
+	void getAbout() { redirect("/getting_started"); }
+	void getUsage() { redirect("/getting_started"); }
+
+	void getPublish() { render!("publish.dt"); }
+	void getDevelop() { render!("develop.dt"); }
+
+	@path("/package-format")
+	void getPackageFormat(string lang = null)
+	{
+		switch (lang) {
+			default: redirect("package-format?lang=json"); break;
+			case "json": render!("package_format_json.dt"); break;
+			case "sdl": render!("package_format_sdl.dt"); break;
+		}
+	}
+
+	private auto downloadInfo()
+	{
+		static struct DownloadFile {
+			string fileName;
+			string platformCaption;
+			string typeCaption;
+		}
+
+		static struct DownloadVersion {
+			string id;
+			DownloadFile[][string] files;
+		}
+
+		static struct Info {
+			DownloadVersion[] versions;
+			string latest = "";
+
+			void addFile(string ver, string platform, string filename)
+			{
+
+				auto df = DownloadFile(filename);
+				switch (platform) {
+					default:
+						auto pts = platform.split("-");
+						df.platformCaption = format("%s%s (%s)", pts[0][0 .. 1].toUpper(), pts[0][1 .. $], pts[1].replace("_", "-").toUpper());
+						break;
+					case "osx-x86": df.platformCaption = "OS X (X86)"; break;
+					case "osx-x86_64": df.platformCaption = "OS X (X86-64)"; break;
+				}
+
+				if (filename.endsWith(".tar.gz")) df.typeCaption = "binary tarball";
+				else if (filename.endsWith(".zip")) df.typeCaption = "zipped binaries";
+				else if (filename.endsWith(".rpm")) df.typeCaption = "binary RPM package";
+				else if (filename.endsWith("setup.exe")) df.typeCaption = "installer";
+				else df.typeCaption = "Unknown";
+
+				foreach(ref v; versions)
+					if( v.id == ver ){
+						v.files[platform] ~= df;
+						return;
+					}
+				DownloadVersion dv = DownloadVersion(ver);
+				dv.files[platform] = [df];
+				versions ~= dv;
+				if (!isPreReleaseVersion(ver) && (latest.empty || compareVersions(ver, latest) > 0))
+					latest = ver;
+			}
+		}
+
+		Info info;
+
+		if (!"public/files".exists || !"public/files".isDir)
+			return info;
+
+		import std.regex;
+		Regex!char[][string] platformPatterns;
+		platformPatterns["windows-x86"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.*))?(?:-setup\\.exe|-windows-x86\\.zip)$")
+		];
+		platformPatterns["linux-x86_64"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86_64\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86_64\\.rpm$")
+		];
+		platformPatterns["linux-x86"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-x86\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.x86\\.rpm$")
+		];
+		platformPatterns["linux-arm"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-linux-arm\\.tar\\.gz$"),
+			regex("^dub-(?P<version>[^-]+)-(?:0\\.(?P<prerelease>.+)|[^0].*)\\.arm\\.rpm$")
+		];
+		platformPatterns["osx-x86_64"] = [
+			regex("^dub-(?P<version>[^-]+)(?:-(?P<prerelease>.+))?-osx-x86_64\\.tar\\.gz$"),
+		];
+
+		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)) {
+			auto name = Path(de.name).head.toString();
+
+			foreach (platform, rexes; platformPatterns) {
+				foreach (rex; rexes) {
+					auto match = match(name, rex).captures;//matchFirst(name, rex);
+					if (match.empty) continue;
+					auto ver = match["version"] ~ (match["prerelease"].length ? "-" ~ match["prerelease"] : "");
+					if (!ver.isValidVersion()) continue;
+					info.addFile(ver, platform, name);
+				}
+			}
+		}
+
+		info.versions.sort!((a, b) => vcmp(a.id, b.id))();
+		return info;
+	}
+
+	void getDownload()
+	{
+		auto info = downloadInfo();
+		render!("download.dt", info);
+	}
+
+	@path("/download/LATEST")
+	void getLatest(HTTPServerResponse res)
+	{
+		auto info = downloadInfo();
+		enforceHTTP(!info.latest.empty, HTTPStatus.notFound, "No version available.");
+		res.writeBody(info.latest);
+	}
+
+
 	@auth
 	void getMyPackages(User _user)
 	{
@@ -495,48 +551,6 @@ class DubRegistryWebFrontend {
 	private void enforceUserPackage(User user, string package_name)
 	{
 		enforceHTTP(m_registry.isUserPackage(user.id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
-	}
-
-	private void updateCategories()
-	{
-		auto catfile = openFile("categories.json");
-		scope(exit) catfile.close();
-		auto json = parseJsonString(catfile.readAllUTF8());
-
-		Category[string] catmap;
-
-		Category processNode(Json node, string[] path)
-		{
-			path ~= node["name"].get!string;
-			auto cat = new Category;
-			cat.name = path.join(".");
-			cat.description = node["description"].get!string;
-			if (path.length > 2)
-				cat.indentedDescription = "\u00a0\u00a0\u00a0\u00a0".replicate(path.length-2) ~ "\u00a0└ " ~ cat.description;
-			else if (path.length == 2)
-				cat.indentedDescription = "\u00a0└ " ~ cat.description;
-			else cat.indentedDescription = cat.description;
-			foreach_reverse (i; 0 .. path.length)
-				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
-					cat.imageName = path[0 .. i+1].join(".");
-					break;
-				}
-
-			catmap[cat.name] = cat;
-
-			if ("categories" in node)
-				foreach (subcat; node["categories"])
-					cat.subCategories ~= processNode(subcat, path);
-
-			return cat;
-		}
-
-		Category[] cats;
-		foreach (top_level_cat; json)
-			cats ~= processNode(top_level_cat, null);
-
-		m_categories = cats;
-		m_categoryMap = catmap;
 	}
 
 	// Attribute for authenticated routes
