@@ -145,6 +145,8 @@ block body
 			em= vs
 		- else
 			a(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')= vs
+		|  
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
-	:javascript new Clipboard('.btn-clipboard');
+	:javascript
+		new Clipboard('.btn-clipboard');
