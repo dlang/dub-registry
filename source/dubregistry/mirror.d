@@ -44,13 +44,12 @@ nothrow {
 	logInfo("Polling '%s' for updates...", url);
 	try {
 		bool[string] current_packs;
-		auto packs = requestHTTP(url ~ Path("packages/index.json")).readJson();
+		auto packs = requestHTTP(url ~ Path("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
 		foreach (p; packs) {
-			auto pname = p.get!string;
-			current_packs[pname] = true;
-			try setPackage(registry, url, pname);
+			current_packs[p.name] = true;
+			try setPackage(registry, p);
 			catch (Exception e) {
-				logError("Failed to add/update package '%s': %s", p, e.msg);
+				logError("Failed to add/update package '%s': %s", p.name, e.msg);
 				logDiagnostic("Full error: %s", e.toString().sanitize);
 			}
 		}
@@ -70,32 +69,10 @@ nothrow {
 	}
 }
 
-private void setPackage(DubRegistry registry, URL src_reg, string pack_name)
+private void setPackage(DubRegistry registry, ref DbPackage pack)
 {
-	auto db = registry.db;
-
-	auto info = requestHTTP(src_reg ~ Path("packages/"~pack_name~".json")).readJson();
-
-	DbPackage pack;
-	pack._id = BsonObjectID.fromString(info["id"].get!string);
-	pack.name = info["name"].get!string;
-	pack.owner = BsonObjectID.fromString(info["owner"].get!string);
-	pack.repository = info["repository"];
-	foreach (jv; info["versions"]) {
-		DbPackageVersion v;
-		v.version_ = jv["version"].get!string;
-		v.readme = jv["readme"].opt!string;
-		v.date = SysTime.fromISOExtString(jv["date"].get!string);
-
-		auto info = jv.get!(Json[string]).dup;
-		info.remove("readme");
-		info.remove("url");
-		info.remove("date");
-		v.info = Json(info);
-		pack.versions ~= v;
-	}
-	logInfo("Updating package '%s'", pack_name);
-	db.addOrSetPackage(pack);
+	logInfo("Updating package '%s'", pack.name);
+	registry.addOrSetPackage(pack);
 }
 
 private void removePackage(DubRegistry registry, string pack_name)
