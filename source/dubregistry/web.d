@@ -53,54 +53,62 @@ class DubRegistryWebFrontend {
 	}
 
 	@path("/")
-	void getHome(string sort = "updated", string category = null)
+	void getHome(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
 	{
+		import std.algorithm.comparison : min;
+		import std.algorithm.iteration : filter, map;
+
+		static struct Info {
+			Json[] packages;
+			size_t packageCount;
+			size_t skip;
+			size_t limit;
+			Category[] categories;
+			Category[string] categoryMap;
+		}
+
 		static import std.algorithm.sorting;
 		import std.algorithm.searching : any;
 
-		// collect the package list
-		auto packapp = appender!(Json[])();
-		packapp.reserve(200);
+		DbPackage[] packages;
 		if (category.length) {
-			foreach (pname; m_registry.availablePackages) {
-				auto pack = m_registry.getPackageInfo(pname);
-				foreach (c; pack["categories"]) {
-					if (c.get!string.startsWith(category)) {
-						packapp.put(pack);
-						break;
-					}
-				}
-			}
+			packages = m_registry.getPackageDump()
+				.filter!(p => p.categories.any!(c => c.startsWith(category)))
+				.array;
 		} else {
-			foreach (pack; m_registry.availablePackages)
-				packapp.put(m_registry.getPackageInfo(pack));
+			packages = m_registry.getPackageDump()
+				.array;
 		}
-		auto packages = packapp.data;
 
 		// sort by date of last version
-		string getDate(Json p) {
-			if( p.type != Json.Type.Object || "versions" !in p ) return null;
-			if( p["versions"].length == 0 ) return null;
-			return p["versions"][p["versions"].length-1]["date"].get!string;
+		SysTime getDate(in ref DbPackage p) {
+			if (p.versions.length == 0) return SysTime(0, UTC());
+			return p.versions[$-1].date;
 		}
-		SysTime getDateAdded(Json p) {
-			return SysTime.fromISOExtString(p["dateAdded"].get!string);
-		}
-		bool compare(Json a, Json b) {
-			bool a_has_ver = a["versions"].get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
-			bool b_has_ver = b["versions"].get!(Json[]).any!(v => !v["version"].get!string.startsWith("~"));
+		SysTime getDateAdded(in ref DbPackage p) { return (cast(BsonObjectID*)&p._id).timeStamp; }
+		bool compare(in ref DbPackage a, in ref DbPackage b) {
+			bool a_has_ver = a.versions.any!(v => !v.version_.startsWith("~"));
+			bool b_has_ver = b.versions.any!(v => !v.version_.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;
 			return getDate(a) > getDate(b);
 		}
 		switch (sort) {
-			default: std.algorithm.sorting.sort!((a, b) => compare(a, b))(packages); break;
-			case "name": std.algorithm.sorting.sort!((a, b) => a["name"] < b["name"])(packages); break;
+			default: std.algorithm.sorting.sort!compare(packages); break;
+			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
 			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
-		auto categories = m_categories;
-		auto categoryMap = m_categoryMap;
-		render!("home.dt", categories, categoryMap, packages);
+		Info info;
+		info.packageCount = packages.length;
+		info.packages = packages[min(skip, $) .. min(skip + limit, $)]
+			.map!(p => m_registry.getPackageInfo(p, false))
+			.array;
+		info.skip = skip;
+		info.limit = limit;
+		info.categories = m_categories;
+		info.categoryMap = m_categoryMap;
+
+		render!("home.dt", info);
 	}
 
 	// compatibility route

@@ -4,11 +4,12 @@ block title
 	- import dubregistry.viewutils;
 	- import dubregistry.web;
 	- import vibe.data.json;
+	- import std.algorithm.comparison : min;
 	- import std.string : replace, split;
 	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
-		window.categories = #{serializeToJson(categories).toString()};
+		window.categories = #{serializeToJson(info.categories).toString()};
 
 block body
 	- auto category = req.query.get("category", null);
@@ -30,7 +31,7 @@ block body
 						- else
 							option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
 						- if (!cat || cat.subCategories.length)
-							- foreach (c; cat ? cat.subCategories : categories)
+							- foreach (c; cat ? cat.subCategories : info.categories)
 								- outputCat(c);
 					- outputCat(null);
 				button#category-submit(type="submit") Update
@@ -55,7 +56,7 @@ block body
 					th
 						a(href="?sort=#{cp[0]}&category=#{category}")= cp[1]
 
-		- foreach( pl; packages )
+		- foreach (pl; info.packages)
 			- if( pl["versions"].length )
 				- auto p = getBestVersion(pl["versions"]);
 				- auto desc = p["description"].opt!string;
@@ -64,7 +65,7 @@ block body
 					td
 						- string image;
 						- if (pl["categories"].length)
-							- if (auto pc = pl["categories"][0].get!string in categoryMap)
+							- if (auto pc = pl["categories"][0].get!string in info.categoryMap)
 								- image = pc.imageName;
 						- if (!image.length) image = "unknown";
 						img.category-icon(src="images/categories/#{image}.png", title=image.replace(".", "/"))
@@ -81,7 +82,14 @@ block body
 					- else
 						td #{desc[0 .. 98]}&hellip;
 
-	p Found #{packages.length} packages.
+	ul.pageNav
+		- foreach (i; 0 .. (info.packageCount + info.limit - 1) / info.limit)
+			- if (i * info.limit == info.skip)
+				li.selected= i+1
+			- else
+				li: a(href="?sort=#{sort_mode}&category=#{category}&skip=#{i*info.limit}&limit=#{info.limit}")= i+1
+
+	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.packageCount)} of #{info.packageCount} packages found.
 
 	- if (!mirror.length)
 		- if (req.session)
