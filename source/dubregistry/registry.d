@@ -37,7 +37,6 @@ class DubRegistry {
 	private {
 		DubRegistrySettings m_settings;
 		DbController m_db;
-		Json[string] m_packageInfos;
 
 		// list of package names to check for updates
 		FixedRingBuffer!string m_updateQueue;
@@ -138,8 +137,6 @@ class DubRegistry {
 	void addOrSetPackage(DbPackage pack)
 	{
 		m_db.addOrSetPackage(pack);
-		if (auto pi = pack.name in m_packageInfos)
-			m_packageInfos.remove(pack.name);
 	}
 
 	void addDownload(BsonObjectID pack_id, string ver, string agent)
@@ -151,7 +148,6 @@ class DubRegistry {
 	{
 		logInfo("Removing package %s of %s", packname, user);
 		m_db.removePackage(packname, user.bsonObjectIDValue);
-		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 	}
 
 	auto getPackages(User.ID user)
@@ -196,50 +192,55 @@ class DubRegistry {
 
 	Json getPackageInfo(string packname, bool include_errors = false)
 	{
-		if (!include_errors) {
-			if (auto ppi = packname in m_packageInfos)
-				return *ppi;
-		}
-
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return Json(null);
 
-		auto ret = getPackageInfo(pack, include_errors);
-		if (!include_errors)
-			m_packageInfos[packname] = ret;
-		return ret;
+		return getPackageInfo(pack, include_errors);
 	}
 
 	Json getPackageInfo(DbPackage pack, bool include_errors)
 	{
-		auto rep = getRepository(pack.repository);
-
-		Json[] vers;
-		foreach (v; pack.versions) {
-			auto nfo = v.info;
-			nfo["version"] = v.version_;
-			nfo["date"] = v.date.toISOExtString();
-			nfo["url"] = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_); // obsolete, will be removed in april 2013
-			if (v.readme.length && v.readme.length < 256 && v.readme[0] == '/') {
-				try {
-					rep.readFile(v.commitID, Path(v.readme), (scope data) { nfo["readme"] = data.readAllUTF8(); });
-				} catch (Exception e) {
-					logDebug("Failed to read README file (%s) for %s %s", v.readme, pack.name, v.version_);
-				}
-			}
-			vers ~= nfo;
-		}
-
 		Json ret = Json.emptyObject;
 		ret["id"] = pack._id.toString();
 		ret["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		ret["owner"] = pack.owner.toString();
 		ret["name"] = pack.name;
-		ret["versions"] = Json(vers);
+		ret["versions"] = Json(pack.versions.map!(v => getPackageVersionInfo(v)).array);
 		ret["repository"] = serializeToJson(pack.repository);
 		ret["categories"] = serializeToJson(pack.categories);
 		if(include_errors) ret["errors"] = serializeToJson(pack.errors);
+		return ret;
+	}
+
+	Json getPackageVersionInfo(DbPackageVersion v)
+	{
+		auto nfo = v.info.get!(Json[string]).dup;
+		nfo["version"] = v.version_;
+		nfo["date"] = v.date.toISOExtString();
+		nfo["readmeFile"] = v.readme;
+		nfo["commitID"] = v.commitID;
+		return Json(nfo);
+	}
+
+	string getReadme(Json version_info, DbRepository repository)
+	{
+		string ret;
+		auto file = version_info["readmeFile"].opt!string;
+		logInfo("readme for %s: %s", version_info["name"].get!string, file);
+		logInfo("repository: %s", repository);
+		try {
+			if (!file.startsWith('/')) return null;
+			auto rep = getRepository(repository);
+			logInfo("reading file");
+			rep.readFile(version_info["commitID"].get!string, Path(file), (scope data) { logInfo("reading cotents"); ret = data.readAllUTF8(); });
+			logInfo("reading file done");
+		} catch (Exception e) {
+			logDiagnostic("Failed to read README file (%s) for %s %s: %s",
+				file, version_info["name"].get!string,
+				version_info["version"].get!string, e.msg);
+		}
+		logInfo("returning readme %s", ret.length);
 		return ret;
 	}
 
@@ -253,7 +254,6 @@ class DubRegistry {
 	void setPackageCategories(string pack_name, string[] categories)
 	{
 		m_db.setPackageCategories(pack_name, categories);
-		if (pack_name in m_packageInfos) m_packageInfos.remove(pack_name);
 	}
 
 	void setPackageRepository(string pack_name, DbRepository repository)
@@ -261,7 +261,6 @@ class DubRegistry {
 		auto new_name = validateRepository(repository);
 		enforce(pack_name == new_name, "The package name of the new repository doesn't match the existing one: "~new_name);
 		m_db.setPackageRepository(pack_name, repository);
-		if (pack_name in m_packageInfos) m_packageInfos.remove(pack_name);
 	}
 
 	void checkForNewVersions()
@@ -341,9 +340,6 @@ class DubRegistry {
 			}
 		auto info = getVersionInfo(rep, reference, deffile);
 
-		// clear cached Json
-		if (packname in m_packageInfos) m_packageInfos.remove(packname);
-
 		//assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
 		info.info["name"] = info.info["name"].get!string.toLower();
 		enforce(info.info["name"] == packname,
@@ -388,9 +384,6 @@ class DubRegistry {
 	protected void removeVersion(string packname, string ver)
 	{
 		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
-
-		// clear cached Json
-		if (packname in m_packageInfos) m_packageInfos.remove(packname);
 
 		m_db.removeVersion(packname, ver);
 	}

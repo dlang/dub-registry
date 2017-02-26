@@ -11,7 +11,7 @@ block title
 
 block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-	- if (versionInfo["readme"].opt!string.length)
+	- if (readmeContents.length)
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
 
 block body
@@ -126,7 +126,7 @@ block body
 			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
 				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
-	- if (versionInfo["readme"].opt!string.length)
+	- if (readmeContents.length)
 		h2 Readme
 
 		.repositoryReadme.markdown-body
@@ -135,7 +135,7 @@ block body
 			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
 			- msettings.headingBaseLevel = 2;
 			- msettings.urlFilter = &urlFilter;
-			!= filterMarkdown(versionInfo["readme"].get!string, msettings)
+			!= filterMarkdown(readmeContents, msettings)
 
 	h2 Available versions
 

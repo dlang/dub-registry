@@ -207,7 +207,8 @@ class DubRegistryWebFrontend {
 			}
 
 			auto packageName = pname;
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, urlFilter);
+			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, urlFilter);
 		}
 	}
 
