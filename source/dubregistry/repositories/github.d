@@ -94,9 +94,10 @@ class GithubRepository : Repository {
 
 	string getDownloadUrl(string ver)
 	{
+		import std.uri : encodeComponent;
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~ver~".zip";
+		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~encodeComponent(ver)~".zip";
 	}
 
 	void download(string ver, scope void delegate(scope InputStream) del)

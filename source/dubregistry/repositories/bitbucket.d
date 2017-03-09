@@ -86,9 +86,10 @@ class BitbucketRepository : Repository {
 
 	string getDownloadUrl(string ver)
 	{
+		import std.uri : encodeComponent;
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~ver~".zip";
+		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~encodeComponent(ver)~".zip";
 	}
 
 	void download(string ver, scope void delegate(scope InputStream) del)
