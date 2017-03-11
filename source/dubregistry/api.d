@@ -24,7 +24,7 @@ void registerDubRegistryAPI(URLRouter router, DubRegistry registry)
 {
 	auto pkgs = new LocalDubRegistryAPI(registry);
 	router.registerRestInterface(pkgs, "/api");
-	router.get("/api/packages/dump", delegate(req, res) => dumpPackages(req, res, registry));
+	router.get("/api/packages/dump", (req, res) @trusted => dumpPackages(req, res, registry));
 }
 
 /// Compatibility alias.

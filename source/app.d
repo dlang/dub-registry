@@ -93,7 +93,7 @@ shared static this()
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
-	router.get("*", (req, res) { if (!s_checkTask.running) startMonitoring(); });
+	router.get("*", (req, res) @trusted { if (!s_checkTask.running) startMonitoring(); });
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
