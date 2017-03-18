@@ -494,7 +494,7 @@ block body
 		tr
 			td "noBoundsCheck"
 			td Disable all bounds checking
-			td -noboundscheck
+			td -boundscheck=off
 		tr
 			td "optimize"
 			td Enable optimizations
