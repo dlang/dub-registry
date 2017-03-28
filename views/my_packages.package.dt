@@ -92,7 +92,7 @@ block body
 		div
 			.img-wrapper
 				img(src="https://img.shields.io/dub/dt/#{packageName}.svg", alt="Dub downloads")
-			input(id="shield-downloads", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/dt/#{packageName}.svg alt="Dub downloads"></a>')
+			input(id="shield-downloads", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/dt/#{packageName}.svg" alt="Dub downloads"></a>')
 			button(class="btn-clipboard",data-clipboard-target="#shield-downloads")
 				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
