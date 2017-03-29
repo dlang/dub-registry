@@ -498,7 +498,7 @@ class DubRegistry {
 	}
 }
 
-private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try)
+private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, Path sub_path = Path("/"))
 {
 	import dub.recipe.io;
 	import dub.recipe.json;
@@ -509,7 +509,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 	foreach (filename; chain((&first_filename_try)[0 .. 1], packageInfoFilenames.filter!(f => f != first_filename_try))) {
 		if (!filename.length) continue;
 		try {
-			rep.readFile(commit.sha, Path("/" ~ filename), (scope input) {
+			rep.readFile(commit.sha, sub_path ~ filename, (scope input) {
 				auto text = input.readAllUTF8(false);
 				auto recipe = parsePackageRecipe(text, filename);
 				ret.info = recipe.toJson();
@@ -517,6 +517,17 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 
 			ret.info["packageDescriptionFile"] = filename;
 			logDebug("Found package description file %s.", filename);
+
+			foreach (ref sp; ret.info["subPackages"].opt!(Json[])) {
+				if (sp.type == Json.Type.string) {
+					auto path = sp.get!string;
+					logDebug("Fetching path based sub package at %s", sub_path ~ path);
+					auto subpack = getVersionInfo(rep, commit, first_filename_try, sub_path ~ path);
+					sp = subpack.info;
+					sp["path"] = path;
+				}
+			}
+
 			break;
 		} catch (FileNotFoundException) {
 			logDebug("Package description file %s not found...", filename);
