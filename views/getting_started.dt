@@ -1,116 +1,119 @@
 extends layout
 
 block title
-	- auto title = "Using DUB";
+	- auto title = "Getting Started With DUB";
 
 block body
-	h2 Introduction
+	h2 Installing DUB
 
-	p DUB is a build tool for D projects with support for automatically retrieving dependencies and integrating them in the build process. The design emphasis is on maximum simplicity for simple projects, while providing the opportunity to customize things when needed.
+	p DUB is the D language's official package manager, providing simple and configurable cross-platform builds. DUB can also generate VisualD and Mono-D package files for easy IDE support.
 
-	p An important property of the build description for each project is that it only contains the minimally needed information to describe how a package is built, skipping things such as build type (debug, release, unittest etc.). What is specified can be done so in a mostly platform and compiler agnostic way using abstract fields (e.g. import paths or used libraries) and by having DUB automatically translate common DMD command line flags to GCC or LDC flags.
+	p To install DUB, search your operating system's package manager or <a href="download">download</a> the pre-compiled package for your platform. The Windows installer will perform all installation steps; for other archives, you will want to ensure the DUB executable is in your path. Installation from source on other platforms is as simple as installing the dmd development files and your system's libcurl-dev, then running <code>./build.sh</code> in the repository's folder.
 
-	p This kind of representation has several important advantages. It allows DUB to generate VisualD and Mono-D project files, makes most packages automatically usable with any supported compiler and finally means that all packages support the same build types and platforms. Also, by using DUB itself as a library, external build tools can access the package description to provide further functionality without requiring the packages to add explicit support to their build script.
+	h2#own-projects Starting a new project
 
-	p Finally, in many cases there is no explicit configuration needed at all, by relying on some conventions:
+	p From your top-level source directory, run:
 
-	ul
-		li Folders named <code>source</code> or <code>src</code> get automatically scanned for sources and are treated as import folders.
-		li A file <code>app.d</code>, or <code>&lt;package name&gt;.d</code> is treated as containing the applications <code>main()</code> and automatically gets excluded in library builds of the package
-		li The two configurations "application" and "library" get added automatically, depending on the availability of those files
-		li A folder <code>views</code> is automatically treated as a string import folder (the <code>-J</code> command line switch for DMD)
+	pre.code $ dub init myproject
 
+	p This begins an interactive session:
 
-	h2#installation Installation
+	pre.code.
+		Package recipe format (sdl/json) [json]:
+		Name [myproject]:
+		Description [A minimal D application.]: My first project
+		Author name [imadev]: My Name
+		License [proprietary]: Boost
+		Copyright string [Copyright © 2017, imadev]:
+		Add dependency (leave empty to skip) []:
+		Successfully created an empty project in '/home/imadev/src/myproject'.
+		Package successfully created in myproject
 
-	p Simply <a href="download">download</a> the pre-compiled package for your platform. On Windows, the installer will perform all the necessary setup. On other systems, the only thing that you may want to do, other than extracting the archive, is to place the <code>dub</code> executable somewhere in your PATH so that you can call it from anywhere.
+	p DUB has created a "myproject" directory containing a .gitignore, a dub configuration file, and a source/app.d source tree.
 
-	p If a binary is not available for your platform, simply clone or download the <a href="https://github.com/rejectedsoftware/dub">dub repository</a> and run the contained <code>./build.sh</code>. You need to have DMD and libcurl development files installed (Only DMD on Windows).
+	p Notice that there are two configuration file formats available. JSON is a commonly-known format, and SDL (SDLang) is a clean, minimalist format. Both offer equivalent functionality (though unlike JSON, SDLang allows comments); use whichever you prefer.
 
+	p The following configuration file is generated:
+	table
+		tr
+			th JSON
+			th SDLang
+		tr
+			td
+				pre.code.lang-json
+					|{
+					|	"name": "myproject",
+					|	"authors": [
+					|		"My Name"
+					|	],
+					|	"description": "My first project",
+					|	"copyright": "Copyright © 2017, imadev",
+					|	"license": "Boost"
+					|}
+			td
+				pre.code.lang-sdl.
+					name "myproject"
+					description "My first project"
+					authors "My Name"
+					copyright "Copyright © 2017, imadev"
+					license "Boost"
 
-	h2#foreign-projects Building foreign projects
+	p For more information and help with configuring your builds, see the documentation for <a href="package-format?json">JSON</a> and <a href="package-format?sdl">SDLang</a>. DUB is smart and will provide sane defaults, but you can override almost anything.
 
-	p Building existing projects is as simple as getting the package and running either <code>dub run</code> (or short <code>dub</code>) to build and run or <code>dub build</code> from the package's root directory to build it. DUB will automatically download all needed dependencies and issue the build command. See the <a href="#command-line">command line documentation</a> for information on how to customize the build process.
+	p Execute <code>dub build</code> to build your project, <code>dub run</code> to build and run it, or <code>dub test</code> to build and run unit tests. The last line below is the output of the default application.
 
-	p To get the package, either use <code>git clone</code> with the projects git URL, or type <code>dub fetch &lt;package name&gt;</code> to have the package downloaded and installed in a package repository in your user folder. <code>dub run &lt;package name&gt;</code> can then be used to build and execute the package. <code>dub fetch --local &lt;package name&gt;</code> can be used instead to extract the package into a sub folder of the current working directory.
+	pre.code.
+		$ dub run
+		Performing "debug" build using dmd for x86.
+		myproject ~master: building configuration "application"...
+		Linking...
+		Running ./myproject.exe
+		Edit source/app.d to start your project.
 
-	h2#own-projects Creating an own project
+	p See the <a href="docs/commandline">command line interface documentation</a>, or run <code>dub --help</code> and <code>dub &lt;command&gt; --help</code> for more information.
 
-	p The easiest way is to type <code>dub init &lt;package name&gt;</code> on the command line to have DUB create an application skeleton for you. It will create the following directory structure:
+	h2#adding-deps Adding a dependency
+
+	p When you find a package to use from the <a href="https://code.dlang.org">DUB registry</a>, add it to the dependency list in your DUB configuration file:
 
 	table
 		tr
-			th Folder
-			th Description
+			th JSON
+			th SDLang
 		tr
-			td <code>&lt;package_name&gt;/</code>
-			td The root folder of the new project
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;<code>source/</code>
-			td The root folder for the project's source code
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>app.d</code>
-			td Suggested source file for the application entry point - this will automatically excluded if the project is used as a library
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>&lt;package_name&gt;/</code>
-			td The suggested root package under which the project's source code will be stored
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;<code>public/</code>
-			td A folder for putting public files that are used at run time (mostly meant for web service projects)
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;<code>views/</code>
-			td May contain string import files, such as HTML or UI templates
-		tr
-			td &nbsp;&nbsp;&nbsp;&nbsp;<code>dub.sdl</code> or <code>dub.json</code>
-			td Contains the package description of the project
+			td
+				pre.code.lang-json
+					|{
+					|	"name": "myproject",
+					|	"authors": [
+					|		"My Name"
+					|	],
+					|	"description": "My first project",
+					|	"copyright": "Copyright © 2017, imadev",
+					|	"license": "Boost",
+					|	"dependencies": {
+					|		"dub": "~>1.3.0"
+					|	}
+					|}
+			td
+				pre.code.lang-sdl.
+					name "myproject"
+					description "My first project"
+					authors "My Name"
+					copyright "Copyright © 2017, imadev"
+					license "Boost"
+					dependency "dub" version="~>1.3.0"
 
-	p Note that this directory structure is just a suggestion for a standard way of laying out things. Any of these folders can be removed or named differently, as long as the package description is adjusted accordingly. See the <a href="package-format">package format specification</a> page for a full reference of the possibilities.
+	p The DUB registry uses git tags to determine application versioning and DUB's dependency management is designed to work best according to <a href="http://semver.org">SemVer</a> rules. Please follow the rules of the SemVer specification for all packages you list on the registry. See the <a href="http://code.dlang.org/package-format?lang=json#version-specs">package documentation</a> for more information on dependency version specification.
 
-	p It is recommended to version your code using GIT tags of the form <code>v1.0.0</code>, where the "1.0.0" can be any valid <a href="http://semver.org/">SemVer</a> version number. Please try to follow the rules of the SemVer specification as close as possible (regarding breaking changes and added features). This has a fundamental effect on the vitality of the overall package ecosystem, so it's worth putting some care into this.
+	p You can publish packages to <a href="/publish">the registry here</a>.
 
-	p The version numbers can then be used to refer to specific commits/revisions of your package. See the <a href="package-format#version-specs">package version section</a> of the package description format page for more information. If you need to use a version control system other than GIT, please <a href="https://github.com/dlang/dub/issues">open a ticket</a> or add a comment if an equivalent ticket already exists.
+	h2#foreign-projects Building a third-party project
 
-	p After you have your new package in place, you can <a href="publish">publish it here</a>.
+	p You can easily fetch and build third-party projects published to the dub registry via the <code>dub fetch &lt;package name&gt;</code> command.
 
+	p To get the package, run <code>dub fetch &lt;package name&gt;</code> to download the package and install it in your user build directory. <code>dub run &lt;package name&gt;</code> can then be used to build and execute the package. <code>dub fetch --local &lt;package name&gt;</code> will extract the package into a subfolder of your current working directory.
 
-	h3#single-file-packages Single-file packages
+	h2#advanced-usage Advanced usage
 
-	p For small applications or scripts, DUB supports a special mode where the whole package is contained in a single .d file (it <em>must</em> have that extension). The contents that would otherwise go into the package recipe file (<code>dub.sdl</code>/<code>dub.json</code>) are embedded in a <code>/+ &hellip; +/</code> comment within the file itself:
-	
-	pre.code.lang-d.
-		#!/usr/bin/env dub
-		/+ dub.sdl:
-			name "hello"
-		+/
-		void main() {
-			import std.stdio : writeln;
-			writeln("Hello, World!");
-		}
-
-	p This can now be executed with <code>dub run --single hello.d</code> (append <code>-- &lt;app arguments&gt;</code> to pass arguments to the generated executable), or using the short syntax <code>dub hello.d &lt;app arguments&gt;</code>. The latter also enables execution as a script using just <code>./hello.d</code> with the optional shebang line at the top of the example (needs <code>chmod +x hello.d</code> first). Single-file packages cannot be used to create library packages.
-
-
-	h2#local-packages Using dependencies that are not on the public registry
-
-	In cases where certain dependencies are not available in the package registry, for example because they are in closed source repositories, or because they are modified forks of the official packages, there are several possibilities to choose from:
-
-	dl
-		dt <code>dub add-path</code>
-		dd Adds a local search directory. All direct sub directories will be searched for packages and those are preferred over packages downloaded from the registry.
-		
-		dt <code>dub add-local</code>
-		dd Similar to the above, but only adds a single package directory.
-
-		dt <code>dub add-override</code>
-		dd Can be used to override a certain version or version range of a package with another version, branch or path. This can be used to change dependencies system wide without modifying the description or selection files of a package.
-
-		dt Path based dependencies
-		dd Dependencies in the package description can use a path instead of a version. This can be used together with Git sub-modules or -trees, or with an otherwise known directory layout to use arbitrarily defined versions of a dependency. Note that this should only be used for non-public packages.
-
-		dt Path based selections
-		dd The <code>dub.selections.json</code> file can be used to specify arbitrary versions, branches, or paths, even if they contradict with the dependency specification of the packages involved (DUB will output a warning message in that case).
-
-
-	h2#command-line Command line interface
-
-	p See the <a href="docs/commandline">command line interface documentation</a> for an overview of DUB's CLI. You can also view the available command line options by running <code>dub --help</code> or <code>dub &lt;command&gt; --help</code>. 
+	p For more advanced feature, like single-file packages and managing local packages, please see <a href="/advanced_usage">the advanced usage guide</a>.
