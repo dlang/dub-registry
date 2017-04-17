@@ -89,6 +89,10 @@ interface IPackages {
 
 	@path(":name/:version/info")
 	Json getInfo(string _name, string _version);
+
+	@method(HTTPMethod.GET)
+        @path("search")
+	string[] search(string q, uint maxResults=5);
 }
 
 class LocalDubRegistryAPI : DubRegistryAPI {
@@ -145,6 +149,14 @@ override {
 	Json getInfo(string name, string ver) {
 		return m_registry.getPackageVersionInfo(rootOf(name), ver)
 			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	}
+
+	string[] search(string q, uint maxResults){
+		import std.range : take;
+		return m_registry.searchPackages([q])
+			.take(maxResults)
+			.map!(a => a["name"].get!string)
+			.array;
 	}
 }
 
