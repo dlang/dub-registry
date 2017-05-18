@@ -51,7 +51,7 @@ class NotificationCenter {
 		mail.headers["To"] = format("%s <%s>", user.fullName, user.email); // FIXME: sanitize/escape user.fullName
 		mail.headers["Subject"] = format("[%s] Errors in new version %s", package_name, branch_or_version);
 
-		auto dst = new MemoryOutputStream;
+		auto dst = createMemoryOutputStream();
 		dst.compileDietFile!("dubregistry.mail.package-version-errors.dt", user, settings, package_name, branch_or_version, errors);
 		mail.bodyText = cast(string)dst.data;
 
@@ -84,7 +84,7 @@ class NotificationCenter {
 				mail.headers["To"] = format("%s <%s>", user.fullName, user.email); // FIXME: sanitize/escape user.fullName
 				mail.headers["Subject"] = format("Weekly deprecation warnings reminder");
 
-				auto dst = new MemoryOutputStream;
+				auto dst = createMemoryOutputStream();
 				dst.compileDietFile!("dubregistry.mail.package-deprecation-warnings.dt", user, settings, deprecations);
 				mail.bodyText = cast(string)dst.data;
 

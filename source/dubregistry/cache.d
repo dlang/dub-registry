@@ -80,7 +80,7 @@ class URLCache {
 						continue;
 					} else {
 						auto data = be["data"].get!BsonBinData().rawData();
-						scope tmpresult = new MemoryStream(cast(ubyte[])data, false);
+						scope tmpresult = createMemoryStream(cast(ubyte[])data, false);
 						callback(tmpresult);
 						return;
 					}
@@ -103,7 +103,7 @@ class URLCache {
 							logDiagnostic("Cache HIT: %s", url.toString());
 							res.dropBody();
 							auto data = be["data"].get!BsonBinData().rawData();
-							result = new MemoryStream(cast(ubyte[])data, false);
+							result = createMemoryStream(cast(ubyte[])data, false);
 							break;
 						case HTTPStatus.notFound:
 							res.dropBody();
@@ -124,13 +124,13 @@ class URLCache {
 							auto pet = "ETag" in res.headers;
 							if (pet || mode == CacheMatchMode.always) {
 								logDiagnostic("Cache MISS: %s", url.toString());
-								auto dst = new MemoryOutputStream;
-								dst.write(res.bodyReader);
+								auto dst = createMemoryOutputStream();
+								res.bodyReader.pipe(dst);
 								auto rawdata = dst.data;
 								if (pet) entry.etag = *pet;
 								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
 								m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
-								result = new MemoryStream(rawdata, false);
+								result = createMemoryStream(rawdata, false);
 								break;
 							}
 
