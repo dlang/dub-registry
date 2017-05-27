@@ -140,7 +140,7 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
 	}
 
-	void setPackageRepository(string packname, Json repo)
+	void setPackageRepository(string packname, DbRepository repo)
 	{
 		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
 	}
@@ -293,11 +293,17 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
-	Json repository;
+	DbRepository repository;
 	DbPackageVersion[] versions;
 	string[] errors;
 	string[] categories;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
+}
+
+struct DbRepository {
+	string kind;
+	string owner;
+	string project;
 }
 
 struct DbPackageVersion {

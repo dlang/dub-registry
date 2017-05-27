@@ -116,13 +116,13 @@ class DubRegistry {
 			Info(p.name, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
 	}
 
-	RepositoryInfo getRepositoryInfo(Json repository)
+	RepositoryInfo getRepositoryInfo(DbRepository repository)
 	{
 		auto rep = getRepository(repository);
 		return rep.getInfo();
 	}
 
-	void addPackage(Json repository, User.ID user)
+	void addPackage(DbRepository repository, User.ID user)
 	{
 		auto pack_name = validateRepository(repository);
 
@@ -237,7 +237,7 @@ class DubRegistry {
 		ret["owner"] = pack.owner.toString();
 		ret["name"] = pack.name;
 		ret["versions"] = Json(vers);
-		ret["repository"] = pack.repository;
+		ret["repository"] = serializeToJson(pack.repository);
 		ret["categories"] = serializeToJson(pack.categories);
 		if(include_errors) ret["errors"] = serializeToJson(pack.errors);
 		return ret;
@@ -256,7 +256,7 @@ class DubRegistry {
 		if (pack_name in m_packageInfos) m_packageInfos.remove(pack_name);
 	}
 
-	void setPackageRepository(string pack_name, Json repository)
+	void setPackageRepository(string pack_name, DbRepository repository)
 	{
 		auto new_name = validateRepository(repository);
 		enforce(pack_name == new_name, "The package name of the new repository doesn't match the existing one: "~new_name);
@@ -271,7 +271,7 @@ class DubRegistry {
 			triggerPackageUpdate(packname);
 	}
 
-	protected string validateRepository(Json repository)
+	protected string validateRepository(DbRepository repository)
 	{
 		// find the packge info of ~master or any available branch
 		PackageVersionInfo info;
@@ -435,7 +435,7 @@ class DubRegistry {
 		}
 
 		Repository rep;
-		try rep = getRepository(pack["repository"]);
+		try rep = getRepository(pack["repository"].deserializeJson!DbRepository);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
