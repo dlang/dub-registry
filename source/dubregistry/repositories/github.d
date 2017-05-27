@@ -6,6 +6,7 @@
 module dubregistry.repositories.github;
 
 import dubregistry.cache;
+import dubregistry.dbcontroller : DbRepository;
 import dubregistry.repositories.repository;
 import std.string : startsWith;
 import std.typecons;
