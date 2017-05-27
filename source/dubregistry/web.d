@@ -43,6 +43,7 @@ class DubRegistryWebFrontend {
 		UserManController m_userman;
 		Category[] m_categories;
 		Category[string] m_categoryMap;
+		DbPackage[] m_packages;
 	}
 
 	this(DubRegistry registry, UserManController userman)
@@ -50,6 +51,7 @@ class DubRegistryWebFrontend {
 		m_registry = registry;
 		m_userman = userman;
 		updateCategories();
+		updatePackageList();
 	}
 
 	@path("/")
@@ -72,12 +74,11 @@ class DubRegistryWebFrontend {
 
 		DbPackage[] packages;
 		if (category.length) {
-			packages = m_registry.getPackageDump()
+			packages = m_packages
 				.filter!(p => p.categories.any!(c => c.startsWith(category)))
 				.array;
 		} else {
-			packages = m_registry.getPackageDump()
-				.array;
+			packages = m_packages.dup;
 		}
 
 		// sort by date of last version
@@ -294,6 +295,12 @@ class DubRegistryWebFrontend {
 
 		m_categories = cats;
 		m_categoryMap = catmap;
+	}
+
+	private void updatePackageList()
+	{
+		setTimer(30.seconds, &updatePackageList);
+		m_packages = m_registry.getPackageDump().array;
 	}
 }
 
