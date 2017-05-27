@@ -32,6 +32,11 @@ void addRepositoryFactory(string kind, RepositoryFactory factory)
 	s_repositoryFactories[kind] = factory;
 }
 
+bool supportsRepositoryKind(string kind)
+{
+	return (kind in s_repositoryFactories) !is null;
+}
+
 
 alias RepositoryFactory = Repository delegate(DbRepository);
 

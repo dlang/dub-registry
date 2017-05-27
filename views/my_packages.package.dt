@@ -76,8 +76,14 @@ block body
 
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
 		select(name="kind", size="1")
-			option(value="github", selected=pack["repository"]["kind"] == "github") GitHub project
-			option(value="bitbucket", selected=pack["repository"]["kind"] == "bitbucket") Bitbucket project
+			- import dubregistry.repositories.repository;
+			- auto rkind = pack["repository"]["kind"].get!string;
+			- if (supportsRepositoryKind("github"))
+				option(value="github", selected=rkind == "github") GitHub project
+			- if (supportsRepositoryKind("bitbucket"))
+				option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket project
+			- if (supportsRepositoryKind("gitlab"))
+				option(value="gitlab", selected=rkind == "gitlab") GitLab project
 		p
 			label(for="owner") Repository owner:
 			input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
