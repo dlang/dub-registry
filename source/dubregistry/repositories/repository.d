@@ -66,7 +66,7 @@ struct RefInfo {
 	}
 }
 
-package Json readJson(string url, bool sanitize = false, bool cache_priority = false)
+package Json readJson(alias request_modifier = (r) {})(string url, bool sanitize = false, bool cache_priority = false)
 {
 	import dubregistry.internal.utils : black;
 
@@ -75,7 +75,7 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 	Exception ex;
 	foreach (i; 0 .. 2) {
 		try {
-			downloadCached(url, (scope input){
+			downloadCached!request_modifier(url, (scope input){
 				scope (failure) clearCacheEntry(url);
 				auto text = input.readAllUTF8(sanitize);
 				ret = parseJsonString(text);

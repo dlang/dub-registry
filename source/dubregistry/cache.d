@@ -42,12 +42,12 @@ class URLCache {
 		m_entries.remove(["url": url.toString()]);
 	}
 
-	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
+	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false, scope void delegate(HTTPClientRequest req) request_modifier = null)
 	{
-		get(url, callback, cache_priority ? CacheMatchMode.always : CacheMatchMode.etag);
+		get(url, callback, cache_priority ? CacheMatchMode.always : CacheMatchMode.etag, request_modifier);
 	}
 
-	void get(URL url, scope void delegate(scope InputStream str) callback, CacheMatchMode mode = CacheMatchMode.etag)
+	void get(URL url, scope void delegate(scope InputStream str) callback, CacheMatchMode mode = CacheMatchMode.etag, scope void delegate(HTTPClientRequest req) request_modifier = null)
 	{
 		import std.datetime : Clock, UTC;
 		import vibe.http.auth.basic_auth;
@@ -94,6 +94,7 @@ class URLCache {
 				(scope req){
 					if (entry.etag.length && mode != CacheMatchMode.never) req.headers["If-None-Match"] = entry.etag;
 					if (user.length) addBasicAuth(req, user, password);
+					if (request_modifier) request_modifier(req);
 				},
 				(scope res){
 					switch (res.statusCode) {
@@ -173,15 +174,15 @@ private struct CacheEntry {
 
 private URLCache s_cache;
 
-void downloadCached(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
+void downloadCached(alias request_modifier = (r) {})(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
 	if (!s_cache) s_cache = new URLCache;
-	s_cache.get(url, callback, cache_priority);
+	s_cache.get(url, callback, cache_priority, (r) => request_modifier(r));
 }
 
-void downloadCached(string url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
+void downloadCached(alias request_modifier = (r) {})(string url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
 {
-	return downloadCached(URL.parse(url), callback, cache_priority);
+	return downloadCached!request_modifier(URL.parse(url), callback, cache_priority);
 }
 
 void clearCacheEntry(URL url)

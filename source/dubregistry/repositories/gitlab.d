@@ -1,7 +1,7 @@
 /**
 	Support for GitLab repositories.
 
-	Copyright: © 2015-2016 rejectedsoftware e.K.
+	Copyright: © 2015-2017 rejectedsoftware e.K.
 	License: Subject to the terms of the GNU GPLv3 license, as written in the included LICENSE.txt file.
 	Authors: Sönke Ludwig
 */
@@ -15,6 +15,7 @@ import std.typecons;
 import vibe.core.log;
 import vibe.core.stream;
 import vibe.data.json;
+import vibe.http.client : HTTPClientRequest;
 import vibe.inet.url;
 import vibe.textfilter.urlencode;
 
@@ -48,13 +49,13 @@ class GitLabRepository : Repository {
 		import std.datetime : SysTime;
 
 		Json tags;
-		try tags = readJson(getAPIURLPrefix()~"repository/tags?private_token="~m_authToken);
+		try tags = readJson!(r => addAuth(r))(getAPIURLPrefix()~"repository/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		RefInfo[] ret;
 		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag["name"].get!string;
-				Json commit = readJson(getAPIURLPrefix()~"repository/commits/"~tag["commit"]["id"].get!string~"?private_token="~m_authToken, true, true);
+				Json commit = readJson!(r => addAuth(r))(getAPIURLPrefix()~"repository/commits/"~tag["commit"]["id"].get!string, true, true);
 				ret ~= RefInfo(tagname, tag["commit"]["id"].get!string, SysTime.fromISOExtString(commit["committed_date"].get!string));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
@@ -68,11 +69,11 @@ class GitLabRepository : Repository {
 	{
 		import std.datetime : SysTime;
 
-		Json branches = readJson(getAPIURLPrefix()~"repository/branches?private_token="~m_authToken);
+		Json branches = readJson!(r => addAuth(r))(getAPIURLPrefix()~"repository/branches");
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch["name"].get!string;
-			Json commit = readJson(getAPIURLPrefix()~"repository/commits/"~branch["commit"]["id"].get!string~"?private_token="~m_authToken, true, true);
+			Json commit = readJson!(r => addAuth(r))(getAPIURLPrefix()~"repository/commits/"~branch["commit"]["id"].get!string, true, true);
 			ret ~= RefInfo(branchname, branch["commit"]["id"].get!string, SysTime.fromISOExtString(commit["committed_date"].get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
@@ -82,7 +83,7 @@ class GitLabRepository : Repository {
 	RepositoryInfo getInfo()
 	{
 		RepositoryInfo ret;
-		auto nfo = readJson(getAPIURLPrefix()~"?private_token="~m_authToken);
+		auto nfo = readJson!(r => addAuth(r))(getAPIURLPrefix());
 		ret.isFork = false; // not reported by API
 		//ret.stars = nfo["star_count"].opt!uint;
 		//ret.forks = nfo["forks_count"].opt!uint;
@@ -92,15 +93,14 @@ class GitLabRepository : Repository {
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
-		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_project ~ "/raw/" ~ commit_sha) ~ path.toString() ~ "?private_token="~m_authToken;
-		downloadCached(url, (scope input) {
+		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_project ~ "/raw/" ~ commit_sha) ~ path.toString();
+		downloadCached!(r => addAuth(r))(url, (scope input) {
 			reader(input);
 		}, true);
 	}
 
 	string getDownloadUrl(string ver)
 	{
-		if (m_authToken.length > 0) return null; // don't make private token public
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
 		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~ver;
@@ -110,11 +110,16 @@ class GitLabRepository : Repository {
 	{
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		auto url = m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~ver~"&private_token="~m_authToken;
-		downloadCached(url, del);
+		auto url = m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~ver;
+		downloadCached!(r => addAuth(r))(url, del);
 	}
 
 	private string getAPIURLPrefix() {
-		return m_baseURL.toString() ~ "api/v3/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
+		return m_baseURL.toString() ~ "api/v4/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
+	}
+
+	private void addAuth(scope HTTPClientRequest req)
+	{
+		req.headers["PRIVATE-TOKEN"] = "Bearer "~m_authToken;
 	}
 }
