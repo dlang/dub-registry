@@ -50,6 +50,8 @@ block body
 				- repo_url = "https://github.com/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
 			- else if( (*pr)["kind"] == "bitbucket" )
 				- repo_url = "https://bitbucket.org/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
+			- else if( (*pr)["kind"] == "gitlab" )
+				- repo_url = "https://gitlab.com/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
 			- if (repo_url.length)
 				tr
 					td Repository

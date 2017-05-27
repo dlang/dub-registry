@@ -82,8 +82,10 @@ class GitLabRepository : Repository {
 	RepositoryInfo getInfo()
 	{
 		RepositoryInfo ret;
-		// TODO!
-		//ret.isFork = nfo["fork"].opt!bool;
+		auto nfo = readJson(getAPIURLPrefix()~"?private_token="~m_authToken);
+		ret.isFork = false; // not reported by API
+		//ret.stars = nfo["star_count"].opt!uint;
+		//ret.forks = nfo["forks_count"].opt!uint;
 		return ret;
 	}
 
