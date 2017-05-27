@@ -158,6 +158,22 @@ h3 {
 	border: 1px solid #ddd;
 }*/
 
+#content ul.pageNav {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+ul.pageNav li {
+	display: inline-block;
+	margin-right: 0.4em;
+}
+ul.pageNav li.selected {
+	font-weight: bold;
+	border: 1px solid #ddd;
+	background-color: #f0f0f0;
+	padding: 0 2pt;
+}
+
 
 @media (min-width: 600pt) {
 	div#content { padding: 12pt 10%; }

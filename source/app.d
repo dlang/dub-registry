@@ -30,7 +30,7 @@ void startMonitoring()
 {
 	void monitorNewVersions()
 	{
-		sleep(30.seconds()); // give the cache a chance to warm up first
+		sleep(10.seconds()); // give the cache a chance to warm up first
 		while(true){
 			if (s_mirror.length) s_registry.mirrorRegistry(URL(s_mirror));
 			else s_registry.checkForNewVersions();
@@ -38,29 +38,6 @@ void startMonitoring()
 		}
 	}
 	s_checkTask = runTask(&monitorNewVersions);
-}
-
-void warmupCache()
-{
-	import std.array : array;
-	import std.datetime : StopWatch;
-
-	runTask({
-		sleep(5.seconds);
-		auto packs = s_registry.availablePackages.array;
-		logInfo("Starting to warm up package cache...");
-		StopWatch sw;
-		sw.start();
-		foreach (i, p; packs) {
-			s_registry.getPackageInfo(p);
-			sleep(10.msecs); // keep the CPU load down
-			if (sw.peek.seconds >= 1) {
-				logInfo("Warmed up cache for %s of %s packages.", i+1, packs.length);
-				sw.reset();
-			}
-		}
-		logInfo("Cache warmup finished.");
-	});
 }
 
 shared static this()
@@ -131,6 +108,4 @@ shared static this()
 
 	// poll github for new project versions
 	startMonitoring();
-	// start warming up the cache (query database and download READMEs)
-	warmupCache();
 }
