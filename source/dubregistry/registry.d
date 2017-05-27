@@ -60,10 +60,8 @@ class DubRegistry {
 
 	@property DbController db() nothrow { return m_db; }
 
-	@property auto availablePackages()
-	{
-		return m_db.getAllPackages();
-	}
+	@property auto availablePackages() { return m_db.getAllPackages(); }
+	@property auto availablePackageIDs() { return m_db.getAllPackageIDs(); }
 
 	auto getPackageDump()
 	{
@@ -141,7 +139,7 @@ class DubRegistry {
 	{
 		m_db.addOrSetPackage(pack);
 		if (auto pi = pack.name in m_packageInfos)
-			*pi = getPackageInfo(pack, false);
+			m_packageInfos.remove(pack.name);
 	}
 
 	void addDownload(BsonObjectID pack_id, string ver, string agent)

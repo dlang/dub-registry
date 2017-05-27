@@ -93,9 +93,21 @@ class DbController {
 		return deserializeBson!DbPackage(bpack);
 	}
 
+	DbPackage getPackage(BsonObjectID id)
+	{
+		auto bpack = m_packages.findOne(["_id": id]);
+		enforce(!bpack.isNull(), "Unknown package ID.");
+		return deserializeBson!DbPackage(bpack);
+	}
+
 	auto getAllPackages()
 	{
 		return m_packages.find(Bson.emptyObject, ["name": 1]).map!(p => p["name"].get!string)();
+	}
+
+	auto getAllPackageIDs()
+	{
+		return m_packages.find(Bson.emptyObject, ["_id": 1]).map!(p => p["_id"].get!BsonObjectID)();
 	}
 
 	auto getPackageDump()
