@@ -28,6 +28,10 @@ public struct AppConfig
 	string bbuser;
 	@Name("bitbucket-password") @Optional
 	string bbpassword;
+	@Name("gogs-url") @Optional
+	string gogsurl;
+	@Name("gogs-auth") @Optional
+	string gogsauth;
 	@Name("enforce-certificate-trust")
 	bool enforceCertificateTrust = false;
 
