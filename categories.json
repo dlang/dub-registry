@@ -73,6 +73,7 @@
 			{"name": "bioinformatics", "description": "Bioinformatics"}
 		]},
 		{"name": "optimized_cpu", "description": "Optimized for fast execution"},
-		{"name": "optimized_mem", "description": "Optimized for low memory usage"}
+		{"name": "optimized_mem", "description": "Optimized for low memory usage"},
+		{"name": "nogc", "description": "Suitable for @nogc use"}
 	]}
 ]
