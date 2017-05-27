@@ -8,21 +8,21 @@ module dubregistry.repositories.repository;
 import vibe.vibe;
 
 import dubregistry.cache;
+import dubregistry.dbcontroller : DbRepository;
 import std.digest.sha;
 import std.typecons;
 
 
-Repository getRepository(Json repinfo)
+Repository getRepository(DbRepository repinfo)
 {
-	auto ident = repinfo.toString();
-	if( auto pr = ident in s_repositories )
+	if( auto pr = repinfo in s_repositories )
 		return *pr;
 
-	logDebug("Returning new repository: %s", ident);
-	auto pf = repinfo["kind"].get!string in s_repositoryFactories;
-	enforce(pf, "Unknown repository type: "~repinfo["kind"].get!string);
+	logDebug("Returning new repository: %s", repinfo);
+	auto pf = repinfo.kind in s_repositoryFactories;
+	enforce(pf, "Unknown repository type: "~repinfo.kind);
 	auto rep = (*pf)(repinfo);
-	s_repositories[ident] = rep;
+	s_repositories[repinfo] = rep;
 	return rep;
 }
 
@@ -33,7 +33,7 @@ void addRepositoryFactory(string kind, RepositoryFactory factory)
 }
 
 
-alias RepositoryFactory = Repository delegate(Json);
+alias RepositoryFactory = Repository delegate(DbRepository);
 
 interface Repository {
 	RefInfo[] getTags();
@@ -85,6 +85,6 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 }
 
 private {
-	Repository[string] s_repositories;
+	Repository[DbRepository] s_repositories;
 	RepositoryFactory[string] s_repositoryFactories;
 }

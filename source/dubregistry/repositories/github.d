@@ -25,8 +25,8 @@ class GithubRepository : Repository {
 
 	static void register(string user, string password)
 	{
-		Repository factory(Json info){
-			return new GithubRepository(info["owner"].get!string, info["project"].get!string, user, password);
+		Repository factory(DbRepository info){
+			return new GithubRepository(info.owner, info.project, user, password);
 		}
 		addRepositoryFactory("github", &factory);
 	}

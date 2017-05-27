@@ -23,8 +23,8 @@ class BitbucketRepository : Repository {
 
 	static void register()
 	{
-		Repository factory(Json info){
-			return new BitbucketRepository(info["owner"].get!string, info["project"].get!string);
+		Repository factory(DbRepository info){
+			return new BitbucketRepository(info.owner, info.project);
 		}
 		addRepositoryFactory("bitbucket", &factory);
 	}

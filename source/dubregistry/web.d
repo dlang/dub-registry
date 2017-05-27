@@ -451,10 +451,10 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
 	void postRegisterPackage(string kind, string owner, string project, User _user, bool ignore_fork = false)
 	{
-		Json rep = Json.emptyObject;
-		rep["kind"] = kind;
-		rep["owner"] = owner;
-		rep["project"] = project;
+		DbRepository rep;
+		rep.kind = kind;
+		rep.owner = owner;
+		rep.project = project;
 
 		if (!ignore_fork) {
 			auto info = m_registry.getRepositoryInfo(rep);
@@ -533,10 +533,10 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 
-		Json rep = Json.emptyObject;
-		rep["kind"] = kind;
-		rep["owner"] = owner;
-		rep["project"] = project;
+		DbRepository rep;
+		rep.kind = kind;
+		rep.owner = owner;
+		rep.project = project;
 		m_registry.setPackageRepository(_packname, rep);
 
 		redirect("/my_packages/"~_packname);
