@@ -24,6 +24,7 @@ block body
 
 		form#category-form(method="GET", action="")
 			input(type="hidden", name="sort", value=sort_mode)
+			input(type="hidden", name="limit", value=info.limit)
 			p Select category:
 				select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
 					- void outputCat(Category cat)
