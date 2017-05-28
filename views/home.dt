@@ -16,6 +16,11 @@ block body
 	- auto category = req.query.get("category", null);
 	- auto sort_mode = req.query.get("sort", "updated");
 
+	- string makeHomeURL(string sort, string category, ulong skip, ulong limit) {
+	-   import std.conv : to;
+	-   return "?sort=" ~ sort ~ "&category=" ~ category ~ "&skip=" ~ skip.to!string ~ "&limit=" ~ limit.to!string;
+	- }
+
 	- auto mirror = req.params.get("mirror", "");
 	- if (mirror.length)
 		p This is a mirror of #[a(href=mirror)= mirror].
@@ -56,7 +61,7 @@ block body
 					th.selected= cp[1]
 				- else
 					th
-						a(href="?sort=#{cp[0]}&category=#{category}")= cp[1]
+						a(href=makeHomeURL(cp[0], category, info.skip, info.limit))= cp[1]
 
 		- foreach (pl; info.packages)
 			- if( pl["versions"].length )
@@ -90,14 +95,14 @@ block body
 			- if (i * info.limit == info.skip)
 				li.selected= i+1
 			- else
-				li: a(href="?sort=#{sort_mode}&category=#{category}&skip=#{i*info.limit}&limit=#{info.limit}")= i+1
+				li: a(href=makeHomeURL(sort_mode, category, i*info.limit, info.limit))= i+1
 	ul.pageNav.perPage
 		- static immutable limit_enum = [10, 20, 50, 100];
 		- foreach (limit; limit_enum)
 			- if (info.limit == limit)
 				li.selected= limit
 			- else
-				li: a(href="?sort=#{sort_mode}&category=#{category}&skip=#{info.skip}&limit=#{limit}")= limit
+				li: a(href=makeHomeURL(sort_mode, category, info.skip, limit))= limit
 
 	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.packageCount)} of #{info.packageCount} packages found.
 
