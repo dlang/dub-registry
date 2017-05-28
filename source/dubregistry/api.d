@@ -139,7 +139,8 @@ override {
 
 	Json getInfo(string name) {
 		return m_registry.getPackageInfo(rootOf(name))
-			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+			.check!(r => r.info.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found")
+			.info;
 	}
 
 	Json getInfo(string name, string ver) {

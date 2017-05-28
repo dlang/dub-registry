@@ -5,6 +5,7 @@ block title
 	- import dubregistry.web;
 	- import vibe.data.json;
 	- import std.algorithm.comparison : min;
+	- import std.algorithm.iteration : map;
 	- import std.string : replace, split;
 	- auto title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
@@ -58,7 +59,8 @@ block body
 
 		- foreach (pl; info.packages)
 			- if( pl["versions"].length )
-				- auto p = getBestVersion(pl["versions"]);
+				- auto vidx = getBestVersionIndex(pl["versions"].get!(Json[]).map!(v => v["version"].opt!string));
+				- auto p = pl["versions"][vidx];
 				- auto desc = p["description"].opt!string;
 				- auto ver = p["version"].opt!string();
 				tr

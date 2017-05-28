@@ -77,22 +77,44 @@ string formatFuzzyDate(SysTime st)
 	else return format("%s years ago", now.year - st.year);
 }
 
-Json getBestVersion(Json versions)
+/** Takes an input range of version strings and returns the index of the "best"
+	version.
+
+	"Best" version in this case means the highest released version. Numbered
+	versions will be preferred over branch names.
+
+*/
+size_t getBestVersionIndex(R)(R versions)
 {
 	import dub.semver;
-	Json ret;
-	foreach (v; versions) {
-		auto vstr = v["version"].get!string;
-		if (ret.type == Json.Type.undefined) ret = v;
-		else {
-			auto curvstr = ret["version"].get!string;
-			if (curvstr.startsWith("~")) {
-				if (vstr == "~master" || !vstr.startsWith("~"))
-					ret = v;
-			} else if (!vstr.startsWith("~") && compareVersions(vstr, curvstr) > 0) {
-				ret = v;
+
+	size_t ret = size_t.max;
+	string retv;
+	size_t i = 0;
+	foreach (vstr; versions) {
+		if (ret == size_t.max) {
+			ret = i;
+			retv = vstr;
+		} else {
+			if (retv.startsWith("~")) {
+				if (vstr == "~master" || !vstr.startsWith("~")) {
+					ret = i;
+					retv = vstr;
+				}
+			} else if (!vstr.startsWith("~") && compareVersions(vstr, retv) > 0) {
+				ret = i;
+				retv = vstr;
 			}
 		}
+		i++;
 	}
 	return ret;
+}
+
+unittest {
+	assert(getBestVersionIndex(["~master", "0.0.1", "1.0.0"]) == 2);
+	assert(getBestVersionIndex(["~master", "0.0.1-alpha"]) == 1);
+	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
+	assert(getBestVersionIndex(["~master", "~somebranch"]) == 0);
+	assert(getBestVersionIndex(["1.0.0", "1.0.1-alpha"]) == 1);
 }

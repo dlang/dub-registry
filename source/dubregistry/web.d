@@ -102,7 +102,7 @@ class DubRegistryWebFrontend {
 		Info info;
 		info.packageCount = packages.length;
 		info.packages = packages[min(skip, $) .. min(skip + limit, $)]
-			.map!(p => m_registry.getPackageInfo(p, false))
+			.map!(p => m_registry.getPackageInfo(p, false).info)
 			.array;
 		info.skip = skip;
 		info.limit = limit;
@@ -155,9 +155,13 @@ class DubRegistryWebFrontend {
 			}
 		}
 
-		Json packageInfo, versionInfo;
-		if (!getPackageInfo(pname, ver, packageInfo, versionInfo))
+		PackageInfo packinfo;
+		PackageVersionInfo verinfo;
+		if (!getPackageInfo(pname, ver, packinfo, verinfo))
 			return;
+
+		auto packageInfo = packinfo.info;
+		auto versionInfo = verinfo.info;
 
 		User user;
 		if (m_userman) user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
@@ -167,13 +171,13 @@ class DubRegistryWebFrontend {
 
 			// This log line is a weird workaround to make otherwise undefined Json fields
 			// available. Smells like a compiler bug.
-			logDebug("%s %s", packageInfo["id"].toString(), versionInfo["url"].toString());
+			logDebug("%s %s", packageInfo["id"].toString(), verinfo.downloadURL);
 
 			// add download to statistic
 			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
-			if (versionInfo["url"].get!string.length > 0) {
+			if (verinfo.downloadURL.length > 0) {
 				// redirect to hosting service specific URL
-				redirect(versionInfo["url"].get!string);
+				redirect(verinfo.downloadURL);
 			} else {
 				// directly forward from hoster
 				res.headers["Content-Disposition"] = "attachment; filename=\""~pname~"-"~(ver.startsWith("~") ? ver[1 .. $] : ver) ~ ".zip\"";
@@ -185,7 +189,7 @@ class DubRegistryWebFrontend {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
 		} else {
-			auto gitVer = versionInfo["version"].get!string;
+			auto gitVer = verinfo.version_;
 			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
 			string urlFilter(string url, bool is_image)
 			{
@@ -213,39 +217,40 @@ class DubRegistryWebFrontend {
 		}
 	}
 
-	private bool getPackageInfo(string pack_name, string pack_version, out Json pkg_info, out Json ver_info)
+	private bool getPackageInfo(string pack_name, string pack_version, out PackageInfo pkg_info, out PackageVersionInfo ver_info)
 	{
 		auto ppath = pack_name.urlDecode().split(":");
 
 		pkg_info = m_registry.getPackageInfo(ppath[0]);
-		if (pkg_info.type == Json.Type.null_) return false;
+		if (pkg_info.info.type == Json.Type.null_) return false;
 
 		if (pack_version.length) {
-			foreach (v; pkg_info["versions"]) {
-				if (v["version"].get!string == pack_version) {
+			foreach (ref v; pkg_info.versions) {
+				if (v.version_ == pack_version) {
 					ver_info = v;
 					break;
 				}
 			}
-			if (ver_info.type != Json.Type.Object) return false;
+			if (ver_info.info.type != Json.Type.Object) return false;
 		} else {
 			import dubregistry.viewutils;
-			if (pkg_info["versions"].length == 0) return false;
-			ver_info = getBestVersion(pkg_info["versions"]);
+			if (pkg_info.versions.length == 0) return false;
+			auto vidx = getBestVersionIndex(pkg_info.versions.map!(v => v.version_));
+			ver_info = pkg_info.versions[vidx];
 		}
 
 		foreach (i; 1 .. ppath.length) {
-			if ("subPackages" !in ver_info) return false;
+			if ("subPackages" !in ver_info.info) return false;
 			bool found = false;
-			foreach (sp; ver_info["subPackages"]) {
+			foreach (sp; ver_info.info["subPackages"]) {
 				if (sp["name"] == ppath[i]) {
 					Json newv = Json.emptyObject;
 					// inherit certain fields
 					foreach (field; ["version", "date", "license", "authors", "homepage"])
-						if (auto pv = field in ver_info) newv[field] = *pv;
+						if (auto pv = field in ver_info.info) newv[field] = *pv;
 					// copy/overwrite the rest frmo the sub package
 					foreach (string name, value; sp) newv[name] = value;
-					ver_info = newv;
+					ver_info.info = newv;
 					found = true;
 					break;
 				}
@@ -490,7 +495,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceUserPackage(_user, _packname);
 		auto packageName = _packname;
 		auto nfo = m_registry.getPackageInfo(packageName);
-		if (nfo.type == Json.Type.null_) return;
+		if (nfo.info.type == Json.Type.null_) return;
 		auto categories = m_categories;
 		auto registry = m_registry;
 		auto user = _user;

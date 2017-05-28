@@ -190,37 +190,53 @@ class DubRegistry {
 		return m_db.getLatestVersion(packname);
 	}
 
-	Json getPackageInfo(string packname, bool include_errors = false)
+	PackageInfo getPackageInfo(string packname, bool include_errors = false)
 	{
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
-		catch(Exception) return Json(null);
+		catch(Exception) return PackageInfo.init;
 
 		return getPackageInfo(pack, include_errors);
 	}
 
-	Json getPackageInfo(DbPackage pack, bool include_errors)
+	PackageInfo getPackageInfo(DbPackage pack, bool include_errors)
 	{
-		Json ret = Json.emptyObject;
-		ret["id"] = pack._id.toString();
-		ret["dateAdded"] = pack._id.timeStamp.toISOExtString();
-		ret["owner"] = pack.owner.toString();
-		ret["name"] = pack.name;
-		ret["versions"] = Json(pack.versions.map!(v => getPackageVersionInfo(v)).array);
-		ret["repository"] = serializeToJson(pack.repository);
-		ret["categories"] = serializeToJson(pack.categories);
-		if(include_errors) ret["errors"] = serializeToJson(pack.errors);
+		auto rep = getRepository(pack.repository);
+
+		PackageInfo ret;
+		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+
+		Json nfo = Json.emptyObject;
+		nfo["id"] = pack._id.toString();
+		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
+		nfo["owner"] = pack.owner.toString();
+		nfo["name"] = pack.name;
+		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
+		nfo["repository"] = serializeToJson(pack.repository);
+		nfo["categories"] = serializeToJson(pack.categories);
+		if(include_errors) nfo["errors"] = serializeToJson(pack.errors);
+
+		ret.info = nfo;
+
 		return ret;
 	}
 
-	Json getPackageVersionInfo(DbPackageVersion v)
+	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep)
 	{
+		// JSON package version info as reported to the client
 		auto nfo = v.info.get!(Json[string]).dup;
 		nfo["version"] = v.version_;
 		nfo["date"] = v.date.toISOExtString();
 		nfo["readmeFile"] = v.readme;
 		nfo["commitID"] = v.commitID;
-		return Json(nfo);
+
+		PackageVersionInfo ret;
+		ret.info = Json(nfo);
+		ret.date = v.date;
+		ret.sha = v.commitID;
+		ret.version_ = v.version_;
+		ret.downloadURL = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_);
+		return ret;
 	}
 
 	string getReadme(Json version_info, DbRepository repository)
@@ -419,7 +435,7 @@ class DubRegistry {
 		import std.encoding;
 		string[] errors;
 
-		Json pack;
+		PackageInfo pack;
 		try pack = getPackageInfo(packname);
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
@@ -428,7 +444,7 @@ class DubRegistry {
 		}
 
 		Repository rep;
-		try rep = getRepository(pack["repository"].deserializeJson!DbRepository);
+		try rep = getRepository(pack.info["repository"].deserializeJson!DbRepository);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
@@ -477,8 +493,8 @@ class DubRegistry {
 			}
 		}
 		if (got_all_tags_and_branches) {
-			foreach (v; pack["versions"]) {
-				auto ver = v["version"].get!string;
+			foreach (v; pack.versions) {
+				auto ver = v.version_;
 				if (ver !in existing) {
 					logInfo("Removing version %s as the branch/tag was removed.", ver);
 					removeVersion(packname, ver);
@@ -549,8 +565,15 @@ struct PackageStats {
 	DbDownloadStats downloads;
 }
 
-private struct PackageVersionInfo {
+struct PackageVersionInfo {
+	string version_;
 	SysTime date;
 	string sha;
-	Json info;
+	string downloadURL;
+	Json info; /// JSON version information, as reported to the client
+}
+
+struct PackageInfo {
+	PackageVersionInfo[] versions;
+	Json info; /// JSON package information, as reported to the client
 }
