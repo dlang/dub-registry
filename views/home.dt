@@ -90,6 +90,13 @@ block body
 				li.selected= i+1
 			- else
 				li: a(href="?sort=#{sort_mode}&category=#{category}&skip=#{i*info.limit}&limit=#{info.limit}")= i+1
+	ul.pageNav.perPage
+		- static immutable limit_enum = [10, 20, 50, 100];
+		- foreach (limit; limit_enum)
+			- if (info.limit == limit)
+				li.selected= limit
+			- else
+				li: a(href="?sort=#{sort_mode}&category=#{category}&skip=#{info.skip}&limit=#{limit}")= limit
 
 	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.packageCount)} of #{info.packageCount} packages found.
 

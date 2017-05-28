@@ -158,6 +158,10 @@ h3 {
 	border: 1px solid #ddd;
 }*/
 
+#content ul.pageNav.perPage:before {
+	content: "Per Page: ";
+	display: inline;
+}
 #content ul.pageNav {
 	list-style: none;
 	padding: 0;
