@@ -60,6 +60,9 @@ class DubRegistryWebFrontend {
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
 
+		if (limit == 0) // prevent division by zero
+			limit = 20;
+
 		static struct Info {
 			Json[] packages;
 			size_t packageCount;
