@@ -6,7 +6,7 @@ block title
 block body
 	- import vibe.data.json;
 	- import dubregistry.web : Category;
-	- auto pack = registry.getPackageInfo(packageName, true);
+	- auto pack = registry.getPackageInfo(packageName, true).info;
 
 	h2 General information
 
