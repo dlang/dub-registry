@@ -2,6 +2,6 @@
 /.dub
 /__test__library__
 /dub-registry
+/dub-registry-test-library
 *.exe
 log.txt
-
