@@ -4,6 +4,7 @@ block title
 	- import std.algorithm;
 	- import std.array : join;
 	- import vibe.data.json;
+	- import vibe.inet.url;
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;
 	- import userman.controller;
@@ -15,139 +16,166 @@ block css
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
 
 block body
+	.main
+		- import vibe.data.bson;
+		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
+			a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
 
-	- import vibe.data.bson;
-	- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
-		a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
+		- if(packageName.canFind(":"))
+			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);
+			h1.
+				#[a.blind(href="#{url}")=packageInfo["name"].get!string]#{find(packageName, ":")} #[strong.badge #{versionInfo["version"].get!string}]
+		- else
+			h1 #{packageName} #[strong.badge #{versionInfo["version"].get!string}]
 
-	h2 Description
+		p= versionInfo["description"].opt!string
+		br
+		p To use this package, put the following dependency into your project's dependencies section:
+		.clipboard-pkg
+			- string expr = versionInfo["version"].get!string;
+			- if( !expr.startsWith("~") ) expr = "~>" ~ expr;
+			.clipboard-pkg-row
+				.clipboard-pkg-title dub.json
+				input(id="package-clipboard-json",value='"#{packageName}": "#{expr}"')
+				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-json")
+					img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
-	p= versionInfo["description"].opt!string
-
-	h2 Package Information
-
-	- string repo_url;
-
-	table
-		- if (packageName.canFind(":"))
-			tr
-				td Root package
-				td
-					a(href='#{req.rootDir}packages/#{urlEncode(packageInfo["name"].get!string)}')= packageInfo["name"].get!string
-
-		tr
-			td Version
-			td #{versionInfo["version"].get!string} (#{formatDate(versionInfo["date"])})
-
-		- if( auto ph = "homepage" in versionInfo )
-			tr
-				td Homepage
-				td
-					a(href="#{ph.get!string}")= ph.get!string
-
-		- if( auto pr = "repository" in packageInfo )
-			- if( (*pr)["kind"] == "github" )
-				- repo_url = "https://github.com/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
-			- else if( (*pr)["kind"] == "bitbucket" )
-				- repo_url = "https://bitbucket.org/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
-			- else if( (*pr)["kind"] == "gitlab" )
-				- repo_url = "https://gitlab.com/"~(*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
-			- if (repo_url.length)
-				tr
-					td Repository
-					td
-						a(href=repo_url)= repo_url
-
-		- if( auto pl = "license" in versionInfo )
-			tr
-				td License
-				td= pl.get!string
-
-		- if( auto pl = "copyright" in versionInfo )
-			tr
-				td Copyright
-				td= pl.get!string
-
-		- if( auto pa = "authors" in versionInfo )
-			tr
-				td Authors
-				td= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
-
-		- if (user.id != User.ID.init)
-			tr
-				td Registered by
-				td= user.fullName.length ? user.fullName : user.name
+			.clipboard-pkg-row
+				.clipboard-pkg-title dub.sdl
+				input(id="package-clipboard-sdl",value='dependency "#{packageName}" version="#{expr}"')
+				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
+					img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
-			tr
-				td Sub packages
-				td
-					dl
-						- foreach (sp; versionInfo["subPackages"])
-							- if (sp.type == Json.Type.object)
-								dt #{packageName}:#{sp["name"].get!string}
-								dd= sp["description"].opt!string
-							- else
-								- auto dir = sp.get!string;
-								- if (!dir.endsWith("/")) dir ~= "/";
-								dt= dir
-								dd [directory based sub package]
+			- bool helpWrited = false;
+			- foreach(sp; versionInfo["subPackages"])
+				- if(sp.type == Json.Type.object && sp["description"].opt!string)
+					- if(!helpWrited)
+						- helpWrited = true;
+						br
+						p This package provides sub packages which can be used individually:
+					p
+						- auto depname = packageName ~ ":" ~ sp["name"].get!string;
+						a.blind(href="#{req.rootDir}packages/#{urlEncode(depname)}")
+							|= depname
+						|= "- " ~ sp["description"].opt!string
 
-		tr
-			td Dependencies
-				- auto pd = "dependencies" in versionInfo;
-				- if (pd && pd.length)
-					td
-						- foreach (string dep, ver; *pd)
-							p
-								a(href="#{req.rootDir}packages/#{urlEncode(dep)}")= dep
-				- else
-					td none
+		hr
+		- if (readmeContents.length)
+			.repositoryReadme.markdown-body
+				- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
+				- scope msettings = new MarkdownSettings;
+				- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
+				- msettings.headingBaseLevel = 2;
+				- msettings.urlFilter = &urlFilter;
+				!= filterMarkdown(readmeContents, msettings)
+
+	.packageInfo
+		ul.unmarkedList
+			- if (user.id != User.ID.init)
+				li#registredBy Registred by #[strong= user.fullName.length ? user.fullName : user.name]
+			- if( auto pr = "repository" in packageInfo )
+				- string repo_url, repo_prefix;
+				- repo_url = (*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
+				- if( (*pr)["kind"] == "github" )
+					- repo_prefix = "https://github.com/";
+				- else if( (*pr)["kind"] == "bitbucket" )
+					- repo_prefix = "https://bitbucket.org/";
+				- if (repo_url.length)
+					li#repository
+						a.blind(href="#{repo_prefix}#{repo_url}")= repo_url
+
+			- if( auto ph = "homepage" in versionInfo )
+				- auto hpage = URL(ph.get!string);
+				li#homepage
+					a.blind(href="#{hpage.toString}")= hpage.host ~ hpage.localURI 
+
+			- if( auto pl = "license" in versionInfo )
+				li#license= pl.get!string
+
+			- if( auto pl = "copyright" in versionInfo )
+				li#copyright= pl.get!string
+
+		- if( auto pa = "authors" in versionInfo )
+			p#authors.wrap
+				strong Authors: 
+				|= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
+
+		- if (versionInfo["subPackages"].opt!(Json[]).length)
+			p#subPackages.wrap
+				strong Sub packages: 
+				- string[] subs;
+				- foreach (sp; versionInfo["subPackages"])
+					- if (sp.type == Json.Type.object)
+						- auto sub = "<span class=\"light\">" ~ packageName ~ ":</span>" ~ sp["name"].get!string;
+						- subs ~= "<a class=\"blind\" href=\"" ~ req.rootDir ~ "packages/" ~urlEncode(sub) ~ "\">" ~ sub ~ "</a>";
+					- else
+						- auto dir = sp.get!string;
+						- if (!dir.endsWith("/")) dir ~= "/";
+						- subs ~= "<a class=\"blind\" href=\"" ~ req.rootDir ~ "packages/" ~urlEncode(dir) ~ "\">" ~ dir ~ "</a>";
+				|!= join(subs, ", ")
+
+		p#dependencies.wrap
+			strong Dependencies: 
+			- auto pd = "dependencies" in versionInfo;
+			- if (pd && pd.length)
+				- string[] deps;
+				- foreach(string dep, unused; (*pd))
+					- deps ~= "<a class=\"blind\" href=\"" ~ req.rootDir ~ "packages/" ~urlEncode(dep) ~ "\">" ~ dep ~ "</a>";
+				|!= join(deps, ", ")
+			- else
+				|  none
 
 		- if (auto ps = "systemDependencies" in versionInfo)
-			tr
-				td System dependencies
-				td= ps.get!string
+			p#systemDeps.wrap
+				strong System dependencies: 
+				|= ps.get!string
 
-	h2 Installation
+		#versions
+			strong Versions:
+			- size_t counter;
+			table
+				- foreach_reverse(v; packageInfo["versions"])
+					- if(counter >= 5)
+						- break;
+					- ++counter;
+					- auto vs = v["version"].get!string;
+					tr
+						- if (vs == versionInfo["version"])
+							td
+								strong= vs
+							td
+								span= formatDate(v["date"])
+						- else
+							td
+								a.blind(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')
+									|= vs
+							td
+								span= formatDate(v["date"])
+			span#showAll
+				a.blind(href="#{req.rootDir}packages/#{urlEncode(packageName)}/versions")
+					| Show all #{packageInfo["versions"].length} versions
 
-	p To use this package, put the following dependency into your project's dependencies section:
-	- string expr = versionInfo["version"].get!string;
-	- if( !expr.startsWith("~") ) expr = "~>" ~ expr;
-
-	.clipboard-pkg
-		.clipboard-pkg-row
-			.clipboard-pkg-title dub.json
-			input(id="package-clipboard-json",value='"#{packageName}": "#{expr}"')
-			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-json")
-				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
-
-		.clipboard-pkg-row
-			.clipboard-pkg-title dub.sdl
-			input(id="package-clipboard-sdl",value='dependency "#{packageName}" version="#{expr}"')
-			button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
-				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
-
-	- if (readmeContents.length)
-		h2 Readme
-
-		.repositoryReadme.markdown-body
-			- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
-			- scope msettings = new MarkdownSettings;
-			- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
-			- msettings.headingBaseLevel = 2;
-			- msettings.urlFilter = &urlFilter;
-			!= filterMarkdown(readmeContents, msettings)
-
-	h2 Available versions
-
-	- foreach_reverse (v; packageInfo["versions"])
-		- auto vs = v["version"].get!string;
-		- if (vs == versionInfo["version"])
-			em= vs
-		- else
-			a(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')= vs
-		|  
+		#stats
+			- auto stats = registry.getPackageStats(packageName)["downloads"];
+			strong Stats:
+			ul.unmarkedList
+				li
+					p
+						strong= stats["daily"].to!string
+						|  downloads today
+				li
+					p
+						strong= stats["weekly"].to!string
+						|  downloads this week
+				li
+					p
+						strong= stats["monthly"].to!string
+						|  downloads this month
+				li
+					p
+						strong= stats["total"].to!string
+						|  downloads total
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript
