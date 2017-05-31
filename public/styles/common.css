@@ -94,7 +94,7 @@ p.warn {
 /********************/
 
 div#content {
-	padding: 12pt;
+	padding: 0.01em;
 	clear: both;
 }
 
@@ -158,10 +158,6 @@ h3 {
 	border: 1px solid #ddd;
 }*/
 
-#content ul.pageNav.perPage:before {
-	content: "Per Page: ";
-	display: inline;
-}
 #content ul.pageNav {
 	list-style: none;
 	padding: 0;
@@ -178,11 +174,25 @@ ul.pageNav li.selected {
 	padding: 0 2pt;
 }
 
-
-@media (min-width: 600pt) {
-	div#content { padding: 12pt 10%; }
+div#content {
+	margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+	div#content { margin: 0 1em; }
+}
+
+@media (min-width: 768px) {
+	div#content { width: 740px; }
+}
+
+@media (min-width: 992px) {
+	div#content { width: 960px; }
+}
+
+@media (min-width: 1200px) {
+	div#content { width: 1160px; }
+}
 
 /********************/
 /* Buttons          */
@@ -235,3 +245,103 @@ button {
 #copy-shields input {
     width: 280px;
 }
+
+@media only screen and (min-width: 54em) {
+	div.main {
+		float: left;
+		position: relative;
+		width: 70%;
+	}
+
+	div.packageInfo {
+		float: right;
+		width: 30%;
+	}
+}
+
+div.packageInfo > *:first-child {
+	margin-top: 0 !important;
+}
+
+div.packageInfo > ul {
+	margin-left: 0 !important;
+	margin-bottom: 1em;
+}
+
+div.packageInfo > * {
+	color: rgba(0,0,0,0.7);
+	line-height: 2em;
+}
+
+div.packageInfo > p,
+div#versions,
+div#versions > p {
+	margin-top: 0 !important;
+	margin-bottom: 0.5em !important;
+}
+
+div.packageInfo > *,
+ul.unmarkedList > li {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+ul.unmarkedList > li {
+	list-style: none;
+	border-bottom: 1px solid rgba(0,0,0,0.1);
+	margin-bottom: 0 !important;
+}
+
+ul.unmarkedList > li:last-child {
+	border-bottom: 0;
+}
+
+ul.unmarkedList > li:hover,
+.wrap {
+	overflow: visible !important;
+	text-overflow: inherit !important;
+	white-space: normal !important;
+}
+
+.wrap {
+	line-height: 1.5em !important;
+}
+
+.wrap span {
+	white-space: nowrap;
+}
+
+#stats ul li {
+	line-height: 1em;
+	border-style: none;
+	margin-bottom: 0;
+}
+
+#versions strong {
+	margin: 0;
+}
+#versions table,
+#showAll{
+	line-height: 1em;
+	margin: 0 2em;
+	font-family: monospace;
+}
+
+#versions td {
+	padding: 0.5em 0;
+	width: 1%;
+	border: none;
+	border-bottom: 1px solid rgb(230,230,230);
+}
+
+.badge {
+	background-color: #B04A43;
+	color: #FFF;
+	font-size: 50%;
+	border-radius: 2px;
+	vertical-align: 30%;
+	padding: 0.1em 0.3em;
+}
+
+span.light { opacity: 0.8; }

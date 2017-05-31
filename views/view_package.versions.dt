@@ -1,0 +1,23 @@
+extends layout
+
+block title
+	- import std.conv : to;
+	- import vibe.textfilter.urlencode;
+	- import dubregistry.viewutils;
+	- auto title = "All " ~ packageInfo.versions.length.to!string ~ " versions of " ~ packageName;
+
+block css
+	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+
+block body
+	h1
+		a.blind(href="#{req.rootDir}packages/#{urlEncode(packageName)}")
+			| &larr; Back to #{packageName}
+	table#versionList
+		- foreach_reverse(v; packageInfo.versions)
+			tr
+				td
+					a.blind(href="#{req.rootDir}packages/#{urlEncode(packageName)}/#{v.version_}")
+						|= v.version_
+				td
+					span= formatDate(v.date)

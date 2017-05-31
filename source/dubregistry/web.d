@@ -60,9 +60,6 @@ class DubRegistryWebFrontend {
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
 
-		if (limit == 0) // prevent division by zero
-			limit = 20;
-
 		static struct Info {
 			Json[] packages;
 			size_t packageCount;
@@ -215,13 +212,31 @@ class DubRegistryWebFrontend {
 			}
 
 			auto packageName = pname;
+			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, urlFilter);
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, urlFilter, registry);
 		}
 	}
 
-	private bool getPackageInfo(string pack_name, string pack_version, out PackageInfo pkg_info, out PackageVersionInfo ver_info)
-	{
+	@path("/packages/:packname/versions")
+	void getAllPackageVersions(HTTPServerRequest req, HTTPServerResponse res, string _packname) {
+		import std.algorithm : canFind;
+
+		auto pname = _packname;
+
+		auto ppath = _packname.urlDecode().split(":");
+		auto packageInfo = m_registry.getPackageInfo(ppath[0]);
+
+		auto packageName = pname;
+		auto registry = m_registry;
+		render!("view_package.versions.dt",
+			packageName,
+			packageInfo,
+			registry);
+	}
+
+	private bool getPackageInfo(string pack_name, string pack_version, out PackageInfo pkg_info, out PackageVersionInfo ver_info) {
+		import std.algorithm : map;
 		auto ppath = pack_name.urlDecode().split(":");
 
 		pkg_info = m_registry.getPackageInfo(ppath[0]);
