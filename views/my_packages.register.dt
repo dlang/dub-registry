@@ -4,27 +4,36 @@ block title
 	- auto title = "Add new package";
 	
 block body
-	- import std.string : splitLines;
 
-	form(method="POST", action="#{req.rootDir}register_package")
-		select(name="kind", size="1")
-			- import dubregistry.repositories.repository;
-			- if (supportsRepositoryKind("github"))
-				option(value="github", selected=kind == "github") GitHub project
-			- if (supportsRepositoryKind("bitbucket"))
-				option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
-			- if (supportsRepositoryKind("gitlab"))
-				option(value="gitlab", selected=kind == "gitlab") GitLab project
-		p
-			label(for="owner") Repository owner:
-			input(type="text", name="owner", value=owner)
-		p
-			label(for="project") Repository name:
-			input(type="text", name="project", value=project)
-		- if (error.length)
-			p.error
-				- foreach (ln; error.splitLines)
-					|= ln
-					br
-		p
-			button(type="submit") Register package
+	- if(error.length)
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
+
+	#registerPackage
+		h1 Add new package
+			p.light
+				a.blind(href="#{req.rootDir}publish") Learn more 
+				| about publishing.
+
+		form(method="POST", action="#{req.rootDir}register_package")
+			p
+				label(for="kind") Repository type
+				select(name="kind", size="1")
+					- import dubregistry.repositories.repository;
+					- if (supportsRepositoryKind("github"))
+						option(value="github", selected=kind == "github") GitHub project
+					- if (supportsRepositoryKind("bitbucket"))
+						option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
+					- if (supportsRepositoryKind("gitlab"))
+						option(value="gitlab", selected=kind == "gitlab") GitLab project
+			p
+				label(for="owner") Repository owner
+				input(type="text", name="owner", value=owner)
+			p
+				label(for="project") Repository name
+				input(type="text", name="project", value=project)
+			p
+				button(type="submit") Register package
