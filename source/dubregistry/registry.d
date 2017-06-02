@@ -243,20 +243,19 @@ class DubRegistry {
 	{
 		string ret;
 		auto file = version_info["readmeFile"].opt!string;
-		logInfo("readme for %s: %s", version_info["name"].get!string, file);
-		logInfo("repository: %s", repository);
 		try {
 			if (!file.startsWith('/')) return null;
 			auto rep = getRepository(repository);
-			logInfo("reading file");
-			rep.readFile(version_info["commitID"].get!string, Path(file), (scope data) { logInfo("reading cotents"); ret = data.readAllUTF8(); });
-			logInfo("reading file done");
+			logDebug("reading readme file for %s: %s", version_info["name"].get!string, file);
+			rep.readFile(version_info["commitID"].get!string, Path(file), (scope data) {
+				ret = data.readAllUTF8();
+			});
+			logDebug("reading readme file done");
 		} catch (Exception e) {
 			logDiagnostic("Failed to read README file (%s) for %s %s: %s",
 				file, version_info["name"].get!string,
 				version_info["version"].get!string, e.msg);
 		}
-		logInfo("returning readme %s", ret.length);
 		return ret;
 	}
 
