@@ -164,7 +164,13 @@ class DubRegistryWebFrontend {
 		auto versionInfo = verinfo.info;
 
 		User user;
-		if (m_userman) user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
+		if (m_userman) {
+			try user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
+			catch (Exception e) {
+				logDebug("Failed to get owner '%s' for %s %s: %s",
+					packageInfo["owner"].get!string, pname, ver, e.msg);
+			}
+		}
 
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
