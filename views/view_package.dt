@@ -107,8 +107,9 @@ block body
 				- string[] subs;
 				- foreach (sp; versionInfo["subPackages"])
 					- if (sp.type == Json.Type.object)
-						- auto sub = "<span class=\"light\">" ~ packageName ~ ":</span>" ~ sp["name"].get!string;
-						- subs ~= "<a class=\"blind\" href=\"" ~ req.rootDir ~ "packages/" ~urlEncode(sub) ~ "\">" ~ sub ~ "</a>";
+						- auto name = sp["name"].get!string;
+						- auto sub = "<span class=\"light\">" ~ packageName ~ ":</span>" ~ name;
+						- subs ~= "<a class=\"blind\" href=\"" ~ req.rootDir ~ "packages/" ~urlEncode(packageName ~ ":" ~ name) ~ "\">" ~ sub ~ "</a>";
 					- else
 						- auto dir = sp.get!string;
 						- if (!dir.endsWith("/")) dir ~= "/";
