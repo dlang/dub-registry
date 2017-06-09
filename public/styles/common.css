@@ -344,4 +344,47 @@ ul.unmarkedList > li:hover,
 	padding: 0.1em 0.3em;
 }
 
-span.light { opacity: 0.8; }
+.light { opacity: 0.8; }
+
+#registerPackage {
+	margin: 0 auto 0 0;
+	max-width: 30em;
+}
+
+#registerPackage h1 p {
+	font-size: 0.5em;
+}
+
+#registerPackage select,
+#registerPackage input {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 1em;
+	border: 1px solid #ccc;
+	background-color: #fff;
+	border-radius: 2px;
+}
+
+#registerPackage label {
+	font-weight: bold;
+}
+
+#registerPackage form p {
+	margin-bottom: 1em;
+}
+
+#registerPackage button {
+	padding: 1em;
+	margin-top: 1em;
+	color: #fff;
+	background-color: #5cb85c;
+	border-color: #4cae4c;
+}
+
+.redAlert {
+	margin: 0.5em;
+	border-radius: 2px;
+	padding: 1em;
+	color: #a94442;
+	border: 1px solid #ebccd1;
+}
