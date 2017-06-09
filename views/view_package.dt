@@ -73,7 +73,7 @@ block body
 	.packageInfo
 		ul.unmarkedList
 			- if (user.id != User.ID.init)
-				li#registredBy Registred by #[strong= user.fullName.length ? user.fullName : user.name]
+				li#registredBy Registered by #[strong= user.fullName.length ? user.fullName : user.name]
 			- if( auto pr = "repository" in packageInfo )
 				- string repo_url, repo_prefix;
 				- repo_url = (*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
