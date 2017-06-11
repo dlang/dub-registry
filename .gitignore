@@ -4,4 +4,5 @@
 /dub-registry
 *.exe
 log.txt
+public/
 
