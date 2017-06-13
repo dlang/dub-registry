@@ -21,5 +21,3 @@ configuration "library" {
 	targetType "library"
 	excludedSourceFiles "source/app.d"
 }
-
-postBuildCommands "dub resbuild.d"
