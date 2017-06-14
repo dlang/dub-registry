@@ -176,6 +176,7 @@ ul.pageNav li.selected {
 
 div#content {
 	margin: 0 auto;
+	margin-top: 1em;
 }
 
 @media (max-width: 768px) {
@@ -255,7 +256,7 @@ button {
 
 	div.packageInfo {
 		float: right;
-		width: 30%;
+		width: 25%;
 	}
 }
 
