@@ -7,17 +7,14 @@ const OUTPUT = './../public';
 
 module.exports = {
 	target: 'web',
-	entry: {
-		home: './scripts/home.js',
-		menu: './scripts/menu.js',
-		clipboard: './scripts/clipboard.min.js',
-		common: './styles/common.css',
-		markdown: './styles/markdown.css',
-		top: './styles/top.css',
-		top_p: './styles/top_p.css'
-	},
+	entry: [
+		'./scripts/bundle.js',
+		'./images/bundle.js',
+		'./styles/bundle.css',
+		'./favicon.ico'
+	],
 	output: {
-		filename: '[name].[hash].js',
+		filename: '[chunkhash].js',
 		path: path.resolve(__dirname, OUTPUT)
 	},
 	module: {
@@ -30,7 +27,7 @@ module.exports = {
 				})
 			},
 			{
-				test: /\.(woff|woff2|eot|ttf|otf)$/,
+				test: /\.(woff|woff2|eot|ttf|otf|png|svg|ico)$/,
 				use: [
 					'file-loader'
 				]
@@ -41,6 +38,6 @@ module.exports = {
 		new ManifestPlugin({
 			stripSrc: true
 		}),
-		new ExtractTextPlugin('[name].[contenthash].css'),
+		new ExtractTextPlugin('[contenthash].css'),
 	]
 };

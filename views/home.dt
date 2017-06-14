@@ -70,7 +70,7 @@ block body
 							- if (auto pc = pl["categories"][0].get!string in info.categoryMap)
 								- image = pc.imageName;
 						- if (!image.length) image = "unknown";
-						img.category-icon(src="images/categories/#{image}.png", title=image.replace(".", "/"))
+						img.category-icon(src='#{req.rootDir ~ resource(image ~ ".png")}', title=image.replace(".", "/"))
 						a(href='packages/#{pl["name"].get!string}')= pl["name"].get!string
 					td.nobreak
 						- if (ver.length <= 20)

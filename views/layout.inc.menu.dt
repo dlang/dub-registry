@@ -2,7 +2,7 @@
 	.helper.expand-container.active
 		.logo
 			a(href="#{req.rootDir}")
-				img(id="logo", alt="DUB Logo", src="#{req.rootDir}images/dub-header.png")
+				img(id="logo", alt="DUB Logo", src='#{req.rootDir ~ resource("dub-header.png")}')
 		a(href="#", title="Menu", class="hamburger expand-toggle")
 			span Menu
 		#cssmenu

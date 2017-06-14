@@ -1,12 +1,16 @@
 ﻿!!! 5
 html
+	- string resource(string name)
+		- import vibe.data.json;
+		- import std.file : readText;
+		- auto j = "public/manifest.json".readText.parseJsonString;
+		- return j[name].type == Json.Type.undefined ? "" : j[name].get!string;
+
 	head
 		block css
-		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top.css")
-		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top_p.css")
+		link(rel="stylesheet", type="text/css", href='#{req.rootDir ~ resource("main.css")}')
 
-		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
+		link(rel="shortcut icon", href='#{req.rootDir ~ resource("favicon.ico")}')
 		meta(name="viewport",content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0")
 		block title
 		title= title ~ " - DUB - The D package registry"
@@ -18,4 +22,4 @@ html
 		#content
 			block body
 
-	script(type="application/javascript", src="/scripts/menu.js")
+	script(type="application/javascript", src='#{req.rootDir ~ resource("main.js")}')
