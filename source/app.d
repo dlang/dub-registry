@@ -40,6 +40,8 @@ void startMonitoring()
 	s_checkTask = runTask(&monitorNewVersions);
 }
 
+version (linux) private immutable string certPath;
+
 shared static this()
 {
 	setLogFile("log.txt", LogLevel.diagnostic);
@@ -55,8 +57,12 @@ shared static this()
 
 	version (linux) {
 		logInfo("Enforcing certificate trust.");
+		enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
+		enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
+		certPath = redhatCA.exists ? redhatCA : debianCA;
+
 		HTTPClient.setTLSSetupCallback((ctx) {
-			ctx.useTrustedCertificateFile("/etc/ssl/certs/ca-certificates.crt");
+			ctx.useTrustedCertificateFile(certPath);
 			ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
 		});
 	}
