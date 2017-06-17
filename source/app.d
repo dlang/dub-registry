@@ -28,16 +28,16 @@ string s_mirror;
 
 void startMonitoring()
 {
-	void monitorNewVersions()
+	void monitorPackages()
 	{
 		sleep(10.seconds()); // give the cache a chance to warm up first
 		while(true){
 			if (s_mirror.length) s_registry.mirrorRegistry(URL(s_mirror));
-			else s_registry.checkForNewVersions();
+			else s_registry.updatePackages();
 			sleep(30.minutes());
 		}
 	}
-	s_checkTask = runTask(&monitorNewVersions);
+	s_checkTask = runTask(&monitorPackages);
 }
 
 version (linux) private immutable string certPath;

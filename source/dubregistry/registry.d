@@ -274,9 +274,9 @@ class DubRegistry {
 		m_db.setPackageRepository(pack_name, repository);
 	}
 
-	void checkForNewVersions()
+	void updatePackages()
 	{
-		logDiagnostic("Triggering check for new versions...");
+		logDiagnostic("Triggering package update...");
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
 	}
@@ -417,7 +417,7 @@ class DubRegistry {
 			}
 			scope(exit) m_currentUpdatePackage = null;
 			logDiagnostic("Updating package %s.", pack);
-			try checkForNewVersions(pack);
+			try updatePackage(pack);
 			catch (Exception e) {
 				logWarn("Failed to check versions for %s: %s", pack, e.msg);
 				logDiagnostic("Full error: %s", e.toString().sanitize);
@@ -425,7 +425,7 @@ class DubRegistry {
 		}
 	}
 
-	private void checkForNewVersions(string packname)
+	private void updatePackage(string packname)
 	{
 		import std.encoding;
 		string[] errors;
