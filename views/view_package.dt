@@ -33,13 +33,13 @@ block body
 				.clipboard-pkg-title dub.json
 				input(id="package-clipboard-json",value='"#{packageName}": "#{expr}"')
 				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-json")
-					img(src='#{req.rootDir ~ resource("clippy.svg")}', width=13, alt="Copy to clipboard")
+					img(src='#{req.rootDir ~ getResource("clippy.svg")}', width=13, alt="Copy to clipboard")
 
 			.clipboard-pkg-row
 				.clipboard-pkg-title dub.sdl
 				input(id="package-clipboard-sdl",value='dependency "#{packageName}" version="#{expr}"')
 				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
-					img(src='#{req.rootDir ~ resource("clippy.svg")}', width=13, alt="Copy to clipboard")
+					img(src='#{req.rootDir ~ getResource("clippy.svg")}', width=13, alt="Copy to clipboard")
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
 			- bool helpWrited = false;
