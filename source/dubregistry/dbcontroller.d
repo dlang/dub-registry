@@ -264,8 +264,9 @@ class DbController {
 		return pack["stats"].deserializeBson!DbPackageStats;
 	}
 
-	void updatePackageStats(BsonObjectID packId, DbPackageStats stats)
+	void updatePackageStats(BsonObjectID packId, ref DbPackageStats stats)
 	{
+		stats.updatedAt = Clock.currTime(UTC());
 		logDebug("updatePackageStats(%s, %s)", packId, stats);
 		m_packages.update(["_id": packId], ["$set": ["stats": stats]]);
 	}
@@ -368,6 +369,7 @@ struct DbPackageDownload {
 }
 
 struct DbPackageStats {
+	SysTime updatedAt;
 	DbDownloadStats downloads;
 	DbRepoStats repo;
 }

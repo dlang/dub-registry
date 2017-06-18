@@ -163,7 +163,10 @@ class DubRegistry {
 	/// get stats (including downloads of all version) for a package
 	DbPackageStats getPackageStats(string packname)
 	{
-		return m_db.getPackageStats(packname);
+		auto cached = m_db.getPackageStats(packname);
+		if (cached.updatedAt > Clock.currTime(UTC()) - 24.hours)
+			return cached;
+		return updatePackageStats(packname);
 	}
 
 	private DbPackageStats updatePackageStats(string packname)
