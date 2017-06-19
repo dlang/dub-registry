@@ -58,6 +58,9 @@ class DbController {
 		DbPackageStats stats;
 		m_packages.update(["stats": ["$exists": false]], ["$set": ["stats": stats]], UpdateFlags.multiUpdate);
 
+		float rating = 0;
+		m_packages.update(["stats.rating": ["$exists": false]], ["$set": ["stats.rating": rating]], UpdateFlags.multiUpdate);
+
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
@@ -305,6 +308,49 @@ class DbController {
 		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
 	}
 
+	DbStatDistributions getStatDistributions()
+	{
+		auto aggregate(T, string prefix, string groupBy)()
+		{
+			auto group = ["_id": Bson(groupBy ? "$"~groupBy : null)];
+			Bson[string] project;
+			foreach (mem; __traits(allMembers, T))
+			{
+				static assert(is(typeof(__traits(getMember, T.init, mem)) == DbStatDistributions.Agg));
+				static assert([__traits(allMembers, DbStatDistributions.Agg)] == ["sum", "mean", "std"]);
+				group[mem~"_sum"] = bson(["$sum": "$"~prefix~"."~mem]);
+				group[mem~"_mean"] = bson(["$avg": "$"~prefix~"."~mem]);
+				group[mem~"_std"] = bson(["$stdDevPop": "$"~prefix~"."~mem]);
+				project[mem] = bson([
+					"mean": "$"~mem~"_mean",
+					"sum": "$"~mem~"_sum",
+					"std": "$"~mem~"_std"
+				]);
+			}
+			auto res = m_packages.aggregate(["$group": group], ["$project": project]);
+
+			static if (groupBy is null)
+			{
+				if (res.length == 0)
+					return T.init;
+				assert(res.length == 1);
+				return res[0].deserializeBson!T;
+			}
+			else
+			{
+				T[string] ret;
+				foreach (doc; res)
+					ret[doc["_id"].get!string] = doc.deserializeBson!T;
+				return ret;
+			}
+		}
+
+		DbStatDistributions ret;
+		ret.downloads = aggregate!(typeof(ret.downloads), "stats.downloads", null);
+		ret.repos = aggregate!(typeof(ret.repos[""]), "stats.repo", "repository.kind");
+		return ret;
+	}
+
 	private void repairVersionOrder()
 	{
 		foreach( bp; m_packages.find() ){
@@ -372,14 +418,32 @@ struct DbPackageStats {
 	SysTime updatedAt;
 	DbDownloadStats downloads;
 	DbRepoStats repo;
+	float rating = 0; // 1-5 - higher means more relevant
+	enum minRating = 1;
+	enum maxRating = 5;
+
+	invariant
+	{
+		assert(minRating <= rating && rating <= maxRating, rating.to!string);
+	}
 }
 
-struct DbDownloadStats {
-	uint total, monthly, weekly, daily;
+struct DbDownloadStatsT(T=uint) {
+	T total, monthly, weekly, daily;
 }
 
-struct DbRepoStats {
-	uint stars, watchers, forks, issues;
+alias DbDownloadStats = DbDownloadStatsT!uint;
+
+struct DbRepoStatsT(T=uint) {
+	T stars, watchers, forks, issues;
+}
+
+alias DbRepoStats = DbRepoStatsT!uint;
+
+struct DbStatDistributions {
+	static struct Agg { ulong sum; float mean = 0, std = 0; }
+	DbDownloadStatsT!Agg downloads;
+	DbRepoStatsT!Agg[string] repos;
 }
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)
