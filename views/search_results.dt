@@ -14,6 +14,8 @@ block body
 			th Package
 			th Latest version
 			th Date
+			- if ("showrating" in req.query)
+				th Rating
 			th Description
 		- foreach (p; results)
 			- auto desc = p.info["description"].opt!string;
@@ -28,6 +30,8 @@ block body
 					- else
 						| #{ver[0 .. 18]}&hellip;
 				td.nobreak= formatDate(p.date)
+				- if ("showrating" in req.query)
+					td.nobreak(title="#{formatPackageStats(p.stats)}", style="color: #B03931;")= formatRating(p.stats.rating)
 				- if (desc.length <= 100)
 					td= desc
 				- else

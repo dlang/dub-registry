@@ -63,6 +63,7 @@ class DbController {
 
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
+		m_packages.ensureIndex([tuple("stats.rating", 1)]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 
 		Bson[string] doc;
@@ -233,18 +234,23 @@ class DbController {
 
 	DbPackage[] searchPackages(string query)
 	{
+		import std.math : round;
+
 		if (!query.strip.length) {
 			return m_packages.find()
-				.sort(["name": 1])
+				.sort(["stats.rating": 1])
 				.map!(deserializeBson!DbPackage)
 				.array;
 		}
 
 		return m_packages
-			.find(["$text": ["$search": query]], ["score": ["$meta": "textScore"]])
-			.sort(["score": ["$meta": "textScore"]])
+			.find(["$text": ["$search": query]], ["score": bson(["$meta": "textScore"])])
+			.sort(["score": bson(["$meta": "textScore"])])
 			.map!(deserializeBson!DbPackage)
-			.array;
+			.array
+			// sort by bucketized rating preserving FTS score order
+			.sort!((a, b) => a.stats.rating.round > b.stats.rating.round, SwapStrategy.stable)
+			.release;
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)

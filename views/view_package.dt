@@ -152,26 +152,31 @@ block body
 					a.blind(href="#{req.rootDir}packages/#{urlEncode(packageName)}/versions")
 						| Show all #{packageInfo["versions"].length} versions
 
-			dt Stats:
+			- auto stats = registry.getPackageStats(packageName);
+
+			dt Download Stats:
 			dd#stats
-				- auto stats = registry.getPackageStats(packageName).downloads;
 				ul.unmarkedList
 					li
 						p
-							strong= stats.daily.to!string
+							strong= stats.downloads.daily
 							|  downloads today
 					li
 						p
-							strong= stats.weekly.to!string
+							strong= stats.downloads.weekly
 							|  downloads this week
 					li
 						p
-							strong= stats.monthly.to!string
+							strong= stats.downloads.monthly
 							|  downloads this month
 					li
 						p
-							strong= stats.total.to!string
+							strong= stats.downloads.total
 							|  downloads total
+
+			- if ("showrating" in req.query)
+				dt Rating:
+				dd#rating(title="#{formatPackageStats(stats)}")= formatRating(stats.rating)
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript
