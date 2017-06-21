@@ -260,6 +260,10 @@ button {
 	}
 }
 
+div.packageInfo {
+	text-align: left; /* override justify */
+}
+
 div.packageInfo > *:first-child {
 	margin-top: 0 !important;
 }
