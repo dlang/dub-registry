@@ -102,15 +102,16 @@ block body
 				img(src="https://img.shields.io/dub/v/#{packageName}.svg", alt="Dub version")
 			input(id="shield-version", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/v/#{packageName}.svg" alt="Dub version"></a>')
 			button(class="btn-clipboard",data-clipboard-target="#shield-version")
-				img(src='#{req.rootDir ~ getResource("clippy.svg")}', width=13, alt="Copy to clipboard")
+				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 		div
 			.img-wrapper
 				img(src="https://img.shields.io/dub/dt/#{packageName}.svg", alt="Dub downloads")
 			input(id="shield-downloads", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/dt/#{packageName}.svg" alt="Dub downloads"></a>')
 			button(class="btn-clipboard",data-clipboard-target="#shield-downloads")
-				img(src='#{req.rootDir ~ getResource("clippy.svg")}', width=13, alt="Copy to clipboard")
+				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
 	br
 	div Find more shields at <a href="http://shields.io/">shields.io</a>
 
+	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript new Clipboard('.btn-clipboard');

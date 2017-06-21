@@ -2,10 +2,11 @@
 html
 	head
 		block css
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top_p.css")
 
-		- import dubregistry.resource;
-		link(rel="stylesheet", type="text/css", href='#{req.rootDir ~ getResource("main.css")}')
-		link(rel="shortcut icon", href='#{req.rootDir ~ getResource("favicon.ico")}')
+		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
 		meta(name="viewport",content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0")
 		block title
 		title= title ~ " - DUB - The D package registry"
@@ -17,4 +18,4 @@ html
 		#content
 			block body
 
-	script(type="application/javascript", src='#{req.rootDir ~ getResource("main.js")}')
+	script(type="application/javascript", src="/scripts/menu.js")
