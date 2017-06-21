@@ -160,22 +160,18 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	Json getPackageStats(string packname)
+	PackageStats getPackageStats(string packname)
 	{
-		BsonObjectID packid;
-		try packid = m_db.getPackageID(packname);
-		catch(Exception) return Json(null);
-		return PackageStats(m_db.getDownloadStats(packid)).serializeToJson();
+		auto packid = m_db.getPackageID(packname);
+		return PackageStats(m_db.getDownloadStats(packid));
 	}
 
-	Json getPackageStats(string packname, string ver)
+	PackageStats getPackageStats(string packname, string ver)
 	{
-		BsonObjectID packid;
-		try packid = m_db.getPackageID(packname);
-		catch(Exception) return Json(null);
+		auto packid = m_db.getPackageID(packname);
 		if (ver == "latest") ver = getLatestVersion(packname);
-		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return PackageStats(m_db.getDownloadStats(packid, ver)).serializeToJson();
+		enforce!RecordNotFound(m_db.hasVersion(packname, ver), "Unknown version for package.");
+		return PackageStats(m_db.getDownloadStats(packid, ver));
 	}
 
 	Json getPackageVersionInfo(string packname, string ver)

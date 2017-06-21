@@ -79,10 +79,10 @@ interface IPackages {
 	string getLatestVersion(string _name);
 
 	@path(":name/stats")
-	Json getStats(string _name);
+	PackageStats getStats(string _name);
 
 	@path(":name/:version/stats")
-	Json getStats(string _name, string _version);
+	PackageStats getStats(string _name, string _version);
 
 	@path(":name/info")
 	Json getInfo(string _name);
@@ -127,14 +127,22 @@ override {
 			.check!(r => r.length)(HTTPStatus.notFound, "Package not found");
 	}
 
-	Json getStats(string name) {
-		return m_registry.getPackageStats(rootOf(name))
-			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package not found");
+	PackageStats getStats(string name) {
+		try {
+			auto stats = m_registry.getPackageStats(rootOf(name));
+			return stats;
+		} catch (RecordNotFound e) {
+			throw new HTTPStatusException(HTTPStatus.notFound, "Package not found");
+		}
 	}
 
-	Json getStats(string name, string ver) {
-		return m_registry.getPackageStats(rootOf(name), ver)
-			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	PackageStats getStats(string name, string ver) {
+		try {
+			auto stats = m_registry.getPackageStats(rootOf(name), ver);
+			return stats;
+		} catch (RecordNotFound e) {
+			throw new HTTPStatusException(HTTPStatus.notFound, "Package or Version not found");
+		}
 	}
 
 	Json getInfo(string name) {

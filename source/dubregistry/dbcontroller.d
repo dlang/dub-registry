@@ -89,7 +89,7 @@ class DbController {
 	DbPackage getPackage(string packname)
 	{
 		auto bpack = m_packages.findOne(["name": packname]);
-		enforce(!bpack.isNull(), "Unknown package name.");
+		enforce!RecordNotFound(!bpack.isNull(), "Unknown package name.");
 		return deserializeBson!DbPackage(bpack);
 	}
 
@@ -103,7 +103,7 @@ class DbController {
 	DbPackage getPackage(BsonObjectID id)
 	{
 		auto bpack = m_packages.findOne(["_id": id]);
-		enforce(!bpack.isNull(), "Unknown package ID.");
+		enforce!RecordNotFound(!bpack.isNull(), "Unknown package ID.");
 		return deserializeBson!DbPackage(bpack);
 	}
 
@@ -294,6 +294,19 @@ class DbController {
 				m_packages.update(["_id": p._id], ["$set": ["versions": newversions]]);
 		}
 	}
+}
+
+class RecordNotFound : Exception
+{
+    @nogc @safe pure nothrow this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
+    {
+        super(msg, file, line, next);
+    }
+
+    @nogc @safe pure nothrow this(string msg, Throwable next, string file = __FILE__, size_t line = __LINE__)
+    {
+        super(msg, file, line, next);
+    }
 }
 
 struct DbPackage {
