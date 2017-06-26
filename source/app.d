@@ -109,6 +109,8 @@ shared static this()
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
 	settings.sessionStore = new MemorySessionStore;
+	readOption("bind", &settings.bindAddresses[0], "Sets the address used for serving.");
+	readOption("port|p", &settings.port, "Sets the port used for serving.");
 
 	listenHTTP(settings, router);
 
