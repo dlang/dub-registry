@@ -146,7 +146,7 @@ class DubRegistry {
 
 	void removePackage(string packname, User.ID user)
 	{
-		logInfo("Removing package %s of %s", packname, user);
+		logInfo("Package %s: removing package owned by %s", packname, user);
 		m_db.removePackage(packname, user.bsonObjectIDValue);
 	}
 
@@ -280,7 +280,7 @@ class DubRegistry {
 
 	void checkForNewVersions()
 	{
-		logInfo("Triggering check for new versions...");
+		logDiagnostic("Triggering check for new versions...");
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
 	}
@@ -464,28 +464,28 @@ class DubRegistry {
 		} catch (Exception e) {
 			errors ~= format("Failed to get GIT tags/branches: %s", e.msg);
 		}
-		logInfo("Updating tags for %s: %s", packname, tags.map!(t => t.name).array);
+		logDiagnostic("Updating tags for %s: %s", packname, tags.map!(t => t.name).array);
 		foreach (tag; tags) {
 			auto name = tag.name[1 .. $];
 			existing[name] = true;
 			try {
 				if (addVersion(packname, name, rep, tag))
-					logInfo("Added version %s of %s", name, packname);
+					logInfo("Package %s: added version %s", packname, name);
 			} catch( Exception e ){
-				logInfo("Error for version %s of %s: %s", name, packname, e.msg);
+				logDiagnostic("Error for version %s of %s: %s", name, packname, e.msg);
 				logDebug("Full error: %s", sanitize(e.toString()));
 				errors ~= format("Version %s: %s", name, e.msg);
 			}
 		}
-		logInfo("Updating branches for %s: %s", packname, branches.map!(t => t.name).array);
+		logDiagnostic("Updating branches for %s: %s", packname, branches.map!(t => t.name).array);
 		foreach (branch; branches) {
 			auto name = "~" ~ branch.name;
 			existing[name] = true;
 			try {
 				if (addVersion(packname, name, rep, branch))
-					logInfo("Added branch %s for %s", name, packname);
+					logInfo("Package %s: added branch %s", packname, name);
 			} catch( Exception e ){
-				logInfo("Error for branch %s of %s: %s", name, packname, e.msg);
+				logDiagnostic("Error for branch %s of %s: %s", name, packname, e.msg);
 				logDebug("Full error: %s", sanitize(e.toString()));
 				if (branch.name != "gh-pages") // ignore errors on the special GitHub website branch
 					errors ~= format("Branch %s: %s", name, e.msg);
@@ -495,7 +495,7 @@ class DubRegistry {
 			foreach (v; pack.versions) {
 				auto ver = v.version_;
 				if (ver !in existing) {
-					logInfo("Removing version %s as the branch/tag was removed.", ver);
+					logInfo("Package %s: removing version %s as the branch/tag was removed.", packname, ver);
 					removeVersion(packname, ver);
 				}
 			}
