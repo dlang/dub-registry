@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Login";
+	- auto title = "Log in";
 
 block body
 	- if(error.length)
@@ -12,8 +12,8 @@ block body
 				br
 
 	#inputForm
-		h1 Login
-			p.light Please enter your user name and password to log in:
+		h1 Log in
+			p.light Please enter your user name and password:
 		form(method="POST", action="login")
 			- if( redirect.length )
 				input(type="hidden", name="redirect", value="#{redirect}")
