@@ -634,7 +634,7 @@ block body
 			td release-debug
 			td <code>"releaseMode" "optimize" "inline" "debugInfo"</code>
 		tr
-			td release-noboundscheck
+			td release-nobounds
 			td <code>"releaseMode" "optimize" "inline" "noBoundsCheck"</code>
 		tr
 			td unittest
