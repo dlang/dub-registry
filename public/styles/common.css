@@ -351,17 +351,17 @@ ul.unmarkedList > li:hover,
 
 .light { opacity: 0.8; }
 
-#inputForm {
+.inputForm {
 	margin: 0 auto 0 0;
 	max-width: 30em;
 }
 
-#inputForm h1 p {
+.inputForm h1 p {
 	font-size: 0.5em;
 }
 
-#inputForm select,
-#inputForm input {
+.inputForm select,
+.inputForm input {
 	box-sizing: border-box;
 	width: 100%;
 	padding: 1em;
@@ -370,15 +370,15 @@ ul.unmarkedList > li:hover,
 	border-radius: 2px;
 }
 
-#inputForm label {
+.inputForm label {
 	font-weight: bold;
 }
 
-#inputForm form p {
+.inputForm form p {
 	margin-bottom: 1em;
 }
 
-#inputForm button {
+.inputForm button {
 	padding: 1em;
 	margin-top: 1em;
 	color: #fff;

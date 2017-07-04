@@ -11,7 +11,7 @@ block body
 				|= ln
 				br
 
-	#inputForm
+	.inputForm
 		h1 Log in
 			p.light Please enter your user name and password:
 		form(method="POST", action="login")

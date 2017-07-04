@@ -12,7 +12,7 @@ block body
 				|= ln
 				br
 
-	#inputForm
+	.inputForm
 		h1 Add new package
 			p.light
 				a.blind(href="#{req.rootDir}publish") Learn more 
