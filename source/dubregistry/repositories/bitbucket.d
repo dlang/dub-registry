@@ -73,6 +73,8 @@ class BitbucketRepository : Repository {
 		auto nfo = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project);
 		RepositoryInfo ret;
 		ret.isFork = nfo["is_fork"].opt!bool;
+		ret.stats.watchers = nfo["followers_count"].opt!uint;
+		ret.stats.forks = nfo["forks_count"].opt!uint;
 		return ret;
 	}
 

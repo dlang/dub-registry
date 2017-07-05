@@ -70,6 +70,7 @@ interface DubRegistryAPI {
 }
 
 struct SearchResult { string name, description, version_; }
+struct DownloadStats { DbDownloadStats downloads; }
 
 interface IPackages {
 	@method(HTTPMethod.GET)
@@ -79,10 +80,10 @@ interface IPackages {
 	string getLatestVersion(string _name);
 
 	@path(":name/stats")
-	PackageStats getStats(string _name);
+	DbPackageStats getStats(string _name);
 
 	@path(":name/:version/stats")
-	PackageStats getStats(string _name, string _version);
+	DownloadStats getStats(string _name, string _version);
 
 	@path(":name/info")
 	Json getInfo(string _name);
@@ -127,7 +128,7 @@ override {
 			.check!(r => r.length)(HTTPStatus.notFound, "Package not found");
 	}
 
-	PackageStats getStats(string name) {
+	DbPackageStats getStats(string name) {
 		try {
 			auto stats = m_registry.getPackageStats(rootOf(name));
 			return stats;
@@ -136,10 +137,9 @@ override {
 		}
 	}
 
-	PackageStats getStats(string name, string ver) {
+	DownloadStats getStats(string name, string ver) {
 		try {
-			auto stats = m_registry.getPackageStats(rootOf(name), ver);
-			return stats;
+			return typeof(return)(m_registry.getDownloadStats(rootOf(name), ver));
 		} catch (RecordNotFound e) {
 			throw new HTTPStatusException(HTTPStatus.notFound, "Package or Version not found");
 		}

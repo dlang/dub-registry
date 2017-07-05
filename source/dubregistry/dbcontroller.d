@@ -21,11 +21,15 @@ class DbController {
 		MongoCollection m_downloads;
 	}
 
+	private alias bson = serializeToBson;
+
 	this(string dbname)
 	{
 		auto db = connectMongoDB("127.0.0.1").getDatabase(dbname);
 		m_packages = db["packages"];
 		m_downloads = db["downloads"];
+
+		// migrations
 
 		// update package format
 		foreach(p; m_packages.find()){
@@ -48,9 +52,11 @@ class DbController {
 		}
 
 		// add updateCounter field for packages that don't have it yet
-		m_packages.update(["updateCounter": ["$exists": false]], ["$set" : ["updateCounter" : 0L]], UpdateFlags.MultiUpdate);
+		m_packages.update(["updateCounter": ["$exists": false]], ["$set" : ["updateCounter" : 0L]], UpdateFlags.multiUpdate);
 
-		repairVersionOrder();
+		// add default non-@optional stats to packages
+		DbPackageStats stats;
+		m_packages.update(["stats": ["$exists": false]], ["$set": ["stats": stats]], UpdateFlags.multiUpdate);
 
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
@@ -70,6 +76,10 @@ class DbController {
 		];
 		doc["background"] = true;
 		db["system.indexes"].insert(doc);
+
+		// sort package versions newest to oldest
+		// TODO: likely can be removed as we're now sorting on insert
+		repairVersionOrder();
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -246,7 +256,21 @@ class DbController {
 		return download._id;
 	}
 
-	auto getDownloadStats(BsonObjectID pack, string ver = null)
+	DbPackageStats getPackageStats(string packname)
+	{
+		auto pack = m_packages.findOne(["name": Bson(packname)], ["stats": true]);
+		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
+		logDebug("getPackageStats(%s) %s", packname, pack["stats"]);
+		return pack["stats"].deserializeBson!DbPackageStats;
+	}
+
+	void updatePackageStats(BsonObjectID packId, DbPackageStats stats)
+	{
+		logDebug("updatePackageStats(%s, %s)", packId, stats);
+		m_packages.update(["_id": packId], ["$set": ["stats": stats]]);
+	}
+
+	DbDownloadStats aggregateDownloadStats(BsonObjectID packId, string ver = null)
 	{
 		static Bson newerThan(SysTime time)
 		{
@@ -258,7 +282,7 @@ class DbController {
 		}
 
 		auto match = Bson.emptyObject();
-		match["package"] = Bson(pack);
+		match["package"] = Bson(packId);
 		if (ver.length) match["version"] = ver;
 
 		immutable now = Clock.currTime;
@@ -315,6 +339,7 @@ struct DbPackage {
 	string name;
 	DbRepository repository;
 	DbPackageVersion[] versions;
+	DbPackageStats stats;
 	string[] errors;
 	string[] categories;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
@@ -342,8 +367,17 @@ struct DbPackageDownload {
 	string userAgent;
 }
 
+struct DbPackageStats {
+	DbDownloadStats downloads;
+	DbRepoStats repo;
+}
+
 struct DbDownloadStats {
 	uint total, monthly, weekly, daily;
+}
+
+struct DbRepoStats {
+	uint stars, watchers, forks, issues;
 }
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)

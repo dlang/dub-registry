@@ -84,8 +84,9 @@ class GitLabRepository : Repository {
 		RepositoryInfo ret;
 		auto nfo = readJson(getAPIURLPrefix()~"?private_token="~m_authToken);
 		ret.isFork = false; // not reported by API
-		//ret.stars = nfo["star_count"].opt!uint;
-		//ret.forks = nfo["forks_count"].opt!uint;
+		ret.stats.stars = nfo["star_count"].opt!uint; // might mean watchers for Gitlab
+		ret.stats.forks = nfo["forks_count"].opt!uint;
+		ret.stats.issues = nfo["open_issues_count"].opt!uint;
 		return ret;
 	}
 

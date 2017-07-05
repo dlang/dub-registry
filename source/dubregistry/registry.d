@@ -160,18 +160,38 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	PackageStats getPackageStats(string packname)
+	/// get stats (including downloads of all version) for a package
+	DbPackageStats getPackageStats(string packname)
 	{
-		auto packid = m_db.getPackageID(packname);
-		return PackageStats(m_db.getDownloadStats(packid));
+		return m_db.getPackageStats(packname);
 	}
 
-	PackageStats getPackageStats(string packname, string ver)
+	private DbPackageStats updatePackageStats(string packname)
+	{
+		logInfo("Updating stats for %s", packname);
+
+		DbPackageStats stats;
+		DbPackage pack = m_db.getPackage(packname);
+		stats.downloads = m_db.aggregateDownloadStats(pack._id);
+
+		try {
+			stats.repo = getRepositoryInfo(pack.repository).stats;
+		} catch (Exception e){
+			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
+			return typeof(return).init;
+		}
+
+		m_db.updatePackageStats(pack._id, stats);
+		return stats;
+	}
+
+	/// get downloads for a package version
+	DbDownloadStats getDownloadStats(string packname, string ver)
 	{
 		auto packid = m_db.getPackageID(packname);
 		if (ver == "latest") ver = getLatestVersion(packname);
 		enforce!RecordNotFound(m_db.hasVersion(packname, ver), "Unknown version for package.");
-		return PackageStats(m_db.getDownloadStats(packid, ver));
+		return m_db.aggregateDownloadStats(packid, ver);
 	}
 
 	Json getPackageVersionInfo(string packname, string ver)
@@ -497,6 +517,8 @@ class DubRegistry {
 			}
 		}
 		m_db.setPackageErrors(packname, errors);
+
+		updatePackageStats(packname);
 	}
 }
 
@@ -554,10 +576,6 @@ private void checkPackageName(string n, string error_suffix)
 				break;
 		}
 	}
-}
-
-struct PackageStats {
-	DbDownloadStats downloads;
 }
 
 struct PackageVersionInfo {
