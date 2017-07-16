@@ -2,17 +2,19 @@
 	"fileVersion": 1,
 	"versions": {
 		"backtrace-d": "~master",
-		"diet-ng": "1.2.1+commit.1.gede7481",
+		"botan": "1.12.9",
+		"botan-math": "1.0.3",
+		"diet-ng": "1.2.1",
 		"dub": "1.3.0",
-		"eventcore": "0.8.11",
+		"eventcore": "0.8.12",
 		"libasync": "0.8.3",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
 		"memutils": "0.4.9",
 		"openssl": "1.1.5+1.0.1g",
 		"taggedalgebraic": "0.10.7",
-		"userman": "0.3.4",
-		"vibe-core": "1.0.0-beta.7+commit.7.g7d7e470",
-		"vibe-d": "0.8.0-beta.8"
+		"userman": "0.3.6",
+		"vibe-core": "1.0.0",
+		"vibe-d": "0.8.0"
 	}
 }
