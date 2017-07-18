@@ -163,15 +163,6 @@ class DubRegistryWebFrontend {
 		auto packageInfo = packinfo.info;
 		auto versionInfo = verinfo.info;
 
-		User user;
-		if (m_userman) {
-			try user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
-			catch (Exception e) {
-				logDebug("Failed to get owner '%s' for %s %s: %s",
-					packageInfo["owner"].get!string, pname, ver, e.msg);
-			}
-		}
-
 		if (ext == "zip") {
 			if (pname.canFind(":")) return;
 
@@ -195,6 +186,15 @@ class DubRegistryWebFrontend {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
 		} else {
+			User user;
+			if (m_userman) {
+				try user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
+				catch (Exception e) {
+					logDebug("Failed to get owner '%s' for %s %s: %s",
+						packageInfo["owner"].get!string, pname, ver, e.msg);
+				}
+			}
+
 			auto gitVer = verinfo.version_;
 			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
 			string urlFilter(string url, bool is_image)
