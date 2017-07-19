@@ -28,7 +28,8 @@ class DbController {
 
 	this(string dbname)
 	{
-		auto db = connectMongoDB("127.0.0.1").getDatabase(dbname);
+		import dubregistry.mongodb : getMongoClient;
+		auto db = getMongoClient.getDatabase(dbname);
 		m_packages = db["packages"];
 		m_downloads = db["downloads"];
 		m_files = db["files"];

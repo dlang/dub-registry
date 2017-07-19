@@ -86,7 +86,9 @@ shared static this()
 		router.get("*", (req, res) @trusted { if (!s_checkTask.running) startMonitoring(); });
 
 	// VPM registry
+	import dubregistry.mongodb : databaseName;
 	auto regsettings = new DubRegistrySettings;
+	regsettings.databaseName = databaseName;
 	s_registry = new DubRegistry(regsettings);
 
 	UserManController userdb;
