@@ -1,0 +1,39 @@
+extends layout
+
+block title
+	- auto title = "Log in";
+
+block body
+	- if(error.length)
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
+
+	.inputForm
+		h1 Log in
+			p.light Please enter your user name and password:
+		form(method="POST", action="login")
+			- if( redirect.length )
+				input(type="hidden", name="redirect", value="#{redirect}")
+			p
+				- if( settings.useUserNames )
+					label(for="login-name") Username/e-mail:
+				- else
+					label(for="login-name") E-mail:
+				input#login-name(type="text", name="name", autofocus)
+			p
+				label(for="login-password") Password:
+				input#login-password(type="password", name="password")
+			p
+				button(type="submit") Login
+
+	p
+		h2 Cannot log in?
+		p
+			a.blind(href="register") Register new account.
+			br
+			a.blind(href="forgot_login") Forgot username or password?
+			br
+			a.blind(href="resend_activation") Resend activation mail
