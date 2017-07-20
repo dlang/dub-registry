@@ -1,0 +1,35 @@
+extends layout
+
+block title
+	- auto title = "Register new account";
+
+block body
+	- if(error.length)
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
+
+	.inputForm
+		h1 Register new account
+			p.light An account on the DUB package registry allows you to register, share and manage packages
+		form(method="POST", action="")
+			p
+				label(for="email") Email:
+				input(type="email", name="email", value=req.form.get("email", ""))
+			- if( settings.useUserNames )
+				p
+					label(for="name") User name:
+					input(type="text", name="name", value=req.form.get("name", ""))
+			p
+				label(for="fullName") Full name:
+				input(type="text", name="fullName", value=req.form.get("fullName", ""))
+			p
+				label(for="password") Password:
+				input(type="password", name="password")
+			p
+				label(for="passwordConfirmation") Password confirmation:
+				input(type="password", name="passwordConfirmation")
+			p
+				button(type="submit") Register account
