@@ -1,0 +1,22 @@
+extends layout
+
+block title
+	- auto title = "Reset your password";
+
+block body
+	- if(error.length)
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
+
+	.inputForm
+		h1 Reset your password
+			p.light Please enter your email address below to have an email sent to you containing your user name and a link to reset your password.
+		form(method="POST", action="forgot_login")
+			p
+				label(for="email") Email:
+				input(type="email", name="email")
+			p
+				button(type="submit") Request password reset
