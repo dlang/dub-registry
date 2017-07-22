@@ -354,6 +354,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	void getGettingStarted() { render!("getting_started.dt"); }
 	void getAbout() { redirect("/getting_started"); }
 	void getUsage() { redirect("/getting_started"); }
+	void getAdvancedUsage() { render!("advanced_usage.dt"); }
 
 	void getPublish() { render!("publish.dt"); }
 	void getDevelop() { render!("develop.dt"); }
