@@ -1865,7 +1865,6 @@ the home page, intro pitch and your-code-here layed out vertically */
     #top .logo > a
     {
         background: transparent; /* override :hover background change */
-        margin-left: 1em;
     }
 
     #top #cssmenu, #top .search-container

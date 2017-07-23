@@ -23,9 +23,7 @@ table {
 
 @media (min-width: 600pt) {
     #top > .helper {
-        padding-left: 10%;
-        padding-right: 10%;
-        margin: 0;
+        margin: 0 auto;
         max-width: initial;
     }
 }
