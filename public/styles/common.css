@@ -180,19 +180,19 @@ div#content {
 }
 
 @media (max-width: 768px) {
-	div#content, div#top > helper { margin: 0 1em; }
+	div#content, div#top > .helper { margin: 0 1em; }
 }
 
 @media (min-width: 768px) {
-	div#content, div#top > helper { width: 740px; }
+	div#content, div#top > .helper { width: 740px; }
 }
 
 @media (min-width: 992px) {
-	div#content, div#top > helper { width: 960px; }
+	div#content, div#top > .helper { width: 960px; }
 }
 
 @media (min-width: 1200px) {
-	div#content, div#top > helper { width: 1160px; }
+	div#content, div#top > .helper { width: 1160px; }
 }
 
 /********************/
