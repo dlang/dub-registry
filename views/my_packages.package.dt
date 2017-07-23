@@ -19,13 +19,14 @@ block body
 		dt Latest version
 		dd= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
 
-		- auto stats = registry.getPackageStats(packageName)["downloads"];
+		//- auto stats = registry.getPackageStats(packageName)["downloads"];
 		dt Downloads
-		dd
-			| Total: #{stats["total"].to!string},
-			| monthly: #{stats["monthly"].to!string},
-			| weekly: #{stats["weekly"].to!string},
-			| daily: #{stats["daily"].to!string}
+		dd Download statistics are temporarily disabled.
+		//-dd
+				| Total: #{stats["total"].to!string},
+				| monthly: #{stats["monthly"].to!string},
+				| weekly: #{stats["weekly"].to!string},
+				| daily: #{stats["daily"].to!string}
 
 	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
 		button(type="submit") Remove this package

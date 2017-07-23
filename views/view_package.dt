@@ -88,7 +88,7 @@ block body
 			- if( auto ph = "homepage" in versionInfo )
 				- auto hpage = URL(ph.get!string);
 				li#homepage
-					a.blind(href="#{hpage.toString}")= hpage.host ~ hpage.localURI 
+					a.blind(href="#{hpage.toString}")= hpage.host ~ hpage.localURI
 
 			- if( auto pl = "license" in versionInfo )
 				li#license= pl.get!string
@@ -98,12 +98,12 @@ block body
 
 		- if( auto pa = "authors" in versionInfo )
 			p#authors.wrap
-				strong Authors: 
+				strong Authors:
 				|= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
 			p#subPackages.wrap
-				strong Sub packages: 
+				strong Sub packages:
 				- string[] subs;
 				- foreach (sp; versionInfo["subPackages"])
 					- auto name = sp["name"].get!string;
@@ -112,7 +112,7 @@ block body
 				|!= join(subs, ", ")
 
 		p#dependencies.wrap
-			strong Dependencies: 
+			strong Dependencies:
 			- auto pd = "dependencies" in versionInfo;
 			- if (pd && pd.length)
 				- string[] deps;
@@ -124,7 +124,7 @@ block body
 
 		- if (auto ps = "systemDependencies" in versionInfo)
 			p#systemDeps.wrap
-				strong System dependencies: 
+				strong System dependencies:
 				|= ps.get!string
 
 		#versions
@@ -153,9 +153,10 @@ block body
 					| Show all #{packageInfo["versions"].length} versions
 
 		#stats
-			- auto stats = registry.getPackageStats(packageName)["downloads"];
+			//- auto stats = registry.getPackageStats(packageName)["downloads"];
 			strong Stats:
-			ul.unmarkedList
+			p statistics are temporarily disabled.
+			//-ul.unmarkedList
 				li
 					p
 						strong= stats["daily"].to!string
