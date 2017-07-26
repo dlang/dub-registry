@@ -1,0 +1,34 @@
+extends layout
+
+block title
+	- auto title = "Edit profile";
+
+block body
+
+	.inputForm
+		h1 Personal information
+		form(action="profile", method="POST")
+			- if (useUserNames)
+				p
+					label(for="user_name") User name
+					input(type="text", name="name", readOnly, value=user.name)
+			p
+				label(for="full_name") Display name
+				input(type="text", name="full_name", value=req.form["full_name"])
+			p
+				label(for="email") E-mail address
+				input(type="email", name="email", value=req.form["email"])
+			p
+				button(type="submit") Apply
+
+	.inputForm
+		h1 Change password
+		form(action="profile", method="POST")
+			p
+				label(for="password") New password
+				input(type="password", name="password", value="")
+			p
+				label(for="passford_confirmation") Confirm password
+				input(type="password", name="password_confirmation", value="")
+			p
+				button(type="submit") Apply
