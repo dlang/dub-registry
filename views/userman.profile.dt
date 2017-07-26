@@ -11,7 +11,7 @@ block body
 			- if (useUserNames)
 				p
 					label(for="user_name") User name
-					input(type="text", name="user_name", readOnly, value=user.name)
+					input(type="text", name="name", readOnly, value=user.name)
 			p
 				label(for="full_name") Display name
 				input(type="text", name="full_name", value=req.form["full_name"])
