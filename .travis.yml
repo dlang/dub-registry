@@ -1,2 +1,7 @@
 language: d
 sudo: false
+addons:
+  apt:
+    packages:
+    - libevent-dev
+    - libssl-dev
