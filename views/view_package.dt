@@ -153,10 +153,9 @@ block body
 					| Show all #{packageInfo["versions"].length} versions
 
 		#stats
-			//- auto stats = registry.getPackageStats(packageName).downloads;
+			- auto stats = registry.getPackageStats(packageName).downloads;
 			strong Stats:
-			p statistics are temporarily disabled.
-			//-ul.unmarkedList
+			ul.unmarkedList
 				li
 					p
 						strong= stats.daily.to!string
