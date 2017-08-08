@@ -81,6 +81,10 @@ class GithubRepository : Repository {
 		auto nfo = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project);
 		RepositoryInfo ret;
 		ret.isFork = nfo["fork"].opt!bool;
+		ret.stats.stars = nfo["stargazers_count"].opt!uint;
+		ret.stats.watchers = nfo["subscribers_count"].opt!uint;
+		ret.stats.forks = nfo["forks_count"].opt!uint;
+		ret.stats.issues = nfo["open_issues_count"].opt!uint; // conflates PRs and Issues
 		return ret;
 	}
 

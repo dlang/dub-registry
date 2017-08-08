@@ -8,7 +8,7 @@ module dubregistry.repositories.repository;
 import vibe.vibe;
 
 import dubregistry.cache;
-import dubregistry.dbcontroller : DbRepository;
+import dubregistry.dbcontroller : DbRepository, DbRepoStats;
 import std.digest.sha;
 import std.typecons;
 
@@ -43,6 +43,7 @@ alias RepositoryFactory = Repository delegate(DbRepository);
 interface Repository {
 	RefInfo[] getTags();
 	RefInfo[] getBranches();
+	/// Get basic repository information, throws FileNotFoundException when the repo no longer exists.
 	RepositoryInfo getInfo();
 	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
 	string getDownloadUrl(string tag_or_branch);
@@ -51,6 +52,7 @@ interface Repository {
 
 struct RepositoryInfo {
 	bool isFork;
+	DbRepoStats stats;
 }
 
 struct RefInfo {
@@ -81,6 +83,8 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 				ret = parseJsonString(text);
 			}, cache_priority);
 			return ret;
+		} catch (FileNotFoundException e) {
+			throw e;
 		} catch (Exception e) {
 			logDiagnostic("Failed to parse downloaded JSON document (attempt #%s): %s", i+1, e.msg);
 			ex = e;

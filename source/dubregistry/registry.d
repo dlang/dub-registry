@@ -160,22 +160,41 @@ class DubRegistry {
 		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
 	}
 
-	Json getPackageStats(string packname)
+	/// get stats (including downloads of all version) for a package
+	DbPackageStats getPackageStats(string packname)
 	{
-		BsonObjectID packid;
-		try packid = m_db.getPackageID(packname);
-		catch(Exception) return Json(null);
-		return PackageStats(m_db.getDownloadStats(packid)).serializeToJson();
+		auto cached = m_db.getPackageStats(packname);
+		if (cached.updatedAt > Clock.currTime(UTC()) - 24.hours)
+			return cached;
+		return updatePackageStats(packname);
 	}
 
-	Json getPackageStats(string packname, string ver)
+	private DbPackageStats updatePackageStats(string packname)
 	{
-		BsonObjectID packid;
-		try packid = m_db.getPackageID(packname);
-		catch(Exception) return Json(null);
+		logInfo("Updating stats for %s", packname);
+
+		DbPackageStats stats;
+		DbPackage pack = m_db.getPackage(packname);
+		stats.downloads = m_db.aggregateDownloadStats(pack._id);
+
+		try {
+			stats.repo = getRepositoryInfo(pack.repository).stats;
+		} catch (Exception e){
+			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
+			return typeof(return).init;
+		}
+
+		m_db.updatePackageStats(pack._id, stats);
+		return stats;
+	}
+
+	/// get downloads for a package version
+	DbDownloadStats getDownloadStats(string packname, string ver)
+	{
+		auto packid = m_db.getPackageID(packname);
 		if (ver == "latest") ver = getLatestVersion(packname);
-		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return PackageStats(m_db.getDownloadStats(packid, ver)).serializeToJson();
+		enforce!RecordNotFound(m_db.hasVersion(packname, ver), "Unknown version for package.");
+		return m_db.aggregateDownloadStats(packid, ver);
 	}
 
 	Json getPackageVersionInfo(string packname, string ver)
@@ -278,9 +297,9 @@ class DubRegistry {
 		m_db.setPackageRepository(pack_name, repository);
 	}
 
-	void checkForNewVersions()
+	void updatePackages()
 	{
-		logDiagnostic("Triggering check for new versions...");
+		logDiagnostic("Triggering package update...");
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
 	}
@@ -421,7 +440,7 @@ class DubRegistry {
 			}
 			scope(exit) m_currentUpdatePackage = null;
 			logDiagnostic("Updating package %s.", pack);
-			try checkForNewVersions(pack);
+			try updatePackage(pack);
 			catch (Exception e) {
 				logWarn("Failed to check versions for %s: %s", pack, e.msg);
 				logDiagnostic("Full error: %s", e.toString().sanitize);
@@ -429,7 +448,7 @@ class DubRegistry {
 		}
 	}
 
-	private void checkForNewVersions(string packname)
+	private void updatePackage(string packname)
 	{
 		import std.encoding;
 		string[] errors;
@@ -501,6 +520,8 @@ class DubRegistry {
 			}
 		}
 		m_db.setPackageErrors(packname, errors);
+
+		updatePackageStats(packname);
 	}
 }
 
@@ -558,10 +579,6 @@ private void checkPackageName(string n, string error_suffix)
 				break;
 		}
 	}
-}
-
-struct PackageStats {
-	DbDownloadStats downloads;
 }
 
 struct PackageVersionInfo {
