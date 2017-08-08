@@ -162,20 +162,20 @@ class DubRegistry {
 
 	Json getPackageStats(string packname)
 	{
-		DbPackage pack;
-		try pack = m_db.getPackage(packname);
+		BsonObjectID packid;
+		try packid = m_db.getPackageID(packname);
 		catch(Exception) return Json(null);
-		return PackageStats(m_db.getDownloadStats(pack._id)).serializeToJson();
+		return PackageStats(m_db.getDownloadStats(packid)).serializeToJson();
 	}
 
 	Json getPackageStats(string packname, string ver)
 	{
-		DbPackage pack;
-		try pack = m_db.getPackage(packname);
+		BsonObjectID packid;
+		try packid = m_db.getPackageID(packname);
 		catch(Exception) return Json(null);
 		if (ver == "latest") ver = getLatestVersion(packname);
 		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return PackageStats(m_db.getDownloadStats(pack._id, ver)).serializeToJson();
+		return PackageStats(m_db.getDownloadStats(packid, ver)).serializeToJson();
 	}
 
 	Json getPackageVersionInfo(string packname, string ver)
