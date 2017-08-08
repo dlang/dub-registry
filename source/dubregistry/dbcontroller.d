@@ -418,8 +418,8 @@ struct DbPackageStats {
 	SysTime updatedAt;
 	DbDownloadStats downloads;
 	DbRepoStats repo;
-	float rating = 0; // 1-5 - higher means more relevant
-	enum minRating = 1;
+	float rating = 0; // 0 - invalid, 1-5 - higher means more relevant
+	enum minRating = 0;
 	enum maxRating = 5;
 
 	invariant

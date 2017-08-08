@@ -160,7 +160,11 @@ class DubRegistry {
 
 		try {
 			stats.repo = getRepositoryInfo(pack.repository).stats;
-		} catch (Exception e){
+		} catch (FileNotFoundException e) {
+			// repo no longer exists, rate it down to zero (#221)
+			logInfo("Zero rating %s because the repo no longer exists.", packname);
+			stats.rating = 0;
+		} catch (Exception e) {
 			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
 			return typeof(return).init;
 		}
