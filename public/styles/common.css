@@ -393,3 +393,11 @@ ul.unmarkedList > li:hover,
 	color: #a94442;
 	border: 1px solid #ebccd1;
 }
+
+button.danger {
+	background-color: #943029;
+	border-color: #872c25;
+	padding: 0.5em;
+	margin-top: 0.5em;
+	color: #fff;
+}
