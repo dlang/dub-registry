@@ -10,10 +10,10 @@ block body
 
 	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-		- if(latest.type == Json.Type.Object)
+		- if (latest.type == Json.Type.Object)
 			|  #[strong.badge= latest["version"].opt!string]
 
-	- if(pack["errors"].length)
+	- if (pack["errors"].length)
 		p.redAlert
 			- foreach_reverse(e; pack["errors"])
 				|= e.get!string
@@ -22,9 +22,12 @@ block body
 	h2 Downloads
 	p
 		- auto stats = registry.getPackageStats(packageName).downloads;
-		| #[strong= stats.daily.to!string] downloads today #[br]
-		| #[strong= stats.weekly.to!string] downloads this week #[br]
-		| #[strong= stats.monthly.to!string] downloads this month #[br]
+		| #[strong= stats.daily.to!string] downloads today
+			br
+		| #[strong= stats.weekly.to!string] downloads this week
+			br
+		| #[strong= stats.monthly.to!string] downloads this month
+			br
 		| #[strong= stats.total.to!string] downloads total
 
 	h2 Update
@@ -67,7 +70,7 @@ block body
 
 	h2#repository Repository
 
-	- if(error.length)
+	- if (error.length)
 		- import std.string : splitLines;
 		p.redAlert
 			- foreach (ln; error.splitLines)
@@ -100,9 +103,11 @@ block body
 	h2 Remove
 	p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
 	p
-		| If you want to #[strong rename] the project, create a new repository and keep the old one. #[br]
-		| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") form] above. #[br]
-		| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub]. #[br]
+		| If you want to #[strong rename] the project, create a new repository and keep the old one.
+			br
+		| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") form] above.
+			br
+		| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
 
 	.inputForm
 		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
