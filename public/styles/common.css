@@ -285,7 +285,6 @@ div#versions > p {
 	margin-bottom: 0.5em !important;
 }
 
-div.packageInfo > *,
 ul.unmarkedList > li {
 	white-space: nowrap;
 	overflow: hidden;
@@ -317,10 +316,26 @@ ul.unmarkedList > li:hover,
 	white-space: nowrap;
 }
 
+div.packageInfo > dl > dt {
+	font-weight: bold;
+}
+
+div.packageInfo > dl > dt:not(:first-child) {
+	padding-top: 0.5em;
+}
+
+div.packageInfo > dl > dd {
+	padding: 0.25em 0 0.25em 0.5em;
+	margin: 0;
+}
+
 #stats ul li {
 	line-height: 1em;
 	border-style: none;
 	margin-bottom: 0;
+}
+#stats ul {
+	margin: 0;
 }
 
 #versions strong {
@@ -329,7 +344,7 @@ ul.unmarkedList > li:hover,
 #versions table,
 #showAll{
 	line-height: 1em;
-	margin: 0 2em;
+	margin: 0;
 	font-family: monospace;
 }
 
