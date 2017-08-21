@@ -8,110 +8,107 @@ block body
 	- import dubregistry.web : Category;
 	- auto pack = registry.getPackageInfo(packageName, true).info;
 
-	h2 General information
-
-	dl
-		dt Package
-		dd
-			a(href="#{req.rootDir}packages/#{packageName}")= packageName
-
+	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-		dt Latest version
-		dd= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
+		- if (latest.type == Json.Type.Object)
+			|  #[strong.badge= latest["version"].opt!string]
 
+	- if (pack["errors"].length)
+		p.redAlert
+			- foreach_reverse(e; pack["errors"])
+				|= e.get!string
+				br
+
+	h2 Downloads
+	p
 		- auto stats = registry.getPackageStats(packageName).downloads;
-		dt Downloads
-		dd
-			| Total: #{stats.total.to!string},
-			| monthly: #{stats.monthly.to!string},
-			| weekly: #{stats.weekly.to!string},
-			| daily: #{stats.daily.to!string}
+		| #[strong= stats.daily.to!string] downloads today
+			br
+		| #[strong= stats.weekly.to!string] downloads this week
+			br
+		| #[strong= stats.monthly.to!string] downloads this month
+			br
+		| #[strong= stats.total.to!string] downloads total
 
-	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
-		button(type="submit") Remove this package
-
+	h2 Update
+	p Packages are automatically updated, so there is no need to trigger an update manually. Please, be patient.
 	- auto update_check_index = registry.getUpdateQueuePosition(packageName);
-	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
-		p
-			button(type="submit", disabled=(update_check_index >= 0)) Trigger manual update
-			- if (update_check_index == 0)
-				| Package is currently being updated.
-			- else if (update_check_index == 1)
-				| Package is scheduled for an update check. Still have to wait for one more package.
-			- else if (update_check_index > 1)
-				| Package is scheduled for an update check. Still have to wait for #{update_check_index} other packages to complete.
-
+	- if (update_check_index == 0)
+		p Package is currently being updated.
+	- else if (update_check_index == 1)
+		p Package is scheduled for an update check. Still have to wait for one more package.
+	- else if (update_check_index > 1)
+		p Package is scheduled for an update check. Still have to wait for #{update_check_index} other packages to complete.
+	.inputForm
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
+			p
+				button(type="submit", disabled=(update_check_index >= 0)) Trigger manual update
 
 	h2 Categories
 
 	p You can choose up to four categories for this package here. Please select only the categories that match most closely. If you feel like there is a category missing, please edit the <a href="https://github.com/rejectedsoftware/dub-registry/blob/master/categories.json">category file</a> and submit a pull request.
 
-	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
-		- foreach (i; 0 .. 4)
-			p Category #{i+1}:
-				- string selected;
-				- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
-				select(name="categories_#{i}", id="category#{i}", size="1")
-					- void outputCat(Category cat)
-						- if (!cat)
-							option(value="")
-						- else
-							option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
-						- if (!cat || cat.subCategories.length)
-							- foreach (c; cat ? cat.subCategories : categories)
-								- outputCat(c);
-					- outputCat(null);
-		button(type="submit") Apply
+	.inputForm
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
+			- foreach (i; 0 .. 4)
+				p
+					label(for="categories_#{i}") Category #{i+1}:
+					- string selected;
+					- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
+					select(name="categories_#{i}", id="category#{i}", size="1")
+						- void outputCat(Category cat)
+							- if (!cat)
+								option(value="")
+							- else
+								option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
+							- if (!cat || cat.subCategories.length)
+								- foreach (c; cat ? cat.subCategories : categories)
+									- outputCat(c);
+						- outputCat(null);
+			p
+				button(type="submit") Apply
 
-	- if (pack["errors"].length)
-		h2 Package errors:
-		ul
-			- foreach_reverse (e; pack["errors"])
-				li.error= e.get!string
-
-	h2 Repository
+	h2#repository Repository
 
 	- if (error.length)
-		p.error= error
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
 
-	form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
-		select(name="kind", size="1")
-			- import dubregistry.repositories.repository;
-			- auto rkind = pack["repository"]["kind"].get!string;
-			- if (supportsRepositoryKind("github"))
-				option(value="github", selected=rkind == "github") GitHub project
-			- if (supportsRepositoryKind("bitbucket"))
-				option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket project
-			- if (supportsRepositoryKind("gitlab"))
-				option(value="gitlab", selected=rkind == "gitlab") GitLab project
-		p
-			label(for="owner") Repository owner:
-			input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
-		p
-			label(for="project") Repository name:
-			input(type="text", name="project", value=pack["repository"]["project"].get!string)
-		p
-			button(type="submit") Apply
+	.inputForm
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
+			p
+				label(for="kind") Repository type
+				select(name="kind", size="1")
+					- import dubregistry.repositories.repository;
+					- auto rkind = pack["repository"]["kind"].get!string;
+					- if (supportsRepositoryKind("github"))
+						option(value="github", selected=rkind == "github") GitHub 
+					- if (supportsRepositoryKind("bitbucket"))
+						option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket
+					- if (supportsRepositoryKind("gitlab"))
+						option(value="gitlab", selected=rkind == "gitlab") GitLab
+			p
+				label(for="owner") Repository owner:
+				input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
+			p
+				label(for="project") Repository name:
+				input(type="text", name="project", value=pack["repository"]["project"].get!string)
+			p
+				button(type="submit") Apply
 
-	h2 Shields
 
-	#copy-shields
-		- auto pkgVersion = Json.Type.Object ? latest["version"].opt!string : "-";
-		div
-			.img-wrapper
-				img(src="https://img.shields.io/dub/v/#{packageName}.svg", alt="Dub version")
-			input(id="shield-version", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/v/#{packageName}.svg" alt="Dub version"></a>')
-			button(class="btn-clipboard",data-clipboard-target="#shield-version")
-				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
-		div
-			.img-wrapper
-				img(src="https://img.shields.io/dub/dt/#{packageName}.svg", alt="Dub downloads")
-			input(id="shield-downloads", value='<a href="https://code.dlang.org/packages/#{packageName}" title="Go to #{packageName}"><img src="https://img.shields.io/dub/dt/#{packageName}.svg" alt="Dub downloads"></a>')
-			button(class="btn-clipboard",data-clipboard-target="#shield-downloads")
-				img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
+	h2 Remove
+	p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
+	p
+		| If you want to #[strong rename] the project, create a new repository and keep the old one.
+			br
+		| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") form] above.
+			br
+		| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
 
-	br
-	div Find more shields at <a href="http://shields.io/">shields.io</a>
-
-	script(type="application/javascript", src="/scripts/clipboard.min.js")
-	:javascript new Clipboard('.btn-clipboard');
+	.inputForm
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
+			button.danger(type="submit") Remove this package
