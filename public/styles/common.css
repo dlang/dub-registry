@@ -337,6 +337,16 @@ div.packageInfo > dl > dd {
 	margin: 0;
 }
 
+#repository a:before {
+	font-family: "FontAwesome";
+	color: #888;
+	content: "\f121";
+	padding-right: 0.4em;
+}
+#repository a.bitbucket:before { content: "\f171"; }
+#repository a.github:before { content: "\f09b"; }
+#repository a.gitlab:before { content: "\f296"; }
+
 #stats ul li {
 	line-height: 1em;
 	border-style: none;
