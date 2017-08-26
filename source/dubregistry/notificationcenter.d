@@ -7,6 +7,7 @@ module dubregistry.notificationcenter;
 
 import dubregistry.scheduler;
 
+import std.array : appender;
 import std.datetime;
 import std.encoding : sanitize;
 import std.string : format;
@@ -14,7 +15,7 @@ import userman.db.controller;
 import vibe.core.log;
 import vibe.mail.smtp;
 import vibe.stream.memory;
-import vibe.templ.diet;
+import diet.html;
 
 
 class NotificationCenter {
@@ -51,9 +52,9 @@ class NotificationCenter {
 		mail.headers["To"] = format("%s <%s>", user.fullName, user.email); // FIXME: sanitize/escape user.fullName
 		mail.headers["Subject"] = format("[%s] Errors in new version %s", package_name, branch_or_version);
 
-		auto dst = createMemoryOutputStream();
-		dst.compileDietFile!("dubregistry.mail.package-version-errors.dt", user, settings, package_name, branch_or_version, errors);
-		mail.bodyText = cast(string)dst.data;
+		auto dst = appender!string();
+		dst.compileHTMLDietFile!("dubregistry.mail.package-version-errors.dt", user, settings, package_name, branch_or_version, errors);
+		mail.bodyText = dst.data;
 
 		sendMail(settings.mailSettings, mail);
 	}
@@ -84,8 +85,8 @@ class NotificationCenter {
 				mail.headers["To"] = format("%s <%s>", user.fullName, user.email); // FIXME: sanitize/escape user.fullName
 				mail.headers["Subject"] = format("Weekly deprecation warnings reminder");
 
-				auto dst = createMemoryOutputStream();
-				dst.compileDietFile!("dubregistry.mail.package-deprecation-warnings.dt", user, settings, deprecations);
+				auto dst = appender!string();
+				dst.compileHTMLDietFile!("dubregistry.mail.package-deprecation-warnings.dt", user, settings, deprecations);
 				mail.bodyText = cast(string)dst.data;
 
 				sendMail(settings.mailSettings, mail);
