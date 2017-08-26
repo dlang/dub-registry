@@ -171,7 +171,7 @@ class DubRegistry {
 
 	private DbPackageStats updatePackageStats(string packname)
 	{
-		logInfo("Updating stats for %s", packname);
+		logDiagnostic("Updating stats for %s", packname);
 
 		DbPackageStats stats;
 		DbPackage pack = m_db.getPackage(packname);
