@@ -81,6 +81,8 @@ block body
 					- repo_prefix = "https://github.com/";
 				- else if( (*pr)["kind"] == "bitbucket" )
 					- repo_prefix = "https://bitbucket.org/";
+				- else if( (*pr)["kind"] == "gitlab" )
+					- repo_prefix = "https://gitlab.com/";
 				- if (repo_url.length)
 					li#repository
 						a.blind(href="#{repo_prefix}#{repo_url}")= repo_url
