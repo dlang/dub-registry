@@ -210,14 +210,6 @@ button {
     cursor: pointer;
 }
 
-button.danger {
-	background-color: #943029;
-	border-color: #872c25;
-	padding: 0.5em;
-	margin-top: 0.5em;
-	color: #fff;
-}
-
 /*********************/
 /* PACKAGE CLIPBOARD */
 /*********************/
@@ -408,6 +400,13 @@ div.packageInfo > dl > dd {
 	color: #fff;
 	background-color: #5cb85c;
 	border-color: #4cae4c;
+}
+
+.inputForm button.danger {
+	background-color: #943029;
+	border-color: #872c25;
+	padding: 0.5em;
+	margin-top: 0.5em;
 }
 
 .redAlert {
