@@ -19,6 +19,7 @@ block body
 				button(type="submit") Register new package
 
 	- else
+		h1 #{user.name}'s packages
 		.inputForm
 			form(method="GET", action="#{req.rootDir}register_package")
 				button(type="submit") Register new package
