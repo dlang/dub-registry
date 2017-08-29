@@ -416,3 +416,17 @@ div.packageInfo > dl > dd {
 	color: #a94442;
 	border: 1px solid #ebccd1;
 }
+
+.packageList .row {
+	padding: 1em 0;
+	border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.packageList .row a.name {
+	font-size: 1.5em;
+}
+
+.packageList .row a.name .badge {
+	font-size: 60%;
+	vertical-align: middle;
+}

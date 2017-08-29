@@ -8,32 +8,29 @@ block body
 	- import std.algorithm;
 	- import std.array : array;
 
-	form(method="GET", action="#{req.rootDir}register_package")
-		button(type="submit") Register new package
+	- auto packages = registry.getPackages(user.id);
 
-	table
-		tr
-			th Package
-			th Latest version
-			th Description
-		- bool have_pack = false;
-		- foreach (p; sort!((a, b) => a < b)(registry.getPackages(user.id).array))
-			- have_pack = true;
-			- auto pack = registry.getPackageInfo(p, true).info;
-			- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-			tr
-				td
-					a(href="#{req.rootDir}my_packages/#{p}")= p
-				td= latest.type == Json.Type.Object ? latest["version"].opt!string : "-"
-				td= latest.type == Json.Type.Object ? latest["description"].opt!string : "-"
+	- if (packages.empty)
+		h1 Oops!
+		p Looks like you haven't registered any packages yet.
+			a.blind(href="#{req.rootDir}publish")  Learn more.
+		.inputForm
+			form(method="GET", action="#{req.rootDir}register_package")
+				button(type="submit") Register new package
+
+	- else
+		.inputForm
+			form(method="GET", action="#{req.rootDir}register_package")
+				button(type="submit") Register new package
+		.packageList
+			- foreach (p; sort!((a, b) => a < b)(packages.array))
+				- auto pack = registry.getPackageInfo(p, true).info;
+				- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
+				div.row
+					a.name.blind(href="#{req.rootDir}my_packages/#{p}")= p
+						- if (latest.type == Json.Type.Object)
+							|  #[strong.badge= latest["version"].opt!string]
+					- if (latest.type == Json.Type.Object)
+						p.description= latest["description"].opt!string
 					- if (pack["errors"].length)
-						- auto err = pack["errors"][pack["errors"].length-1].get!string;
-						span.error= err[0 .. min($, 40)]
-							- if (pack["errors"].length > 1 || err.length > 40)
-								| (<a href="#{req.rootDir}my_packages/#{p}">more...</a>)
-		- if (!have_pack)
-			tr
-				td(colspan="3") You have not registered any packages yet.
-
-	p Note that it can take up to an hour until new packages and new git tags are automatically reflected in the registry. You can force a manual update of individual packages on their details page.
-
+						p.redAlert= pack["errors"][$-1].get!string
