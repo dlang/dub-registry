@@ -20,18 +20,22 @@ block body
 
 	- else
 		h1 #{user.name}'s packages
-		.inputForm
+		.inputForm(style="padding-bottom: 1em")
 			form(method="GET", action="#{req.rootDir}register_package")
 				button(type="submit") Register new package
-		.packageList
-			- foreach (p; sort!((a, b) => a < b)(packages.array))
-				- auto pack = registry.getPackageInfo(p, true).info;
-				- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-				div.row
-					a.name.blind(href="#{req.rootDir}my_packages/#{p}")= p
-						- if (latest.type == Json.Type.Object)
-							|  #[strong.badge= latest["version"].opt!string]
-					- if (latest.type == Json.Type.Object)
-						p.description= latest["description"].opt!string
+		- foreach (p; sort!((a, b) => a < b)(packages.array))
+			- auto pack = registry.getPackageInfo(p, true).info;
+			- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
+			p
+				strong
 					- if (pack["errors"].length)
-						p.redAlert= pack["errors"][$-1].get!string
+						span(title="There are errors in the package")= "! "
+					a.blind(href="#{req.rootDir}my_packages/#{p}")= p
+				- if (latest.type == Json.Type.Object)
+					- auto ver = latest["version"].opt!string;
+					- if (ver.startsWith('~'))
+						strong= " " ~ ver
+					- else
+						strong= " v" ~ ver
+				- if (latest.type == Json.Type.Object)
+					|= " - " ~ latest["description"].opt!string
