@@ -74,16 +74,17 @@ block body
 		ul.unmarkedList
 			- if (user.id != User.ID.init)
 				li#registredBy Registered by #[strong= user.fullName.length ? user.fullName : user.name]
-			- if( auto pr = "repository" in packageInfo )
-				- string repo_url, repo_prefix;
-				- repo_url = (*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
-				- if( (*pr)["kind"] == "github" )
-					- repo_prefix = "https://github.com/";
-				- else if( (*pr)["kind"] == "bitbucket" )
-					- repo_prefix = "https://bitbucket.org/";
-				- if (repo_url.length)
-					li#repository
-						a.blind(href="#{repo_prefix}#{repo_url}")= repo_url
+			- if (auto pr = "repository" in packageInfo)
+				- string repo_kind = (*pr)["kind"].get!string;
+				- string repo_path, repo_prefix;
+				- repo_path = (*pr)["owner"].get!string~"/"~(*pr)["project"].get!string;
+				- switch (repo_kind)
+					- default: break;
+					- case "bitbucket": repo_prefix = "https://bitbucket.org/"; break;
+					- case "github": repo_prefix = "https://github.com/"; break;
+					- case "gitlab": repo_prefix = "https://gitlab.com/"; break;
+				li#repository
+					a.blind(class=repo_kind, href="#{repo_prefix}#{repo_path}")= repo_path
 
 			- if( auto ph = "homepage" in versionInfo )
 				- auto hpage = URL(ph.get!string);
