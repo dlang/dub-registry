@@ -426,3 +426,34 @@ div.packageInfo > dl > dd {
 	color: #a94442;
 	border: 1px solid #ebccd1;
 }
+
+.packageList .error {
+	color: #a94442;
+}
+
+@media (max-width: 992px) {
+	.packageList .row {
+		padding: 1em 0;
+		border-bottom: 1px solid rgba(0,0,0,0.1);
+	}
+
+	.packageList .row .cell:first-child {
+		font-size: 1.3em;
+	}
+}
+
+@media (min-width: 992px) {
+	.packageList { display: table; }
+	.packageList .row {
+		display: table-row;
+	}
+	.packageList .row .cell:first-child {
+		padding-right: 1em;
+		white-space: nowrap;
+	}
+	.packageList .row .cell {
+		display: table-cell;
+		padding: 0.3em 0;
+		border-bottom: 1px solid rgba(0,0,0,0.1);
+	}
+}
