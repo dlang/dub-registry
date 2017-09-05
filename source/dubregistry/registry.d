@@ -40,6 +40,8 @@ class DubRegistry {
 
 		// list of package names to check for updates
 		PackageWorkQueue m_updateQueue;
+		// list of packages whose statistics need to be updated
+		PackageWorkQueue m_updateStatsQueue;
 	}
 
 	this(DubRegistrySettings settings)
@@ -47,6 +49,7 @@ class DubRegistry {
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
 		m_updateQueue = new PackageWorkQueue(&updatePackage);
+		m_updateStatsQueue = new PackageWorkQueue((p) { updatePackageStats(p); });
 	}
 
 	@property DbController db() nothrow { return m_db; }
@@ -467,7 +470,7 @@ class DubRegistry {
 		}
 		m_db.setPackageErrors(packname, errors);
 
-		updatePackageStats(packname);
+		m_updateStatsQueue.put(packname);
 	}
 }
 
