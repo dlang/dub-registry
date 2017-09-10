@@ -61,7 +61,9 @@ class DubRegistryWebFrontend {
 		import std.algorithm.iteration : filter, map;
 
 		static struct Info {
-			Json[] packages;
+			// TODO: No need to use untyped Json
+			static struct Package { DbPackageStats stats; Json _; alias _ this; }
+			Package[] packages;
 			size_t packageCount;
 			size_t skip;
 			size_t limit;
@@ -96,13 +98,14 @@ class DubRegistryWebFrontend {
 		switch (sort) {
 			default: std.algorithm.sorting.sort!compare(packages); break;
 			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
+			case "rating": std.algorithm.sorting.sort!((a, b) => a.stats.rating > b.stats.rating)(packages); break;
 			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
 		Info info;
 		info.packageCount = packages.length;
 		info.packages = packages[min(skip, $) .. min(skip + limit, $)]
-			.map!(p => m_registry.getPackageInfo(p, false).info)
+			.map!(p => Info.Package(p.stats, m_registry.getPackageInfo(p, false).info))
 			.array;
 		info.skip = skip;
 		info.limit = limit;

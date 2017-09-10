@@ -42,12 +42,18 @@ class DubRegistry {
 		PackageWorkQueue m_updateQueue;
 		// list of packages whose statistics need to be updated
 		PackageWorkQueue m_updateStatsQueue;
+		DbStatDistributions m_statDistributions;
 	}
 
 	this(DubRegistrySettings settings)
 	{
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
+
+		// recompute ratings on startup to pick up any algorithm changes
+		m_statDistributions = m_db.getStatDistributions();
+		recomputeRatings(m_statDistributions);
+
 		m_updateQueue = new PackageWorkQueue(&updatePackage);
 		m_updateStatsQueue = new PackageWorkQueue((p) { updatePackageStats(p); });
 	}
@@ -85,9 +91,9 @@ class DubRegistry {
 
 	auto searchPackages(string query)
 	{
-		static struct Info { string name; DbPackageVersion _base; alias _base this; }
+		static struct Info { string name; DbPackageStats stats; DbPackageVersion _base; alias _base this; }
 		return m_db.searchPackages(query).filter!(p => p.versions.length > 0).map!(p =>
-			Info(p.name, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
+			Info(p.name, p.stats, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
 	}
 
 	RepositoryInfo getRepositoryInfo(DbRepository repository)
@@ -154,10 +160,19 @@ class DubRegistry {
 
 		try {
 			stats.repo = getRepositoryInfo(pack.repository).stats;
-		} catch (Exception e){
+		} catch (FileNotFoundException e) {
+			// repo no longer exists, rate it down to zero (#221)
+			logInfo("Zero rating %s because the repo no longer exists.", packname);
+			stats.rating = 0;
+		} catch (Exception e) {
 			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
 			return typeof(return).init;
 		}
+
+		if (auto pStatDist = pack.repository.kind in m_statDistributions.repos)
+			stats.rating = computeRating(stats, m_statDistributions.downloads, *pStatDist);
+		else
+			logError("Missing stat distribution for %s repositories.", pack.repository.kind);
 
 		m_db.updatePackageStats(pack._id, stats);
 		return stats;
@@ -275,6 +290,8 @@ class DubRegistry {
 	void updatePackages()
 	{
 		logDiagnostic("Triggering package update...");
+		// update stat distributions before rating packages
+		m_statDistributions = m_db.getStatDistributions();
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
 	}
@@ -472,6 +489,18 @@ class DubRegistry {
 
 		m_updateStatsQueue.put(packname);
 	}
+
+	/// recompute all ratings based on cached stats, e.g. after updating algorithm
+	private void recomputeRatings(DbStatDistributions dists)
+	{
+		foreach (packname; this.availablePackages)
+		{
+			const pack = m_db.getPackage(packname);
+			auto stats = m_db.getPackageStats(packname);
+			stats.rating = computeRating(stats, dists.downloads, dists.repos[pack.repository.kind]);
+			m_db.updatePackageStats(pack._id, stats);
+		}
+	}
 }
 
 private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, Path sub_path = Path("/"))
@@ -541,4 +570,48 @@ struct PackageVersionInfo {
 struct PackageInfo {
 	PackageVersionInfo[] versions;
 	Json info; /// JSON package information, as reported to the client
+}
+
+/// Computes a package rating from given package stats and global distributions of those stats.
+private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
+{
+	import std.math : log1p, round, tanh;
+
+    if (!downDist.total.sum) // no stat distribution yet
+        return 0;
+
+	/// Using monthly downloads to penalize stale packages, logarithm to
+	/// offset exponential distribution, and tanh as smooth limiter to [0..1].
+	immutable downloadRating = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
+	logDebug("downloadRating %s %s %s", downloadRating, stats.downloads.monthly, downDist.monthly.mean);
+
+	// Compute rating for repo
+	float sum=0, wsum=0;
+	void add(T)(float weight, float value, T dist)
+	{
+		if (dist.sum == 0)
+			return; // ignore metrics missing for that repository kind
+		sum += weight * log1p(value / dist.mean);
+		wsum += weight;
+	}
+	with (stats.repo)
+	{
+		alias d = repoDist;
+		// all of those values are highly correlated
+		add(1.0f, stars, d.stars);
+		add(1.0f, watchers, d.watchers);
+		add(1.0f, forks, d.forks);
+		add(-1.0f, issues, d.issues); // penalize many open issues/PRs
+	}
+
+	immutable repoRating = max(0.0, tanh(sum / wsum));
+	logDebug("repoRating: %s %s %s", repoRating, sum, wsum);
+
+	// average ratings
+	immutable avgRating = (repoRating + downloadRating) / 2;
+	assert(0 <= avgRating && avgRating <= 1.0, "%s %s".format(repoRating, downloadRating));
+	immutable scaled = stats.minRating + avgRating * (stats.maxRating - stats.minRating);
+	logDebug("rating: %s %s %s %s %s %s", stats.downloads.monthly, downDist.monthly.mean, downloadRating, repoRating, avgRating, scaled);
+
+	return scaled;
 }
