@@ -7,6 +7,7 @@ module dubregistry.registry;
 
 import dubregistry.cache : FileNotFoundException;
 import dubregistry.dbcontroller;
+import dubregistry.internal.workqueue;
 import dubregistry.repositories.repository;
 
 import dub.semver;
@@ -25,7 +26,6 @@ import vibe.core.log;
 import vibe.data.bson;
 import vibe.data.json;
 import vibe.stream.operations;
-import vibe.utils.array : FixedRingBuffer;
 
 
 /// Settings to configure the package registry.
@@ -39,22 +39,17 @@ class DubRegistry {
 		DbController m_db;
 
 		// list of package names to check for updates
-		FixedRingBuffer!string m_updateQueue;
-		string m_currentUpdatePackage;
-		Task m_updateQueueTask;
-		TaskMutex m_updateQueueMutex;
-		TaskCondition m_updateQueueCondition;
-		SysTime m_lastSignOfLifeOfUpdateTask;
+		PackageWorkQueue m_updateQueue;
+		// list of packages whose statistics need to be updated
+		PackageWorkQueue m_updateStatsQueue;
 	}
 
 	this(DubRegistrySettings settings)
 	{
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
-		m_updateQueue.capacity = 10000;
-		m_updateQueueMutex = new TaskMutex;
-		m_updateQueueCondition = new TaskCondition(m_updateQueueMutex);
-		m_updateQueueTask = runTask(&processUpdateQueue);
+		m_updateQueue = new PackageWorkQueue(&updatePackage);
+		m_updateStatsQueue = new PackageWorkQueue((p) { updatePackageStats(p); });
 	}
 
 	@property DbController db() nothrow { return m_db; }
@@ -69,28 +64,12 @@ class DubRegistry {
 
 	void triggerPackageUpdate(string pack_name)
 	{
-		synchronized (m_updateQueueMutex) {
-			if (!m_updateQueue[].canFind(pack_name))
-				m_updateQueue.put(pack_name);
-		}
-
-		// watchdog for update task
-		if (Clock.currTime(UTC()) - m_lastSignOfLifeOfUpdateTask > 2.hours) {
-			logError("Update task has hung. Trying to interrupt.");
-			m_updateQueueTask.interrupt();
-		}
-
-		if (!m_updateQueueTask.running)
-			m_updateQueueTask = runTask(&processUpdateQueue);
-		m_updateQueueCondition.notifyAll();
+		m_updateQueue.put(pack_name);
 	}
 
 	bool isPackageScheduledForUpdate(string pack_name)
 	{
-		if (m_currentUpdatePackage == pack_name) return true;
-		synchronized (m_updateQueueMutex)
-			if (m_updateQueue[].canFind(pack_name)) return true;
-		return false;
+		return m_updateQueue.isPending(pack_name);
 	}
 
 	/** Returns the current index of a given package in the update queue.
@@ -101,11 +80,7 @@ class DubRegistry {
 	*/
 	sizediff_t getUpdateQueuePosition(string pack_name)
 	{
-		if (m_currentUpdatePackage == pack_name) return 0;
-		synchronized (m_updateQueueMutex) {
-			auto idx = m_updateQueue[].countUntil(pack_name);
-			return idx >= 0 ? idx + 1 : -1;
-		}
+		return m_updateQueue.getPosition(pack_name);
 	}
 
 	auto searchPackages(string query)
@@ -422,32 +397,6 @@ class DubRegistry {
 		m_db.removeVersion(packname, ver);
 	}
 
-	private void processUpdateQueue()
-	{
-		scope (exit) logWarn("Update task was killed!");
-		while (true) {
-			m_lastSignOfLifeOfUpdateTask = Clock.currTime(UTC());
-			logDiagnostic("Getting new package to be updated...");
-			string pack;
-			synchronized (m_updateQueueMutex) {
-				while (m_updateQueue.empty) {
-					logDiagnostic("Waiting for package to be updated...");
-					m_updateQueueCondition.wait();
-				}
-				pack = m_updateQueue.front;
-				m_updateQueue.popFront();
-				m_currentUpdatePackage = pack;
-			}
-			scope(exit) m_currentUpdatePackage = null;
-			logDiagnostic("Updating package %s.", pack);
-			try updatePackage(pack);
-			catch (Exception e) {
-				logWarn("Failed to check versions for %s: %s", pack, e.msg);
-				logDiagnostic("Full error: %s", e.toString().sanitize);
-			}
-		}
-	}
-
 	private void updatePackage(string packname)
 	{
 		import std.encoding;
@@ -521,7 +470,7 @@ class DubRegistry {
 		}
 		m_db.setPackageErrors(packname, errors);
 
-		updatePackageStats(packname);
+		m_updateStatsQueue.put(packname);
 	}
 }
 
