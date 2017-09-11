@@ -213,7 +213,7 @@ class DubRegistryWebFrontend {
 						// TODO: BitBucket + GitLab
 						case "github":
 							if (is_image) return format("https://github.com/%s/%s/raw/%s/%s", owner, project, gitVer, url);
-							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url);
+							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url.startsWith("#") ? "README.md" ~ url : url);
 					}
 				}
 
