@@ -412,6 +412,12 @@ div.packageInfo > dl > dd {
 	border-color: #4cae4c;
 }
 
+.inputForm button:disabled {
+	background-color: #888;
+	border-color: #666;
+	cursor: default;
+}
+
 .inputForm button.danger {
 	background-color: #943029;
 	border-color: #872c25;
