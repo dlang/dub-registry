@@ -112,7 +112,7 @@ block body
 
 	p You can easily fetch and build third-party projects published to the dub registry via the <code>dub fetch &lt;package name&gt;</code> command.
 
-	p To get the package, run <code>dub fetch &lt;package name&gt;</code> to download the package and install it in your user build directory. <code>dub run &lt;package name&gt;</code> can then be used to build and execute the package. <code>dub fetch --local &lt;package name&gt;</code> will extract the package into a subfolder of your current working directory.
+	p To get the package, run <code>dub fetch &lt;package name&gt;</code> to download the package and install it in your user build directory. <code>dub run &lt;package name&gt;</code> can then be used to build and execute the package. <code>dub fetch --cache=local &lt;package name&gt;</code> will extract the package into a subfolder of your current working directory.
 
 	h2#advanced-usage Advanced usage
 
