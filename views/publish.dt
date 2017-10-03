@@ -14,11 +14,16 @@ block body
 
 	h2#register Registering with the registry
 
-	p If you want to publish your project, simply put the contents into a repository and push it to <a href="https://github.com/">GitHub</a> or <a href="https://bitbucket.org">Bitbucket</a> (other providers will be supported later). You can then <a href="register">register an account</a> and register the package using your GitHub/Bitbucket user name (or organization) and the project name. Anyone who adds the name of your project as a dependency to his/her package description will automatically have the contents of your git repository available to his/her project.
+	p If you want to publish your project, simply put the contents into a repository and push it to <a href="https://github.com/">GitHub</a>, <a href="https://gitlab.com/">GitLab</a> or <a href="https://bitbucket.org">Bitbucket</a>. You can then <a href="register">register an account</a> and register the package using your GitHub/GitLab/Bitbucket user name (or organization) and the project name. Anyone who adds the name of your project as a dependency to his/her package description will automatically have the contents of your git repository available to his/her project.
 
-	
+
 	h2#versions Version tags
 
 	p The repository will be monitored for changes and new version tags. To add a new version, just create a tag with a name of the form <code>v1.2.3</code>, where 1.2.3 should be changed to the actual version number. About twice per hour, the repository will be queried for new tags and any detected version will be made available on the registry.
 
 	p Furthermore, all named branches will be available as special rolling versions of the form <code>~master</code> (in case of the git "master" branch). However, those should never directly be used to refer to dependencies. Use those only in dub.selections.json or for version overrides (<code>$ dub add-override</code>).
+
+
+	h2#private-repositories Private repositories
+
+	p The #[a(href="https://github.com/dlang/dub-registry") DUB registry] project can also be used as a private service. The settings file can be configured with credentials for a private repository hosting service instance, so that packages are fetched from the LAN, or from a private cloud based repository. Once a private instance is set up, all DUB clients need to be configured to make use of it by adding a #[code(class="lang-json") "registryUrls": ["http://dubregistry.example.com/"]] field with the appropriate URL(s) to #[code ~/.dub/settings.json], or #[code AppData/Roaming/dub/settings.json] on Windows.
