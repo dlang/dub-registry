@@ -65,8 +65,8 @@ class DubRegistryWebFrontend {
 			static struct Package { DbPackageStats stats; Json _; alias _ this; }
 			Package[] packages;
 			size_t packageCount;
-			size_t skip;
-			size_t limit;
+			ulong skip;
+			ulong limit;
 			Category[] categories;
 			Category[string] categoryMap;
 		}
