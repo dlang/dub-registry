@@ -276,7 +276,7 @@ block body
 		tr
 			td libs
 			td: code string[]
-			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl")
+			td A list of external library names - depending on the compiler, these will be converted to the proper linker flag (e.g. "ssl" might get translated to "-L-lssl"). On Posix platforms dub will try to find the correct linker flags by using <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>
 
 		tr
 			td sourceFiles
