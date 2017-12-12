@@ -73,12 +73,20 @@ block body
 				- auto ver = p["version"].opt!string();
 				tr
 					td
-						- string image;
+						- import std.string : startsWith;
+						- string image, imageDescription;
+						- bool isApplication;
 						- if (pl["categories"].length)
+							- foreach (category; pl["categories"])
+								- if (category.get!string.startsWith("application"))
+									- isApplication = true;
+									- break;
 							- if (auto pc = pl["categories"][0].get!string in info.categoryMap)
 								- image = pc.imageName;
+								- imageDescription = pc.imageDescription;
 						- if (!image.length) image = "unknown";
-						img.category-icon(src="images/categories/#{image}.png", title=image.replace(".", "/"))
+						- if (!imageDescription.length) imageDescription = "unknown";
+						span(class="category-icon icon-category-#{image} #{isApplication ? `application` : ``}", title=imageDescription)
 						a(href='packages/#{pl["name"].get!string}')= pl["name"].get!string
 					td.nobreak
 						- if (ver.length <= 20)

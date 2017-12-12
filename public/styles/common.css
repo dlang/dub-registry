@@ -149,7 +149,19 @@ h3 {
 #content table.form th { border: none; background: none; }
 #content table.form td { border: none; }
 
-.category-icon { width: 16px; height: 16px; vertical-align: middle; }
+.category-icon {
+	display: inline-block;
+	width: 16px;
+	vertical-align: middle;
+	font-family: "fontello";
+	text-align: center;
+	margin-right: 4px;
+	color: #664949;
+}
+
+.category-icon.application {
+	color: #505692;
+}
 
 /*section.repositoryReadme {
 	margin-top: 30pt;
@@ -334,7 +346,7 @@ div.packageInfo > dl > dd {
 }
 
 #repository a:before {
-	font-family: "FontAwesome";
+	font-family: "fontello";
 	color: #888;
 	content: "\f121";
 	padding-right: 0.4em;

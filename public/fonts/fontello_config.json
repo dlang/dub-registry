@@ -53,6 +53,180 @@
       "css": "github-circled",
       "code": 61595,
       "src": "fontawesome"
+    },
+    {
+      "uid": "c9d395b295ad7d9c28298dcea916c6df",
+      "css": "category-desktop",
+      "code": 59392,
+      "src": "websymbols"
+    },
+    {
+      "uid": "347c38a8b96a509270fdcabc951e7571",
+      "css": "category-database",
+      "code": 61888,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "197375a3cea8cb90b02d06e4ddf1433d",
+      "css": "category-web",
+      "code": 59394,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "14c9e8bd3e747ecb08cae42f5564a671",
+      "css": "category-scientific",
+      "code": 61462,
+      "src": "mfglabs"
+    },
+    {
+      "uid": "0133387f2069a1b3168942b84d81dd3a",
+      "css": "category-game",
+      "code": 61723,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "7b6c617d6d1e3f22db493839f0483bf6",
+      "css": "category-editor",
+      "code": 59393,
+      "src": "elusive"
+    },
+    {
+      "uid": "7480a298ce334eef70193895e799c3fd",
+      "css": "category-audio",
+      "code": 59395,
+      "src": "elusive"
+    },
+    {
+      "uid": "414fe97e4af5215a06d29be0f2cecdf5",
+      "css": "category-network",
+      "code": 59396,
+      "src": "entypo"
+    },
+    {
+      "uid": "3def559c3c39b8500882e02892b7daa8",
+      "css": "category-photo",
+      "code": 59397,
+      "src": "entypo"
+    },
+    {
+      "uid": "8663320a860b00f26e94d3d15c9ba99a",
+      "css": "category-productivity",
+      "code": 59398,
+      "src": "entypo"
+    },
+    {
+      "uid": "1b5a5d7b7e3c71437f5a26befdd045ed",
+      "css": "category-unknown",
+      "code": 59399,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "d59ff824282fc6edaeca991deab522aa",
+      "css": "category-server",
+      "code": 62003,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "872d9516df93eb6b776cc4d94bd97dac",
+      "css": "category-video",
+      "code": 59400,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "fbede3c5584282a0e9b131926dff71da",
+      "css": "category-3d",
+      "code": 61874,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "ddecf5ad7935e3fb1b70dac6ed00d06a",
+      "css": "category-i18n",
+      "code": 59401,
+      "src": "entypo"
+    },
+    {
+      "uid": "e99461abfef3923546da8d745372c995",
+      "css": "category-library",
+      "code": 59402,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "381da2c2f7fd51f8de877c044d7f439d",
+      "css": "category-graphics",
+      "code": 59403,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "c93d6731f7cc8c218754e005306bad54",
+      "css": "category-generic",
+      "code": 59404,
+      "src": "iconic"
+    },
+    {
+      "uid": "86ee1fc7ff57e9c9c60d8a5e57183776",
+      "css": "category-auth",
+      "code": 59405,
+      "src": "iconic"
+    },
+    {
+      "uid": "2e7c67db76849147d16a6763d07a03a9",
+      "css": "category-crypto",
+      "code": 59435,
+      "src": "maki"
+    },
+    {
+      "uid": "7184d8171b6a9b18eabbace94cca21db",
+      "css": "category-cpu",
+      "code": 59406,
+      "src": "entypo"
+    },
+    {
+      "uid": "2626e3a1bbcd90e45849af3b58a1d594",
+      "css": "category-gc",
+      "code": 59407,
+      "src": "entypo"
+    },
+    {
+      "uid": "054519608bca087aa306252471dda9c4",
+      "css": "category-mem",
+      "code": 59408,
+      "src": "entypo"
+    },
+    {
+      "uid": "cc05df515bebe11df3ada0a5910a8f6d",
+      "css": "category-data",
+      "code": 59409,
+      "src": "entypo"
+    },
+    {
+      "uid": "922ab2cb66943a83de969990289ef1dc",
+      "css": "category-std",
+      "code": 59410,
+      "src": "entypo"
+    },
+    {
+      "uid": "767fede84586366cd7d6c835be745454",
+      "css": "category-mobile",
+      "code": 59411,
+      "src": "entypo"
+    },
+    {
+      "uid": "2c0b53280f82068f6bab4e2200025d9f",
+      "css": "category-communication",
+      "code": 59412,
+      "src": "entypo"
+    },
+    {
+      "uid": "31efa81b26fa5a380119c95d6b831d6d",
+      "css": "category-development",
+      "code": 62069,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "2f5ef6f6b7aaebc56458ab4e865beff5",
+      "css": "category-binding",
+      "code": 61591,
+      "src": "fontawesome"
     }
   ]
 }

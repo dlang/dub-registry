@@ -306,11 +306,15 @@ class DubRegistryWebFrontend {
 			else if (path.length == 2)
 				cat.indentedDescription = "\u00a0└ " ~ cat.description;
 			else cat.indentedDescription = cat.description;
-			foreach_reverse (i; 0 .. path.length)
-				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
-					cat.imageName = path[0 .. i+1].join(".");
+			Json icons = json["icons"];
+			foreach_reverse (i; 0 .. path.length) {
+				string dotPath = path[0 .. i+1].join(".");
+				if (dotPath in icons) {
+					cat.imageName = icons[dotPath].get!string;
+					cat.imageDescription = path[0 .. i+1].join("/");
 					break;
 				}
+			}
 
 			catmap[cat.name] = cat;
 
@@ -322,7 +326,7 @@ class DubRegistryWebFrontend {
 		}
 
 		Category[] cats;
-		foreach (top_level_cat; json)
+		foreach (top_level_cat; json["list"])
 			cats ~= processNode(top_level_cat, null);
 
 		m_categories = cats;
@@ -615,6 +619,6 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 }
 
 final class Category {
-	string name, description, indentedDescription, imageName;
+	string name, description, indentedDescription, imageName, imageDescription;
 	Category[] subCategories;
 }
