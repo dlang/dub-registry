@@ -64,6 +64,15 @@ p.error, li.error, span.error {
 	color: red;
 }
 
+p > span.repoError {
+	color: red;
+	display: none;
+}
+
+p > input:invalid + span.repoError, p > span.repoError.visible {
+	display: block;
+}
+
 p.warn {
 	color: #ffa000;
 }

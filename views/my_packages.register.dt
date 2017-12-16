@@ -20,20 +20,8 @@ block body
 
 		form(method="POST", action="#{req.rootDir}register_package")
 			p
-				label(for="kind") Repository type
-				select(name="kind", size="1")
-					- import dubregistry.repositories.repository;
-					- if (supportsRepositoryKind("github"))
-						option(value="github", selected=kind == "github") GitHub project
-					- if (supportsRepositoryKind("bitbucket"))
-						option(value="bitbucket", selected=kind == "bitbucket") Bitbucket project
-					- if (supportsRepositoryKind("gitlab"))
-						option(value="gitlab", selected=kind == "gitlab") GitLab project
-			p
-				label(for="owner") Repository owner
-				input(type="text", name="owner", value=owner)
-			p
-				label(for="project") Repository name
-				input(type="text", name="project", value=project)
+				label(for="project") Repository URL
+				input(type="text", name="url", value=url, pattern="^(https?://)?(www\.)?(github(\.com)?|gitlab(\.com)?|bitbucket(\.org)?)/[^/]+/[^/]+([?#.].*)?$", placeholder="github.com/user/repository")
+				span.repoError Please enter a valid project URL or tuple to a GitHub, GitLab or BitBucket project, such as #[code https://gitlab.com/dlang/dub] or #[code bitbucket/dlang/dub].
 			p
 				button(type="submit") Register package
