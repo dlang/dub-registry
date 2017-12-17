@@ -122,13 +122,6 @@ class DubRegistryWebFrontend {
 		res.redirect("/packages/index.json");
 	}
 
-	@path("/users/:userid")
-	void getUser(string _userid)
-	{
-		User target = m_userman.getUser(User.ID.fromString(_userid));
-		render!("view_user.dt", target);
-	}
-
 	@path("/packages/index.json")
 	void getPackages(HTTPServerRequest req, HTTPServerResponse res)
 	{
@@ -487,13 +480,24 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		res.writeBody(info.latest);
 	}
 
+	@path("/users/:userid")
+	void getUser(string _userid)
+	{
+		User user = m_userman.getUser(User.ID.fromString(_userid));
+		auto registry = m_registry;
+		auto packages = registry.getPackages(user.id);
+		bool mine = false;
+		render!("user_packages.dt", user, registry, mine, packages);
+	}
 
 	@auth
 	void getMyPackages(User _user)
 	{
 		auto user = _user;
 		auto registry = m_registry;
-		render!("my_packages.dt", user, registry);
+		auto packages = registry.getPackages(user.id);
+		bool mine = true;
+		render!("user_packages.dt", user, registry, mine, packages);
 	}
 
 	@auth @path("/register_package")
@@ -580,6 +584,15 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		}
 		enforceBadRequest(!path.empty);
 		m_registry.setPackageLogo(_packname, path);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/delete_logo")
+	void getDeleteLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.unsetPackageLogo(_packname);
 
 		redirect("/my_packages/"~_packname);
 	}

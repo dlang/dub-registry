@@ -32,7 +32,9 @@ block body
 				img.packageLogo.small(src=logoPath)
 				img.packageLogo.tiny(src=logoPath)
 			input(name="logo", type="file", accept="image/*", onchange="updateLogoPreview(this)")
-			button(type="Submit") Upload
+			button(type="submit") Upload
+			a(href="#{req.rootDir}my_packages/#{packageName}/delete_logo")
+				button.danger(type="button") Delete
 
 	h2 Downloads
 	p

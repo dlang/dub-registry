@@ -291,6 +291,11 @@ class DubRegistry {
 			throw new Exception("Failed to generate logo");
 	}
 
+	void unsetPackageLogo(string pack_name)
+	{
+		m_db.removePackageLogo(pack_name);
+	}
+
 	void setPackageRepository(string pack_name, DbRepository repository)
 	{
 		auto new_name = validateRepository(repository);

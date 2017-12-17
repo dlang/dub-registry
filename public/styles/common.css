@@ -539,33 +539,51 @@ div.packageInfo > .actions > a > button {
 	border: 1px solid #ebccd1;
 }
 
+.packageList {
+	margin-top: 1em;
+}
+
 .packageList .error {
 	color: #a94442;
 }
 
-@media (max-width: 992px) {
-	.packageList .row {
-		padding: 1em 0;
-		border-bottom: 1px solid rgba(0,0,0,0.1);
-	}
+.packageList .row {
+	display: flex;
+	margin-bottom: 8pt;
+	align-items: center;
+}
 
-	.packageList .row .cell:first-child {
-		font-size: 1.3em;
+.packageList .row img.logo {
+	flex-shrink: 0;
+	flex-grow: 0;
+	width: 6em;
+	max-height: 6em;
+	display: block;
+	margin-right: 8pt;
+}
+
+.packageList .row .text {
+	flex-shrink: 1;
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.packageList .row .text > * {
+	margin: 2pt;
+	padding: 0;
+}
+
+@media (max-width: 992px) {
+	.packageList .row img.logo {
+		width: 5em;
+		max-height: 5em;
 	}
 }
 
-@media (min-width: 992px) {
-	.packageList { display: table; }
-	.packageList .row {
-		display: table-row;
-	}
-	.packageList .row .cell:first-child {
-		padding-right: 1em;
-		white-space: nowrap;
-	}
-	.packageList .row .cell {
-		display: table-cell;
-		padding: 0.3em 0;
-		border-bottom: 1px solid rgba(0,0,0,0.1);
+@media (max-width: 550px) {
+	.packageList .row img.logo {
+		width: 4em;
+		max-height: 4em;
 	}
 }
