@@ -104,14 +104,14 @@ block body
 			- if( auto pl = "copyright" in versionInfo )
 				li#copyright= pl.get!string
 
-		- if (packageInfo["donation_url"].get!string.length || packageInfo["donation_detail"].get!string.length)
-			//- TODO: move this if only for the button after adding more actions
+		- if ("donationUrl" in versionInfo || "donationDetail" in versionInfo)
+			//- TODO: move this if only for the button and detail after adding more actions
 			.actions
-				- if (packageInfo["donation_url"].get!string.length)
-					a(href=packageInfo["donation_url"].get!string)
+				- if (auto url = "donationUrl" in versionInfo)
+					a(href=url.get!string, target="_blank")
 						button.primary.large Donate to the Author
-				- if (packageInfo["donation_detail"].get!string.length)
-					p.detail= packageInfo["donation_detail"].get!string
+				- if (auto detail = "donationDetail" in versionInfo)
+					p.detail= detail.get!string
 
 		dl
 			- if( auto pa = "authors" in versionInfo )

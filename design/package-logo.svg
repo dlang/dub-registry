@@ -95,21 +95,18 @@
        id="path4538"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccc" />
-    <g
-       id="g5220"
-       transform="matrix(1.1609679,-0.51024567,0,2.8419583,-3.7472477,-471.22657)">
-      <path
-         id="path4633"
-         d="m 17.328993,255.8497 c 4.63946,1.51921 9.286571,3.10001 13.78277,4.58164 2.275947,0.74999 2.62007,1.30452 2.807155,2.11911 l 0.0055,4.03943 c 2.64e-4,0.19383 0.03979,0.57844 0.597561,0.59341 l 4.969225,0.13338 c 5.016781,0.20447 6.853,-0.87717 8.14889,-1.92429 1.384212,-1.32961 1.686626,-2.4817 0.761555,-3.65591 6.877215,0.0601 -16.002819,-6.16292 -14.316256,-4.1566 -7.50733,-1.46457 -10.944574,-1.54518 -16.7564,-1.73017 z m 8.279233,1.86525 c 3.01559,0.12616 6.380727,0.255 12.2274,1.62978 6.33039,1.48852 7.716375,2.08317 7.433998,3.45893 -0.37788,1.04163 -2.282842,1.99611 -5.6914,1.97523 l -2.30152,-0.0472 -0.0487,-2.05678 c -0.165316,-0.68815 -0.699282,-1.42091 -2.394523,-1.95896 -3.113869,-0.98831 -4.734843,-1.53843 -9.225259,-3.00098 z"
-         style="fill:#ffffff;stroke-width:0.32008049"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cscssccccccsccccscc" />
-      <path
-         style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:5.4484911;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         d="m 40.531941,257.50051 a 2.3900898,0.31657187 11.788596 0 1 -1.507307,0.0982 2.3900898,0.31657187 11.788596 0 1 -2.946954,-0.812 2.3900898,0.31657187 11.788596 0 1 1.507312,-0.0982 2.3900898,0.31657187 11.788596 0 1 2.946959,0.81198 z"
-         id="path5889"
-         inkscape:connector-curvature="0" />
-    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40.21941757px;line-height:53.62588501px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.6812942px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="36.843479"
+       y="296.21661"
+       id="text6109"
+       transform="skewY(-17.337588)"><tspan
+         sodipodi:role="line"
+         id="tspan6107"
+         x="36.843479"
+         y="296.21661"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed, Bold';fill:#ffffff;stroke-width:2.6812942px">D</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"

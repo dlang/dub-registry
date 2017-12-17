@@ -11,6 +11,8 @@ class PackageVersion {
 	string homepage;
 	string copyright;
 	string[] authors;
+	string donationUrl;
+	string donationDetail;
 	string[string] dependencies;
 	RepositoryInfo repository;
 }
