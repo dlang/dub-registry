@@ -6,6 +6,7 @@
 module dubregistry.web;
 
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
@@ -119,6 +120,13 @@ class DubRegistryWebFrontend {
 	void getAvailable(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		res.redirect("/packages/index.json");
+	}
+
+	@path("/users/:userid")
+	void getUser(string _userid)
+	{
+		User target = m_userman.getUser(User.ID.fromString(_userid));
+		render!("view_user.dt", target);
 	}
 
 	@path("/packages/index.json")
@@ -556,6 +564,36 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages");
 	}
 
+	@auth @path("/my_packages/:packname/set_logo")
+	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		Path path;
+		foreach (key, file; request.files) {
+			if (key != "logo")
+				removeFile(file.tempPath);
+			else {
+				path = Path(tempDir()) ~ PathEntry(file.tempPath.toNativeString.baseName
+					~ file.filename.name.extension);
+				moveFile(file.tempPath, path);
+			}
+		}
+		enforceBadRequest(!path.empty);
+		m_registry.setPackageLogo(_packname, path);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_donation_url")
+	void postSetDonationUrl(string donation_url, string donation_detail, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		// TODO: repository ownership verification
+		m_registry.setPackageDonationDetails(_packname, donation_url, donation_detail);
+
+		redirect("/my_packages/"~_packname);
+	}
+
 	@auth @path("/my_packages/:packname/set_categories")
 	void postSetPackageCategories(string[] categories, string _packname, User _user)
 	{
@@ -597,6 +635,32 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		import dub.commandline;
 		auto commands = getCommands();
 		render!("docs.commandline.dt", commands);
+	}
+
+	@path("/logos/:logo")
+	void getLogo(scope HTTPServerRequest req, scope HTTPServerResponse res, string _logo)
+	{
+		import std.algorithm : canFind;
+
+		bool supportsWebP = req.headers.get("Accept").canFind("image/webp");
+
+		bool[logoFormats.length] exists;
+		Path[logoFormats.length] paths;
+		foreach (i, format; logoFormats)
+		{
+			paths[i] = Path(logoOutputFolder) ~ PathEntry.validateFilename(_logo ~ format);
+			exists[i] = existsFile(paths[i]);
+		}
+
+		auto settings = new HTTPFileServerSettings();
+		settings.maxAge = 7.days;
+
+		if (supportsWebP && exists[0])
+			sendFile(req, res, paths[0], settings);
+		else if (exists[1])
+			sendFile(req, res, paths[1], settings);
+		else
+			sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
 	}
 
 	private void enforceUserPackage(User user, string package_name)

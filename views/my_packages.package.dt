@@ -5,6 +5,8 @@ block title
 
 block body
 	- import vibe.data.json;
+	- import std.conv;
+	- import std.random;
 	- import dubregistry.web : Category;
 	- auto pack = registry.getPackageInfo(packageName, true).info;
 
@@ -18,6 +20,36 @@ block body
 			- foreach_reverse(e; pack["errors"])
 				|= e.get!string
 				br
+
+	h2 General
+
+	.inputForm
+		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
+			h3 Logo
+			- string existing = pack["logo"].get!string;
+			- string logoPath = existing.length ? (existing ~ "?" ~ uniform(ulong.min, ulong.max).to!string) : (req.rootDir ~ "images/default-logo.png");
+			.packageLogoCollection
+				img.packageLogo(src=logoPath)
+				img.packageLogo.medium(src=logoPath)
+				img.packageLogo.small(src=logoPath)
+				img.packageLogo.tiny(src=logoPath)
+			input(name="logo", type="file", accept="image/*", onchange="updateLogoPreview(this)")
+			button(type="Submit") Upload
+
+	.inputForm
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_donation_url")
+			h3 Donations
+			label(for="donation_url") Donation URL
+			input(name="donation_url", type="url", value=pack["donation_url"].get!string)
+			p.
+				You can provide a donation URL which will be displayed on the package page as
+				clickable button. You could put any donation page like a paypal link or a patreon page here.
+			label(for="donation_detail") Detail Text
+			input(name="donation_detail", type="text", value=pack["donation_detail"].get!string)
+			p.
+				Provide donation information like accepted payment methods for a custom URL or what type it
+				is. This field could also be used for providing a crypto currency address.
+			button(type="Submit") Update
 
 	h2 Downloads
 	p
@@ -112,3 +144,5 @@ block body
 	.inputForm
 		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
 			button.danger(type="submit") Remove this package
+
+	script(src="#{req.rootDir}scripts/edit_package.js")

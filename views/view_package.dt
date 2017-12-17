@@ -21,6 +21,9 @@ block body
 		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
 			a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
 
+		- if (packageInfo["logo"].get!string.length)
+			img.packageLogo(src=packageInfo["logo"].get!string)
+
 		- if(packageName.canFind(":"))
 			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);
 			h1.
@@ -73,7 +76,11 @@ block body
 	.packageInfo
 		ul.unmarkedList
 			- if (user.id != User.ID.init)
-				li#registredBy Registered by #[strong= user.fullName.length ? user.fullName : user.name]
+				li#registredBy Registered by
+					a.blind(href="#{req.rootDir}users/#{user.id}")
+						strong= user.fullName.length ? user.fullName : user.name
+			- if (!packageInfo["versions"].empty)
+			li#latestVersion #[strong= versionInfo["version"].get!string] released #{formatFuzzyDate(versionInfo["date"])}
 			- if (auto pr = "repository" in packageInfo)
 				- string repo_kind = (*pr)["kind"].get!string;
 				- string repo_path, repo_prefix;
@@ -97,10 +104,22 @@ block body
 			- if( auto pl = "copyright" in versionInfo )
 				li#copyright= pl.get!string
 
+		- if (packageInfo["donation_url"].get!string.length || packageInfo["donation_detail"].get!string.length)
+			//- TODO: move this if only for the button after adding more actions
+			.actions
+				- if (packageInfo["donation_url"].get!string.length)
+					a(href=packageInfo["donation_url"].get!string)
+						button.primary.large Donate to the Author
+				- if (packageInfo["donation_detail"].get!string.length)
+					p.detail= packageInfo["donation_detail"].get!string
+
 		dl
 			- if( auto pa = "authors" in versionInfo )
 				dt Authors:
-				dd.wrap= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
+				dd.wrap
+					ul.authors.unmarkedList
+						- foreach (author; pa.get!(Json[]))
+							li= author.get!string
 
 			- if (versionInfo["subPackages"].opt!(Json[]).length)
 				dt Sub packages:

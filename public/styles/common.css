@@ -41,9 +41,9 @@ pre.code, pre > code {
 	margin: 6pt 0;
 	padding: 3pt;
 	background-color: #F4F4F4;
-    -moz-tab-size: 4;
-    -o-tab-size:   4;
-    tab-size:      4;
+	-moz-tab-size: 4;
+	-o-tab-size:   4;
+	tab-size:      4;
 }
 
 dd { margin-left: 18pt; margin-top: 3pt; margin-bottom: 6pt; }
@@ -204,14 +204,26 @@ div#content {
 /********************/
 
 button {
-    color: #333;
-    background: white;
-    border: 1px solid #CCC;
-    border-radius: 4px;
-    padding: 0.3em 0.6em;
-    display: inline-block;
-    text-decoration: none;
-    cursor: pointer;
+	color: #333;
+	background: white;
+	border: 1px solid #CCC;
+	border-radius: 4px;
+	padding: 0.3em 0.6em;
+	display: inline-block;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+button.primary {
+	color: white;
+	font-weight: bold;
+	background: #B03931;
+	border-color: #98312A;
+}
+
+button.primary:hover, button.primary:focus {
+	background: #742620;
+	border-color: #943029;
 }
 
 /*********************/
@@ -219,17 +231,17 @@ button {
 /*********************/
 
 .clipboard-pkg {
-    padding-top: 5px;
+	padding-top: 5px;
 }
 
 .clipboard-pkg-title {
-    font-weight: bold;
-    display: inline-block;
-    width: 60px;
+	font-weight: bold;
+	display: inline-block;
+	width: 60px;
 }
 
 .clipboard-pkg-row input {
-    width: 280px;
+	width: 280px;
 }
 
 /********************/
@@ -237,18 +249,18 @@ button {
 /********************/
 
 #copy-shields div {
-    padding-left: 10px;
+	padding-left: 10px;
 }
 
 #copy-shields .img-wrapper {
-    width: 140px;
-    display: inline-block;
-    padding-left: 5px;
-    vertical-align: middle;
+	width: 140px;
+	display: inline-block;
+	padding-left: 5px;
+	vertical-align: middle;
 }
 
 #copy-shields input {
-    width: 280px;
+	width: 280px;
 }
 
 @media only screen and (min-width: 54em) {
@@ -264,6 +276,63 @@ button {
 	}
 }
 
+img.packageLogo {
+	float: right;
+	max-width: 150px;
+	max-height: 150px;
+	margin: 0 0 1em 1em;
+}
+
+@media only screen and (max-width: 480px) {
+	img.packageLogo {
+		display: block;
+		float: none;
+		max-width: 100%;
+		max-height: none;
+		margin: 1em auto;
+	}
+}
+
+.packageLogoCollection {
+	position: relative;
+	width: 344px;
+	height: 264px;
+}
+
+.packageLogoCollection > img.packageLogo {
+	position: absolute;
+	display: block;
+	float: left;
+	max-width: 256px;
+	max-height: 256px;
+	top: 0;
+	left: 0;
+}
+
+.packageLogoCollection > img.packageLogo.medium {
+	max-width: 64px;
+	max-height: 64px;
+	top: 60px;
+	right: 0;
+	left: unset;
+}
+
+.packageLogoCollection > img.packageLogo.small {
+	max-width: 32px;
+	max-height: 32px;
+	top: 140px;
+	right: 32px;
+	left: unset;
+}
+
+.packageLogoCollection > img.packageLogo.tiny {
+	max-width: 16px;
+	max-height: 16px;
+	top: 188px;
+	right: 48px;
+	left: unset;
+}
+
 div.packageInfo {
 	text-align: left; /* override justify */
 }
@@ -274,7 +343,7 @@ div.packageInfo > *:first-child {
 
 div.packageInfo > ul {
 	margin-left: 0 !important;
-	margin-bottom: 1em;
+	margin-bottom: 2em;
 }
 
 div.packageInfo > * {
@@ -331,6 +400,39 @@ div.packageInfo > dl > dt:not(:first-child) {
 div.packageInfo > dl > dd {
 	padding: 0.25em 0 0.25em 0.5em;
 	margin: 0;
+	margin-bottom: 0.5em;
+}
+
+div.packageInfo > dl > dd > ul.authors {
+	margin-left: 0 !important;
+	padding: 0;
+}
+
+div.packageInfo > dl > dd > ul.authors > li {
+	margin-bottom: 5pt;
+}
+
+div.packageInfo > .actions {
+	margin-bottom: 2em;
+}
+
+div.packageInfo > .actions > .detail {
+	color: #888;
+	text-align: center;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+div.packageInfo > .actions > .detail:hover {
+	text-overflow: unset;
+	overflow: visible;
+	white-space: normal;
+}
+
+div.packageInfo > .actions > a > button {
+	padding: 0.7em 0;
+	width: 100%;
 }
 
 #repository a:before {
