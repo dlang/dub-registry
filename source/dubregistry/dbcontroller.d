@@ -163,7 +163,9 @@ class DbController {
 
 	void enablePackageLogo(string packname)
 	{
-		m_packages.update(["name": packname], ["$set": ["logo": "/logos/" ~ packname]]);
+		// revving of logo because of extremely long cache.
+		string revv = Clock.currStdTime.to!string(36);
+		m_packages.update(["name": packname], ["$set": ["logo": "/logos/" ~ packname ~ "." ~ revv]]);
 	}
 
 	void removePackageLogo(string packname)

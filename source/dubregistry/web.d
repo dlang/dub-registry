@@ -634,6 +634,10 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 
 		bool supportsWebP = req.headers.get("Accept").canFind("image/webp");
 
+		auto dot = _logo.countUntil('.');
+		if (dot != -1)
+			_logo = _logo[0 .. dot];
+
 		bool[logoFormats.length] exists;
 		Path[logoFormats.length] paths;
 		foreach (i, format; logoFormats)
@@ -643,7 +647,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		}
 
 		auto settings = new HTTPFileServerSettings();
-		settings.maxAge = 7.days;
+		settings.maxAge = 365.days;
 
 		if (supportsWebP && exists[0])
 			sendFile(req, res, paths[0], settings);

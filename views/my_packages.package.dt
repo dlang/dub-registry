@@ -5,8 +5,6 @@ block title
 
 block body
 	- import vibe.data.json;
-	- import std.conv;
-	- import std.random;
 	- import dubregistry.web : Category;
 	- auto pack = registry.getPackageInfo(packageName, true).info;
 
@@ -27,7 +25,7 @@ block body
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
 			h3 Logo
 			- string existing = pack["logo"].get!string;
-			- string logoPath = existing.length ? (existing ~ "?" ~ uniform(ulong.min, ulong.max).to!string) : (req.rootDir ~ "images/default-logo.png");
+			- string logoPath = existing.length ? existing : (req.rootDir ~ "images/default-logo.png");
 			.packageLogoCollection
 				img.packageLogo(src=logoPath)
 				img.packageLogo.medium(src=logoPath)

@@ -49,7 +49,6 @@ auto generateLogo(Path file, string name, bool deleteExisting = false, bool dele
 		}
 	auto t = runWorkerTaskH(&generateLogoUnsafe, Task.getThis(), file, name);
 	auto success = receiveOnlyCompat!(bool[logoFormats.length]);
-	t.join();
 	foreach (i, format; logoFormats)
 		if (existsFile(buildPath(logoOutputFolder, name ~ format)) && !success[i])
 			removeFile(buildPath(logoOutputFolder, name ~ format));
