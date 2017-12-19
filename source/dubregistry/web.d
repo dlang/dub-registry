@@ -274,7 +274,7 @@ class DubRegistryWebFrontend {
 				if (sp["name"] == ppath[i]) {
 					Json newv = Json.emptyObject;
 					// inherit certain fields
-					foreach (field; ["version", "date", "license", "authors", "homepage", "donationUrl", "donationDetail"])
+					foreach (field; ["version", "date", "license", "authors", "homepage"])
 						if (auto pv = field in ver_info.info) newv[field] = *pv;
 					// copy/overwrite the rest frmo the sub package
 					foreach (string name, value; sp) newv[name] = value;
@@ -593,6 +593,16 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 		m_registry.unsetPackageLogo(_packname);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_donation_url")
+	void postSetDonationUrl(string donation_url, string donation_detail, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		// TODO: repository ownership verification
+		m_registry.setPackageDonationDetails(_packname, donation_url, donation_detail);
 
 		redirect("/my_packages/"~_packname);
 	}

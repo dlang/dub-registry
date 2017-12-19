@@ -161,6 +161,11 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
 	}
 
+	void setPackageDonationDetails(string packname, string url, string detail)
+	{
+		m_packages.update(["name": packname], ["$set": ["donation_url": url, "donation_detail": detail]]);
+	}
+
 	void enablePackageLogo(string packname)
 	{
 		// revving of logo because of extremely long cache.
@@ -403,6 +408,8 @@ struct DbPackage {
 	BsonObjectID owner;
 	string name;
 	@optional string logo;
+	@optional string donation_url;
+	@optional string donation_detail;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;

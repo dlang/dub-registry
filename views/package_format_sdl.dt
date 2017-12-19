@@ -96,19 +96,6 @@ block body
 			td License(s) under which the project can be used - see the <a href="#licenses">license specification</a> section for possible values
 
 		tr
-			td donationUrl
-			td: code "&lt;url&gt;"
-			td URL for donating to the project (button will be shown on registry). You could put any donation page like a PayPal or a Patreon link here.
-
-		tr
-			td donationDetail
-			td: code "&lt;text&gt;"
-			td.
-				Text which will be shown below donation button (or standalone if no donationUrl is set).
-				Provide donation information like accepted payment methods for a custom URL or what type it
-				is. This field could also be used for providing a crypto currency address.
-
-		tr
 			td subPackage
 			td #[code "&lt;path&gt;"] or #[code { ... }]
 			td Defines a sub-package using either a path to a sub directory, or in-place - see the <a href="#sub-packages">sub package section</a> for more information

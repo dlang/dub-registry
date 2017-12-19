@@ -222,6 +222,8 @@ class DubRegistry {
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
 		nfo["logo"] = pack.logo;
+		nfo["donation_url"] = pack.donation_url;
+		nfo["donation_detail"] = pack.donation_detail;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -280,6 +282,11 @@ class DubRegistry {
 	void setPackageCategories(string pack_name, string[] categories)
 	{
 		m_db.setPackageCategories(pack_name, categories);
+	}
+
+	void setPackageDonationDetails(string pack_name, string url, string detail)
+	{
+		m_db.setPackageDonationDetails(pack_name, url, detail);
 	}
 
 	void setPackageLogo(string pack_name, Path path)
