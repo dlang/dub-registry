@@ -433,6 +433,7 @@ div.packageInfo > .actions > .detail:hover {
 div.packageInfo > .actions > a > button {
 	padding: 0.7em 0;
 	width: 100%;
+	margin-bottom: 5pt;
 }
 
 #repository a:before {

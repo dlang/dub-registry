@@ -18,8 +18,7 @@ block css
 block body
 	.main
 		- import vibe.data.bson;
-		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
-			a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
+		- bool isMine = req.session && user.id == User.ID.fromString(req.session.get!string("userID"));
 
 		- if (packageInfo["logo"].get!string.length)
 			img.packageLogo(src=packageInfo["logo"].get!string)
@@ -104,12 +103,15 @@ block body
 			- if( auto pl = "copyright" in versionInfo )
 				li#copyright= pl.get!string
 
-		- if (packageInfo["donation_url"].get!string.length || packageInfo["donation_detail"].get!string.length)
+		- if (isMine || packageInfo["donation_url"].get!string.length || packageInfo["donation_detail"].get!string.length)
 			//- TODO: move this if only for the button after adding more actions
 			.actions
+				- if (isMine)
+					a(href="#{req.rootDir}my_packages/#{packageName}")
+						button.primary.large Manage this package
 				- if (packageInfo["donation_url"].get!string.length)
 					a(href=packageInfo["donation_url"].get!string)
-						button.primary.large Donate to the Author
+						button.large(class=isMine ? "" : "primary") Donate to the Author
 				- if (packageInfo["donation_detail"].get!string.length)
 					p.detail= packageInfo["donation_detail"].get!string
 
