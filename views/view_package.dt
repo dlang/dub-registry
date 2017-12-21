@@ -174,9 +174,8 @@ block body
 							strong= stats.downloads.total
 							|  downloads total
 
-			- if ("showrating" in req.query)
-				dt Rating:
-				dd#rating(title="#{formatPackageStats(stats)}")= formatRating(stats.rating)
+			dt Rating:
+			dd#rating(title="#{formatPackageStats(stats)}")= formatRating(stats.rating)
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript
