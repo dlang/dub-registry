@@ -55,8 +55,23 @@ class DubRegistryWebFrontend {
 		updatePackageList();
 	}
 
+	@path("/home")
+	void getHome()
+	{
+		render!"home.dt";
+	}
+
 	@path("/")
-	void getHome(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
+	void getRoot(scope HTTPServerRequest req)
+	{
+		if (req.queryString.length)
+			redirect("/packages?" ~ req.queryString);
+		else
+			redirect("/packages");
+	}
+
+	@path("/packages")
+	void getPackages(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
 	{
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
@@ -113,7 +128,7 @@ class DubRegistryWebFrontend {
 		info.categories = m_categories;
 		info.categoryMap = m_categoryMap;
 
-		render!("home.dt", info);
+		render!("package_list.dt", info);
 	}
 
 	// compatibility route

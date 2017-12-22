@@ -3,6 +3,7 @@ extends layout
 block title
 	- import std.algorithm;
 	- import std.array : join;
+	- import std.range;
 	- import vibe.data.json;
 	- import vibe.inet.url;
 	- import vibe.textfilter.urlencode;
@@ -78,8 +79,8 @@ block body
 				li#registredBy Registered by
 					a.blind(href="#{req.rootDir}users/#{user.id}")
 						strong= user.fullName.length ? user.fullName : user.name
-			- if (!packageInfo["versions"].empty)
-			li#latestVersion #[strong= versionInfo["version"].get!string] released #{formatFuzzyDate(versionInfo["date"])}
+			- if (!packageInfo["versions"].get!(Json[]).empty)
+				li#latestVersion #[strong= versionInfo["version"].get!string] released #{formatFuzzyDate(versionInfo["date"])}
 			- if (auto pr = "repository" in packageInfo)
 				- string repo_kind = (*pr)["kind"].get!string;
 				- string repo_path, repo_prefix;

@@ -1,7 +1,7 @@
 .helper
 	.helper.expand-container.active
 		.logo
-			a(href="#{req.rootDir}")
+			a(href="#{req.rootDir}home")
 				img(id="logo", alt="DUB Logo", src="#{req.rootDir}images/dub-header.png")
 		a(href="#", title="Menu", class="hamburger expand-toggle")
 			span Menu
@@ -10,7 +10,7 @@
 			- import std.range : empty;
 			- import std.string : split;
 			- import std.typecons : tuple;
-			- auto listitems = [tuple("Packages", [""]), tuple("Documentation", ["Getting Started;getting_started", "Advanced Usage;advanced_usage", "Command line documentation;docs/commandline", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/dlang/dub-registry/issues", "Bug tracker (DUB);https://github.com/dlang/dub/issues", "Github repository (website);https://github.com/dlang/dub-registry", "GitHub repository (DUB);https://github.com/dlang/dub"]), tuple("Download", ["download"])];
+			- auto listitems = [tuple("Packages", ["packages"]), tuple("Documentation", ["Getting Started;getting_started", "Advanced Usage;advanced_usage", "Command line documentation;docs/commandline", "Development;develop", "Package format (JSON);package-format?lang=json", "Package format (SDLang);package-format?lang=sdl"]), tuple("About",  ["Forums;http://forum.rejectedsoftware.com/groups/rejectedsoftware.dub", "Bug tracker (website);https://github.com/dlang/dub-registry/issues", "Bug tracker (DUB);https://github.com/dlang/dub/issues", "Github repository (website);https://github.com/dlang/dub-registry", "GitHub repository (DUB);https://github.com/dlang/dub"]), tuple("Download", ["download"])];
 			- if( req.session )
 				- listitems ~= tuple("My account", ["Manage packages;my_packages", "Edit profile;profile", "Log out;logout"]);
 			- else

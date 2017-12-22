@@ -9,6 +9,8 @@ block body
 	- import std.algorithm;
 	- import std.array : array;
 
+	include package_render.inc.dt
+
 	- if (packages.empty)
 		h1 Oops!
 		p Looks like #{mine ? "you haven't" : "this user hasn't"} registered any packages yet.
@@ -28,20 +30,4 @@ block body
 		.packageList
 			- foreach (p; sort!((a, b) => a < b)(packages.array))
 				- auto pack = registry.getPackageInfo(p, mine).info;
-				- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-				.row
-					- string logo = pack["logo"].get!string;
-					img.logo(src=logo.length ? logo : req.rootDir ~ "images/default-logo.png", alt=p, title=p ~ " logo")
-					.text
-						.name
-							- if (mine && pack["errors"].length)
-								span(title="There are errors in the package")= "! "
-							- if (mine)
-								a.blind(href="#{req.rootDir}my_packages/#{p}")= p
-							- else
-								a.blind(href="#{req.rootDir}packages/#{p}")= p
-						- if (latest.type == Json.Type.Object)
-							.version #[strong= latest["version"].opt!string] released #{formatFuzzyDate(latest["date"])}
-							.description= latest["description"].opt!string
-							- if (mine && pack["errors"].length)
-								.error= pack["errors"][$-1].opt!string
+				- renderPackage(p, pack, true);
