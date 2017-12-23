@@ -13,7 +13,7 @@
 		"memutils": "0.4.9",
 		"openssl": "1.1.5+1.0.1g",
 		"taggedalgebraic": "0.10.7",
-		"userman": "0.3.6",
+		"userman": "0.3.7",
 		"vibe-core": "1.1.1",
 		"vibe-d": "0.8.1"
 	}
