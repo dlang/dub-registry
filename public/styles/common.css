@@ -548,13 +548,13 @@ div.packageInfo > .actions > a > button {
 	color: #a94442;
 }
 
-.packageList .row {
+.packageList .package {
 	display: flex;
 	margin-bottom: 8pt;
 	align-items: center;
 }
 
-.packageList .row img.logo {
+.packageList .package img.logo {
 	flex-shrink: 0;
 	flex-grow: 0;
 	width: 6em;
@@ -563,27 +563,27 @@ div.packageInfo > .actions > a > button {
 	margin-right: 8pt;
 }
 
-.packageList .row .text {
+.packageList .package .text {
 	flex-shrink: 1;
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
 }
 
-.packageList .row .text > * {
+.packageList .package .text > * {
 	margin: 2pt;
 	padding: 0;
 }
 
 @media (max-width: 992px) {
-	.packageList .row img.logo {
+	.packageList .package img.logo {
 		width: 5em;
 		max-height: 5em;
 	}
 }
 
 @media (max-width: 550px) {
-	.packageList .row img.logo {
+	.packageList .package img.logo {
 		width: 4em;
 		max-height: 4em;
 	}
