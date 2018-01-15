@@ -175,7 +175,7 @@ block body
 							|  downloads total
 
 			dt Score:
-			dd#score(title="#{formatPackageStats(stats)}")= formatScore(stats.score)
+			dd#score(title="#{formatPackageStats(stats)}")!= formatScore(req.rootDir, stats.score)
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript

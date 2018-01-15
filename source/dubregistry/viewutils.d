@@ -77,9 +77,9 @@ string formatFuzzyDate(SysTime st)
 	else return format("%s years ago", now.year - st.year);
 }
 
-string formatScore(float score)
+string formatScore(string rootDir, float score)
 {
-	return format("%.1f", score);
+	return format(`<a href="%sdevelop#package-scoring">%.1f</a>`, rootDir, score);
 }
 
 string formatPackageStats(Stats)(Stats s)

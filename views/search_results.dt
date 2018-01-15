@@ -29,7 +29,7 @@ block body
 					- else
 						| #{ver[0 .. 18]}&hellip;
 				td.nobreak= formatDate(p.date)
-				td.nobreak(title="#{formatPackageStats(p.stats)}", style="color: #B03931;")= formatScore(p.stats.score)
+				td.nobreak(title="#{formatPackageStats(p.stats)}", style="color: #B03931;")!= formatScore(req.rootDir, p.stats.score)
 				- if (desc.length <= 100)
 					td= desc
 				- else
