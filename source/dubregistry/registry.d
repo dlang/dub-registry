@@ -50,9 +50,9 @@ class DubRegistry {
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
 
-		// recompute ratings on startup to pick up any algorithm changes
+		// recompute scores on startup to pick up any algorithm changes
 		m_statDistributions = m_db.getStatDistributions();
-		recomputeRatings(m_statDistributions);
+		recomputeScores(m_statDistributions);
 
 		m_updateQueue = new PackageWorkQueue(&updatePackage);
 		m_updateStatsQueue = new PackageWorkQueue((p) { updatePackageStats(p); });
@@ -162,15 +162,15 @@ class DubRegistry {
 			stats.repo = getRepositoryInfo(pack.repository).stats;
 		} catch (FileNotFoundException e) {
 			// repo no longer exists, rate it down to zero (#221)
-			logInfo("Zero rating %s because the repo no longer exists.", packname);
-			stats.rating = 0;
+			logInfo("Zero scoring %s because the repo no longer exists.", packname);
+			stats.score = 0;
 		} catch (Exception e) {
 			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
 			return typeof(return).init;
 		}
 
 		if (auto pStatDist = pack.repository.kind in m_statDistributions.repos)
-			stats.rating = computeRating(stats, m_statDistributions.downloads, *pStatDist);
+			stats.score = computeScore(stats, m_statDistributions.downloads, *pStatDist);
 		else
 			logError("Missing stat distribution for %s repositories.", pack.repository.kind);
 
@@ -290,7 +290,7 @@ class DubRegistry {
 	void updatePackages()
 	{
 		logDiagnostic("Triggering package update...");
-		// update stat distributions before rating packages
+		// update stat distributions before score packages
 		m_statDistributions = m_db.getStatDistributions();
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
@@ -490,14 +490,14 @@ class DubRegistry {
 		m_updateStatsQueue.put(packname);
 	}
 
-	/// recompute all ratings based on cached stats, e.g. after updating algorithm
-	private void recomputeRatings(DbStatDistributions dists)
+	/// recompute all scores based on cached stats, e.g. after updating algorithm
+	private void recomputeScores(DbStatDistributions dists)
 	{
 		foreach (packname; this.availablePackages)
 		{
 			const pack = m_db.getPackage(packname);
 			auto stats = m_db.getPackageStats(packname);
-			stats.rating = computeRating(stats, dists.downloads, dists.repos[pack.repository.kind]);
+			stats.score = computeScore(stats, dists.downloads, dists.repos[pack.repository.kind]);
 			m_db.updatePackageStats(pack._id, stats);
 		}
 	}
@@ -572,8 +572,8 @@ struct PackageInfo {
 	Json info; /// JSON package information, as reported to the client
 }
 
-/// Computes a package rating from given package stats and global distributions of those stats.
-private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
+/// Computes a package score from given package stats and global distributions of those stats.
+private float computeScore(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
 {
 	import std.math : log1p, round, tanh;
 
@@ -582,10 +582,10 @@ private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, Dow
 
 	/// Using monthly downloads to penalize stale packages, logarithm to
 	/// offset exponential distribution, and tanh as smooth limiter to [0..1].
-	immutable downloadRating = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
-	logDebug("downloadRating %s %s %s", downloadRating, stats.downloads.monthly, downDist.monthly.mean);
+	immutable downloadScore = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
+	logDebug("downloadScore %s %s %s", downloadScore, stats.downloads.monthly, downDist.monthly.mean);
 
-	// Compute rating for repo
+	// Compute score for repo
 	float sum=0, wsum=0;
 	void add(T)(float weight, float value, T dist)
 	{
@@ -604,14 +604,14 @@ private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, Dow
 		add(-1.0f, issues, d.issues); // penalize many open issues/PRs
 	}
 
-	immutable repoRating = max(0.0, tanh(sum / wsum));
-	logDebug("repoRating: %s %s %s", repoRating, sum, wsum);
+	immutable repoScore = max(0.0, tanh(sum / wsum));
+	logDebug("repoScore: %s %s %s", repoScore, sum, wsum);
 
-	// average ratings
-	immutable avgRating = (repoRating + downloadRating) / 2;
-	assert(0 <= avgRating && avgRating <= 1.0, "%s %s".format(repoRating, downloadRating));
-	immutable scaled = stats.minRating + avgRating * (stats.maxRating - stats.minRating);
-	logDebug("rating: %s %s %s %s %s %s", stats.downloads.monthly, downDist.monthly.mean, downloadRating, repoRating, avgRating, scaled);
+	// average scores
+	immutable avgScore = (repoScore + downloadScore) / 2;
+	assert(0 <= avgScore && avgScore <= 1.0, "%s %s".format(repoScore, downloadScore));
+	immutable scaled = stats.minScore + avgScore * (stats.maxScore - stats.minScore);
+	logDebug("score: %s %s %s %s %s %s", stats.downloads.monthly, downDist.monthly.mean, downloadScore, repoScore, avgScore, scaled);
 
 	return scaled;
 }

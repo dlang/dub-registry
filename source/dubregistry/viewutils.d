@@ -77,15 +77,15 @@ string formatFuzzyDate(SysTime st)
 	else return format("%s years ago", now.year - st.year);
 }
 
-string formatRating(float rating)
+string formatScore(float score)
 {
-	return format("%.1f", rating);
+	return format("%.1f", score);
 }
 
 string formatPackageStats(Stats)(Stats s)
 {
 	return format("%.1f\n\n#downloads / m: %s\n#stars: %s\n#watchers: %s\n#forks: %s\n#issues: %s\n",
-				  s.rating, s.downloads.monthly, s.repo.stars, s.repo.watchers, s.repo.forks, s.repo.issues);
+				  s.score, s.downloads.monthly, s.repo.stars, s.repo.watchers, s.repo.forks, s.repo.issues);
 }
 
 /** Takes an input range of version strings and returns the index of the "best"

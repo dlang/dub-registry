@@ -174,8 +174,8 @@ block body
 							strong= stats.downloads.total
 							|  downloads total
 
-			dt Rating:
-			dd#rating(title="#{formatPackageStats(stats)}")= formatRating(stats.rating)
+			dt Score:
+			dd#score(title="#{formatPackageStats(stats)}")= formatScore(stats.score)
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript

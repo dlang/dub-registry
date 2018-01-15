@@ -98,7 +98,7 @@ class DubRegistryWebFrontend {
 		switch (sort) {
 			default: std.algorithm.sorting.sort!compare(packages); break;
 			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
-			case "rating": std.algorithm.sorting.sort!((a, b) => a.stats.rating > b.stats.rating)(packages); break;
+			case "score": std.algorithm.sorting.sort!((a, b) => a.stats.score > b.stats.score)(packages); break;
 			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
