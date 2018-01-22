@@ -51,12 +51,10 @@ block body
 
 	table
 
-		- static immutable browse_kinds = ["name;Name", "updated;Last update", "rating;Rating", "added;Registered", ";Description"];
+		- static immutable browse_kinds = ["name;Name", "updated;Last update", "score;Score", "added;Registered", ";Description"];
 		tr
 			- foreach (i, c; browse_kinds)
 				- auto cp = c.split(";");
-				- if (cp[0] == "rating" && "showrating" !in req.query)
-					- continue;
 				- if (cp[0].length == 0)
 					th= cp[1]
 				- else if (sort_mode == cp[0])
@@ -86,8 +84,7 @@ block body
 						- else
 							| #{ver[0 .. 18]}&hellip;
 						span.dull.nobreak(title=formatDateTime(p["date"]))<> , #{formatFuzzyDate(p["date"])}
-					- if ("showrating" in req.query)
-						td.nobreak(title="#{formatPackageStats(pl.stats)}", style="color: #B03931;")= formatRating(pl.stats.rating)
+					td.nobreak(title="#{formatPackageStats(pl.stats)}", style="color: #B03931;")!= formatScore(req.rootDir, pl.stats.score)
 					td.nobreak(title=formatDateTime(pl["dateAdded"]))= formatDate(pl["dateAdded"])
 					- if (desc.length <= 100)
 						td= desc
