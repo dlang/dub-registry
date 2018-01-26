@@ -372,12 +372,6 @@ class DubRegistry {
 			format("Package name (%s) does not match the original package name (%s). Check %s.",
 				info.info["name"].get!string, packname, info.info["packageDescriptionFile"].get!string));
 
-		if ("description" !in info.info || "license" !in info.info) {
-		//enforce("description" in info.info && "license" in info.info,
-			throw new Exception(
-			"Published packages must contain \"description\" and \"license\" fields.");
-		}
-
 		foreach( string n, vspec; info.info["dependencies"].opt!(Json[string]) )
 			foreach (p; n.split(":"))
 				checkPackageName(p, "Check "~info.info["packageDescriptionFile"].get!string~".");
@@ -399,6 +393,10 @@ class DubRegistry {
 			return false;
 		}
 
+		if ("description" !in info.info || "license" !in info.info) {
+			throw new Exception(
+			"Published packages must contain \"description\" and \"license\" fields.");
+		}
 		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
 		if (auto pv = "version" in info.info)
 			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
