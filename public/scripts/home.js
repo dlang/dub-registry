@@ -20,7 +20,7 @@ function updateCategorySelector(i, parentcat)
 	newhtml += "<option value=''>---</option>";
 	for (i in cats) {
 		var cat = cats[i];
-		newhtml += "<option value='"+cat.name+"'>"+cat.description+"</option>"; // <img class='category-icon' src='images/categories/"+cat.image+".png'>
+		newhtml += "<option value='"+cat.name+"'>"+cat.description+"</option>"; // <div class='category-icon icon-category-"+cat.image+"'>
 	}
 	sel.innerHTML = newhtml;
 	sel.style.display = "inline-block";

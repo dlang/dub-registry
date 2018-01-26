@@ -234,7 +234,7 @@ body > .container
 #top .search-container.expand-container .expand-toggle::after
 {
     content: "\f002  \f0d7"; /* f002 = search; f0d7 = caret down */
-    font-family: FontAwesome;
+    font-family: fontello;
 }
 
 #top .search-container.expand-container .expand-toggle span
@@ -308,7 +308,7 @@ span#search-dropdown > .helper
 span#search-dropdown > .helper::after
 {
     content: "\f0d7"; /* caret down */
-    font-family: FontAwesome;
+    font-family: fontello;
     position: absolute;
     width: 1em;
     line-height: 1em;
@@ -538,7 +538,7 @@ body.std .subnav a.package
 .expand-container > .expand-toggle::after
 {
     content: " \f0d7"; /* caret down */
-    font-family: FontAwesome;
+    font-family: fontello;
 }
 body.have-javascript .expand-container.open > .expand-toggle::after
 {
@@ -1979,7 +1979,7 @@ the home page, intro pitch and your-code-here layed out vertically */
     #top a.hamburger::after
     {
         content: "\f0c9"; /* bars */
-        font-family: FontAwesome;
+        font-family: fontello;
     }
 }
 
