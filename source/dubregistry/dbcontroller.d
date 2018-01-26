@@ -70,17 +70,22 @@ class DbController {
 		m_packages.ensureIndex([tuple("stats.score", 1)]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 
+		// drop old text index versions
+		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
+		// add current text index
+
 		Bson[string] doc;
 		doc["v"] = 1;
 		doc["key"] = ["_fts": Bson("text"), "_ftsx": Bson(1)];
 		doc["ns"] = db.name ~ "." ~ m_packages.name;
-		doc["name"] = "packages_full_text_search_index";
+		doc["name"] = "packages_full_text_search_index_v2";
 		doc["weights"] = [
 			"name": Bson(4),
+			"categories": Bson(3),
 			"versions.info.description" : Bson(3),
-			// TODO: try to index readme
 			"versions.info.homepage" : Bson(1),
 			"versions.info.author" : Bson(1),
+			"versions.readme" : Bson(2),
 		];
 		doc["background"] = true;
 		db["system.indexes"].insert(doc);
