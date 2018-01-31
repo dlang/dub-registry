@@ -177,6 +177,10 @@ block body
 			dt Score:
 			dd#score(title="#{formatPackageStats(stats)}")!= formatScore(req.rootDir, stats.score)
 
+			dt Short URL:
+				dd
+					a(href="http://#{packageName}.dub.pm", target="_blank") #{packageName}.dub.pm
+
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript
 		new Clipboard('.btn-clipboard');
