@@ -25,7 +25,7 @@ block body
 				button(type="submit") Register new package
 		.packageList
 			- foreach (p; sort!((a, b) => a < b)(packages.array))
-				- auto pack = registry.getPackageInfo(p, true).info;
+				- auto pack = registry.getPackageInfo(p, true, true).info;
 				- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 				.row
 					strong.cell

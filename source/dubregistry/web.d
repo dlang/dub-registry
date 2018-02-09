@@ -105,7 +105,7 @@ class DubRegistryWebFrontend {
 		Info info;
 		info.packageCount = packages.length;
 		info.packages = packages[min(skip, $) .. min(skip + limit, $)]
-			.map!(p => Info.Package(p.stats, m_registry.getPackageInfo(p, false).info))
+			.map!(p => Info.Package(p.stats, m_registry.getPackageInfo(p, false, true).info))
 			.array;
 		info.skip = skip;
 		info.limit = limit;
@@ -234,7 +234,7 @@ class DubRegistryWebFrontend {
 		auto pname = _packname;
 
 		auto ppath = _packname.urlDecode().split(":");
-		auto packageInfo = m_registry.getPackageInfo(ppath[0]);
+		auto packageInfo = m_registry.getPackageInfo(ppath[0], false, true);
 
 		auto packageName = pname;
 		auto registry = m_registry;
@@ -248,7 +248,7 @@ class DubRegistryWebFrontend {
 		import std.algorithm : map;
 		auto ppath = pack_name.urlDecode().split(":");
 
-		pkg_info = m_registry.getPackageInfo(ppath[0]);
+		pkg_info = m_registry.getPackageInfo(ppath[0], false, false);
 		if (pkg_info.info.type == Json.Type.null_) return false;
 
 		if (pack_version.length) {
@@ -526,7 +526,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName);
+		auto nfo = m_registry.getPackageInfo(packageName, true, true);
 		if (nfo.info.type == Json.Type.null_) return;
 		auto categories = m_categories;
 		auto registry = m_registry;
