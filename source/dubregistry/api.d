@@ -88,10 +88,10 @@ interface IPackages {
 	DownloadStats getStats(string _name, string _version);
 
 	@path(":name/info")
-	Json getInfo(string _name);
+	Json getInfo(string _name, bool minimize = false);
 
 	@path(":name/:version/info")
-	Json getInfo(string _name, string _version);
+	Json getInfo(string _name, string _version, bool minimize = false);
 }
 
 class LocalDubRegistryAPI : DubRegistryAPI {
@@ -147,14 +147,14 @@ override {
 		}
 	}
 
-	Json getInfo(string name) {
-		return m_registry.getPackageInfo(rootOf(name))
+	Json getInfo(string name, bool minimize = false) {
+		return m_registry.getPackageInfo(rootOf(name), false, minimize)
 			.check!(r => r.info.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found")
 			.info;
 	}
 
-	Json getInfo(string name, string ver) {
-		return m_registry.getPackageVersionInfo(rootOf(name), ver)
+	Json getInfo(string name, string ver, bool minimize = false) {
+		return m_registry.getPackageVersionInfo(rootOf(name), ver, minimize)
 			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
 	}
 }

@@ -195,11 +195,13 @@ class DubRegistry {
 		return m_db.aggregateDownloadStats(packid, ver);
 	}
 
-	Json getPackageVersionInfo(string packname, string ver)
+	Json getPackageVersionInfo(string packname, string ver, bool minimize)
 	{
 		if (ver == "latest") ver = getLatestVersion(packname);
 		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return m_db.getVersionInfo(packname, ver).serializeToJson();
+		auto ret = m_db.getVersionInfo(packname, ver).serializeToJson();
+		if (minimize) ret.remove("readme");
+		return ret;
 	}
 
 	string getLatestVersion(string packname)
@@ -207,13 +209,13 @@ class DubRegistry {
 		return m_db.getLatestVersion(packname);
 	}
 
-	PackageInfo getPackageInfo(string packname, bool include_errors = false)
+	PackageInfo getPackageInfo(string packname, bool include_errors, bool minimize)
 	{
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return PackageInfo.init;
 
-		return getPackageInfo(pack, include_errors);
+		return getPackageInfo(pack, include_errors, minimize);
 	}
 
 	/** Gets information about multiple packages at once.
@@ -231,18 +233,18 @@ class DubRegistry {
 			An unordered input range of `PackageInfo` values is returned,
 			corresponding to all or part of the packages of the given names.
 	*/
-	auto getPackageInfos(scope string[] pack_names, bool include_errors = false)
+	auto getPackageInfos(scope string[] pack_names, bool include_errors = false, bool minimize)
 	{
 		return m_db.getPackages(pack_names)
-			.map!(pack => getPackageInfo(pack, include_errors));
+			.map!(pack => getPackageInfo(pack, include_errors, minimize));
 	}
 
-	PackageInfo getPackageInfo(DbPackage pack, bool include_errors)
+	PackageInfo getPackageInfo(DbPackage pack, bool include_errors, bool minimize)
 	{
 		auto rep = getRepository(pack.repository);
 
 		PackageInfo ret;
-		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep, minimize)).array;
 		ret.logo = pack.logo;
 
 		Json nfo = Json.emptyObject;
@@ -261,13 +263,13 @@ class DubRegistry {
 		return ret;
 	}
 
-	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep)
+	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep, bool minimize)
 	{
 		// JSON package version info as reported to the client
 		auto nfo = v.info.get!(Json[string]).dup;
 		nfo["version"] = v.version_;
 		nfo["date"] = v.date.toISOExtString();
-		nfo["readme"] = v.readme;
+		if (!minimize) nfo["readme"] = v.readme;
 		nfo["commitID"] = v.commitID;
 
 		PackageVersionInfo ret;
