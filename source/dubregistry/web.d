@@ -330,7 +330,7 @@ class DubRegistryWebFrontend {
 		auto pname = _packname;
 
 		auto ppath = _packname.urlDecode().split(":");
-		auto packageInfo = m_registry.getPackageInfo(ppath[0], false, true);
+		auto packageInfo = m_registry.getPackageInfo(ppath[0]);
 
 		auto packageName = pname;
 		auto registry = m_registry;
@@ -346,7 +346,7 @@ class DubRegistryWebFrontend {
 
 		if (!ppath.length || !ppath[0].length) return false;
 
-		pkg_info = m_registry.getPackageInfo(ppath[0], false, false);
+		pkg_info = m_registry.getPackageInfo(ppath[0]);
 		if (pkg_info.info.type == Json.Type.null_) return false;
 
 		if (pack_version.length) {
@@ -649,7 +649,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName, true, true);
+		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.include_errors);
 		if (nfo.info.type == Json.Type.null_) return;
 		auto categories = m_categories;
 		auto registry = m_registry;

@@ -7,6 +7,7 @@ block body
 	- import vibe.data.json;
 	- import std.algorithm;
 	- import std.array : array;
+	- import dubregistry.registry : PackageInfoFlags;
 
 	- auto packages = registry.getPackages(user.id);
 
@@ -25,7 +26,7 @@ block body
 				button(type="submit") Register new package
 		.packageList
 			- foreach (p; sort!((a, b) => a < b)(packages.array))
-				- auto pack = registry.getPackageInfo(p, true, true).info;
+				- auto pack = registry.getPackageInfo(p, PackageInfoFlags.include_errors).info;
 				- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 				.row
 					strong.cell
