@@ -187,11 +187,13 @@ class DubRegistry {
 		return m_db.aggregateDownloadStats(packid, ver);
 	}
 
-	Json getPackageVersionInfo(string packname, string ver)
+	Json getPackageVersionInfo(string packname, string ver, bool minimize)
 	{
 		if (ver == "latest") ver = getLatestVersion(packname);
 		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return m_db.getVersionInfo(packname, ver).serializeToJson();
+		auto ret = m_db.getVersionInfo(packname, ver).serializeToJson();
+		if (minimize) ret.remove("readme");
+		return ret;
 	}
 
 	string getLatestVersion(string packname)
@@ -199,21 +201,21 @@ class DubRegistry {
 		return m_db.getLatestVersion(packname);
 	}
 
-	PackageInfo getPackageInfo(string packname, bool include_errors = false)
+	PackageInfo getPackageInfo(string packname, bool include_errors, bool minimize)
 	{
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return PackageInfo.init;
 
-		return getPackageInfo(pack, include_errors);
+		return getPackageInfo(pack, include_errors, minimize);
 	}
 
-	PackageInfo getPackageInfo(DbPackage pack, bool include_errors)
+	PackageInfo getPackageInfo(DbPackage pack, bool include_errors, bool minimize)
 	{
 		auto rep = getRepository(pack.repository);
 
 		PackageInfo ret;
-		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep, minimize)).array;
 
 		Json nfo = Json.emptyObject;
 		nfo["id"] = pack._id.toString();
@@ -230,13 +232,13 @@ class DubRegistry {
 		return ret;
 	}
 
-	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep)
+	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep, bool minimize)
 	{
 		// JSON package version info as reported to the client
 		auto nfo = v.info.get!(Json[string]).dup;
 		nfo["version"] = v.version_;
 		nfo["date"] = v.date.toISOExtString();
-		nfo["readme"] = v.readme;
+		if (!minimize) nfo["readme"] = v.readme;
 		nfo["commitID"] = v.commitID;
 
 		PackageVersionInfo ret;
@@ -418,7 +420,7 @@ class DubRegistry {
 		string[] errors;
 
 		PackageInfo pack;
-		try pack = getPackageInfo(packname);
+		try pack = getPackageInfo(packname, false, true);
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
 			logDebug("%s", sanitize(e.toString()));
