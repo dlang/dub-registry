@@ -236,7 +236,7 @@ class DubRegistry {
 		auto nfo = v.info.get!(Json[string]).dup;
 		nfo["version"] = v.version_;
 		nfo["date"] = v.date.toISOExtString();
-		nfo["readmeFile"] = v.readme;
+		nfo["readme"] = v.readme;
 		nfo["commitID"] = v.commitID;
 
 		PackageVersionInfo ret;
@@ -250,22 +250,23 @@ class DubRegistry {
 
 	string getReadme(Json version_info, DbRepository repository)
 	{
-		string ret;
-		auto file = version_info["readmeFile"].opt!string;
-		try {
-			if (!file.startsWith('/')) return null;
-			auto rep = getRepository(repository);
-			logDebug("reading readme file for %s: %s", version_info["name"].get!string, file);
-			rep.readFile(version_info["commitID"].get!string, Path(file), (scope data) {
-				ret = data.readAllUTF8();
-			});
-			logDebug("reading readme file done");
-		} catch (Exception e) {
-			logDiagnostic("Failed to read README file (%s) for %s %s: %s",
-				file, version_info["name"].get!string,
-				version_info["version"].get!string, e.msg);
+		auto readme = version_info["readme"].opt!string;
+
+		// compat migration, read file from repo if README hasn't yet been stored in the db
+		if (readme.length && readme.length < 256 && readme[0] == '/') {
+			try {
+				auto rep = getRepository(repository);
+				logDebug("reading readme file for %s: %s", version_info["name"].get!string, readme);
+				rep.readFile(version_info["commitID"].get!string, Path(readme), (scope data) {
+					readme = data.readAllUTF8();
+				});
+			} catch (Exception e) {
+				logDiagnostic("Failed to read README file (%s) for %s %s: %s",
+					readme, version_info["name"].get!string,
+					version_info["version"].get!string, e.msg);
+			}
 		}
-		return ret;
+		return readme;
 	}
 
 	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) del)
@@ -372,12 +373,6 @@ class DubRegistry {
 			format("Package name (%s) does not match the original package name (%s). Check %s.",
 				info.info["name"].get!string, packname, info.info["packageDescriptionFile"].get!string));
 
-		if ("description" !in info.info || "license" !in info.info) {
-		//enforce("description" in info.info && "license" in info.info,
-			throw new Exception(
-			"Published packages must contain \"description\" and \"license\" fields.");
-		}
-
 		foreach( string n, vspec; info.info["dependencies"].opt!(Json[string]) )
 			foreach (p; n.split(":"))
 				checkPackageName(p, "Check "~info.info["packageDescriptionFile"].get!string~".");
@@ -389,8 +384,7 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		try {
-			rep.readFile(reference.sha, Path("/README.md"), (scope input) { input.readAll(); });
-			dbver.readme = "/README.md";
+			rep.readFile(reference.sha, Path("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
 		} catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
 
 		if (m_db.hasVersion(packname, ver)) {
@@ -399,6 +393,10 @@ class DubRegistry {
 			return false;
 		}
 
+		if ("description" !in info.info || "license" !in info.info) {
+			throw new Exception(
+			"Published packages must contain \"description\" and \"license\" fields.");
+		}
 		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
 		if (auto pv = "version" in info.info)
 			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
