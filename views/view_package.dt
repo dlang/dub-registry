@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- import std.algorithm;
-	- import std.array : join;
+	- import std.array : join, split;
 	- import vibe.data.json;
 	- import vibe.inet.url;
 	- import vibe.textfilter.urlencode;
@@ -19,7 +19,7 @@ block body
 	.main
 		- import vibe.data.bson;
 		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
-			a(href="#{req.rootDir}my_packages/#{packageName}") Manage this package
+			a(href="#{req.rootDir}my_packages/#{packageName.split(":")[0]}") Manage this package
 
 		- if(packageName.canFind(":"))
 			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);
