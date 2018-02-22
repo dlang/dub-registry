@@ -16,6 +16,8 @@ import vibe.vibe;
 
 
 class DbController {
+@safe:
+
 	private {
 		MongoCollection m_packages;
 		MongoCollection m_downloads;
@@ -36,14 +38,14 @@ class DbController {
 			bool any_change = false;
 			if (p["branches"].type == Bson.Type.object) {
 				Bson[] branches;
-				foreach( b; p["branches"] )
+				foreach (b; p["branches"].byValue)
 					branches ~= b;
 				p["branches"] = branches;
 				any_change = true;
 			}
 			if (p["branches"].type == Bson.Type.array) {
 				auto versions = p["versions"].get!(Bson[]);
-				foreach (b; p["branches"]) versions ~= b;
+				foreach (b; p["branches"].byValue) versions ~= b;
 				p["branches"] = Bson(null);
 				p["versions"] = Bson(versions);
 				any_change = true;
@@ -189,9 +191,11 @@ class DbController {
 			new_versions.sort!((a, b) => vcmp(a, b));
 
 			// remove versions with invalid dependency names to avoid the findAndModify below to fail
-			new_versions = new_versions.filter!(
+			() @trusted {
+				new_versions = new_versions.filter!(
 					v => !v.info["dependencies"].opt!(Json[string]).byKey.canFind!(k => k.canFind("."))
 				).array;
+			} ();
 
 			//assert((cast(Json)bversions).toString() == (cast(Json)serializeToBson(versions)).toString());
 
@@ -326,7 +330,7 @@ class DbController {
 	DbStatDistributions getStatDistributions()
 	{
 		auto aggregate(T, string prefix, string groupBy)()
-		{
+		@safe {
 			auto group = ["_id": Bson(groupBy ? "$"~groupBy : null)];
 			Bson[string] project;
 			foreach (mem; __traits(allMembers, T))
@@ -354,7 +358,7 @@ class DbController {
 			else
 			{
 				T[string] ret;
-				foreach (doc; res)
+				foreach (doc; res.byValue)
 					ret[doc["_id"].get!string] = doc.deserializeBson!T;
 				return ret;
 			}
@@ -462,18 +466,18 @@ struct DbStatDistributions {
 }
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)
-{
+@safe {
 	return vcmp(a.version_, b.version_);
 }
 
 bool vcmp(string va, string vb)
-{
+@safe {
 	import dub.dependency;
 	return Version(va) < Version(vb);
 }
 
 private string[] splitAlphaNumParts(string str)
-{
+@safe {
 	string[] ret;
 	while (!str.empty) {
 		while (!str.empty && !str.front.isIdentChar()) str.popFront();
@@ -494,6 +498,6 @@ private string[] splitAlphaNumParts(string str)
 }
 
 private bool isIdentChar(dchar ch)
-{
+@safe {
 	return std.uni.isAlpha(ch) || std.uni.isNumber(ch);
 }

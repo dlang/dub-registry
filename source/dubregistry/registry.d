@@ -34,6 +34,8 @@ class DubRegistrySettings {
 }
 
 class DubRegistry {
+@safe:
+
 	private {
 		DubRegistrySettings m_settings;
 		DbController m_db;
@@ -257,7 +259,7 @@ class DubRegistry {
 			try {
 				auto rep = getRepository(repository);
 				logDebug("reading readme file for %s: %s", version_info["name"].get!string, readme);
-				rep.readFile(version_info["commitID"].get!string, Path(readme), (scope data) {
+				rep.readFile(version_info["commitID"].get!string, InetPath(readme), (scope data) {
 					readme = data.readAllUTF8();
 				});
 			} catch (Exception e) {
@@ -269,7 +271,7 @@ class DubRegistry {
 		return readme;
 	}
 
-	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) del)
+	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) @safe del)
 	{
 		DbPackage pack = m_db.getPackage(packname);
 		auto rep = getRepository(pack.repository);
@@ -384,7 +386,7 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		try {
-			rep.readFile(reference.sha, Path("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
+			rep.readFile(reference.sha, InetPath("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
 		} catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
 
 		if (m_db.hasVersion(packname, ver)) {
@@ -421,7 +423,7 @@ class DubRegistry {
 		try pack = getPackageInfo(packname);
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
-			logDebug("%s", sanitize(e.toString()));
+			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
 			return;
 		}
 
@@ -429,7 +431,7 @@ class DubRegistry {
 		try rep = getRepository(pack.info["repository"].deserializeJson!DbRepository);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
-			logDebug("%s", sanitize(e.toString()));
+			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
 			return;
 		}
 
@@ -456,7 +458,7 @@ class DubRegistry {
 					logInfo("Package %s: added version %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for version %s of %s: %s", name, packname, e.msg);
-				logDebug("Full error: %s", sanitize(e.toString()));
+				() @trusted  { logDebug("Full error: %s", sanitize(e.toString())); } ();
 				errors ~= format("Version %s: %s", name, e.msg);
 			}
 		}
@@ -469,7 +471,7 @@ class DubRegistry {
 					logInfo("Package %s: added branch %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for branch %s of %s: %s", name, packname, e.msg);
-				logDebug("Full error: %s", sanitize(e.toString()));
+				() @trusted { logDebug("Full error: %s", sanitize(e.toString())); } ();
 				if (branch.name != "gh-pages") // ignore errors on the special GitHub website branch
 					errors ~= format("Branch %s: %s", name, e.msg);
 			}
@@ -501,21 +503,24 @@ class DubRegistry {
 	}
 }
 
-private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, Path sub_path = Path("/"))
-{
+private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, InetPath sub_path = InetPath("/"))
+@safe {
 	import dub.recipe.io;
 	import dub.recipe.json;
 
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
-	foreach (filename; chain((&first_filename_try)[0 .. 1], packageInfoFilenames.filter!(f => f != first_filename_try))) {
+	string[1] first_try;
+	first_try[0] = first_filename_try;
+	auto all_filenames = () @trusted { return packageInfoFilenames(); } ();
+	foreach (filename; chain(first_try[], all_filenames.filter!(f => f != first_filename_try))) {
 		if (!filename.length) continue;
 		try {
-			rep.readFile(commit.sha, sub_path ~ filename, (scope input) {
+			rep.readFile(commit.sha, sub_path ~ filename, (scope input) @safe {
 				auto text = input.readAllUTF8(false);
-				auto recipe = parsePackageRecipe(text, filename);
-				ret.info = recipe.toJson();
+				auto recipe = () @trusted { return parsePackageRecipe(text, filename); } ();
+				ret.info = () @trusted { return recipe.toJson(); } ();
 			});
 
 			ret.info["packageDescriptionFile"] = filename;
@@ -542,7 +547,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 }
 
 private void checkPackageName(string n, string error_suffix)
-{
+@safe {
 	enforce(n.length > 0, "Package names may not be empty. "~error_suffix);
 	foreach( ch; n ){
 		switch(ch){
@@ -572,7 +577,8 @@ struct PackageInfo {
 
 /// Computes a package score from given package stats and global distributions of those stats.
 private float computeScore(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
-{
+@safe {
+	import std.algorithm.comparison : max;
 	import std.math : log1p, round, tanh;
 
     if (!downDist.total.sum) // no stat distribution yet

@@ -17,6 +17,8 @@ import vibe.inet.url;
 
 
 class GithubRepository : Repository {
+@safe:
+
 	private {
 		string m_owner;
 		string m_project;
@@ -26,7 +28,7 @@ class GithubRepository : Repository {
 
 	static void register(string user, string password)
 	{
-		Repository factory(DbRepository info){
+		Repository factory(DbRepository info) @safe {
 			return new GithubRepository(info.owner, info.project, user, password);
 		}
 		addRepositoryFactory("github", &factory);
@@ -88,7 +90,7 @@ class GithubRepository : Repository {
 		return ret;
 	}
 
-	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
+	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
 		auto url = getContentURLPrefix()~"/"~m_owner~"/"~m_project~"/"~commit_sha~path.toString();
@@ -102,20 +104,23 @@ class GithubRepository : Repository {
 		import std.uri : encodeComponent;
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~encodeComponent(ver)~".zip";
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~venc~".zip";
 	}
 
-	void download(string ver, scope void delegate(scope InputStream) del)
+	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
 		downloadCached(getDownloadUrl(ver), del);
 	}
 
-	private string getAPIURLPrefix() {
+	private string getAPIURLPrefix()
+	{
 		if (m_authUser.length) return "https://"~m_authUser~":"~m_authPassword~"@api.github.com";
 		else return "https://api.github.com";
 	}
 
-	private string getContentURLPrefix() {
+	private string getContentURLPrefix()
+	{
 		return "https://raw.github.com";
 	}
 }

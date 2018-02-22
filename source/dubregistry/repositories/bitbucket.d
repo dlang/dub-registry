@@ -17,6 +17,8 @@ import vibe.inet.url;
 
 
 class BitbucketRepository : Repository {
+@safe:
+
 	private {
 		string m_owner;
 		string m_project;
@@ -24,7 +26,7 @@ class BitbucketRepository : Repository {
 
 	static void register()
 	{
-		Repository factory(DbRepository info){
+		Repository factory(DbRepository info) @safe {
 			return new BitbucketRepository(info.owner, info.project);
 		}
 		addRepositoryFactory("bitbucket", &factory);
@@ -42,7 +44,7 @@ class BitbucketRepository : Repository {
 		try tags = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/tags");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		RefInfo[] ret;
-		foreach( string tagname, tag; tags ){
+		foreach (string tagname, tag; tags.byKeyValue) {
 			try {
 				auto commit_hash = tag["raw_node"].get!string();
 				auto commit_date = bbToIsoDate(tag["utctimestamp"].get!string());
@@ -59,7 +61,7 @@ class BitbucketRepository : Repository {
 	{
 		Json branches = readJson("https://api.bitbucket.org/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
 		RefInfo[] ret;
-		foreach( string branchname, branch; branches ){
+		foreach (string branchname, branch; branches.byKeyValue) {
 			auto commit_hash = branch["raw_node"].get!string();
 			auto commit_date = bbToIsoDate(branch["utctimestamp"].get!string());
 			ret ~= RefInfo(branchname, commit_hash, commit_date);
@@ -78,11 +80,11 @@ class BitbucketRepository : Repository {
 		return ret;
 	}
 
-	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
+	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
 		auto url = "https://bitbucket.org/api/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~commit_sha~path.toString();
-		downloadCached(url, (scope input) {
+		downloadCached(url, (scope input) @safe {
 			reader(input);
 		}, true);
 	}
@@ -92,17 +94,18 @@ class BitbucketRepository : Repository {
 		import std.uri : encodeComponent;
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~encodeComponent(ver)~".zip";
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		return "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~venc~".zip";
 	}
 
-	void download(string ver, scope void delegate(scope InputStream) del)
+	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
 		downloadCached(getDownloadUrl(ver), del);
 	}
 }
 
 private auto bbToIsoDate(string bbdate)
-{
+@safe {
 	import std.array, std.datetime : SysTime;
 	auto ttz = bbdate.split("+");
 	if( ttz.length < 2 ) ttz ~= "00:00";

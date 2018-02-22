@@ -4,8 +4,8 @@ homepage "http://code.dlang.org/"
 authors "Sönke Ludwig" "Matthias Dondorff"
 license "GPL-3.0"
 
-dependency "vibe-d" version="~>0.8.0-beta"
-dependency "dub" version="~>1.3.0-beta"
+dependency "vibe-d" version="~>0.8.3-alpha"
+dependency "dub" version="~>1.7.0"
 dependency "userman" version="~>0.3.2"
 subConfiguration "dub" "library-nonet"
 

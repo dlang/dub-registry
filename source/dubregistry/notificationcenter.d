@@ -18,7 +18,10 @@ import vibe.stream.memory;
 import diet.html;
 
 
+
 class NotificationCenter {
+@safe:
+
 	private {
 		UserManController m_users;
 		PersistentScheduler m_scheduler;
@@ -30,7 +33,7 @@ class NotificationCenter {
 	this(UserManController users)
 	{
 		m_users = users;
-		m_scheduler = new PersistentScheduler(Path("notification-schedule.json"));
+		m_scheduler = new PersistentScheduler(NativePath("notification-schedule.json"));
 		if (!m_scheduler.existsEvent(weeklyDeprecationEventName))
 			m_scheduler.scheduleWeeklyEvent(weeklyDeprecationEventName, SysTime(DateTime(2014, 01, 05, 12, 0, 0), UTC()));
 	}
@@ -41,7 +44,7 @@ class NotificationCenter {
 	}
 
 	void notifyNewErrors(User.ID user_id, string package_name, string branch_or_version, string[] errors)
-	{
+	@trusted {
 		auto user = m_users.getUser(user_id);
 		if (user.email != "sludwig@rejectedsoftware.com") return;
 
@@ -71,8 +74,10 @@ class NotificationCenter {
 	}
 
 	private void onSendDeprecationWarnings()
-	{
-		foreach (uid, deprecations; m_deprecations) {
+	nothrow @trusted {
+		foreach (uid_deprecations; m_deprecations.byKeyValue) {
+			auto uid = uid_deprecations.key;
+			auto deprecations = uid_deprecations.value;
 			User user;
 			try {
 				user = m_users.getUser(uid);

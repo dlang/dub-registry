@@ -35,11 +35,11 @@ alias registerDubRegistryWebApi = registerDubRegistryAPI;
 private void dumpPackages(HTTPServerRequest req, HTTPServerResponse res, DubRegistry registry)
 {
 	import vibe.data.json : serializeToPrettyJson;
-	import vibe.stream.wrapper : StreamOutputRange;
+	import vibe.stream.wrapper : streamOutputRange;
 
 	res.contentType = "application/json; charset=UTF-8";
 	res.headers["Content-Encoding"] = "gzip"; // force GZIP compressed response
-	auto dst = StreamOutputRange(res.bodyWriter);
+	auto dst = streamOutputRange(res.bodyWriter);
 	dst.put('[');
 	bool first = true;
 	foreach (p; registry.getPackageDump()) {
@@ -73,6 +73,8 @@ struct SearchResult { string name, description, version_; }
 struct DownloadStats { DbDownloadStats downloads; }
 
 interface IPackages {
+@safe:
+
 	@method(HTTPMethod.GET)
 	SearchResult[] search(string q = "");
 
@@ -158,8 +160,10 @@ override {
 }
 
 private:
-	string rootOf(string pkg) {
+	string rootOf(string pkg) @safe {
 		import std.algorithm: findSplitBefore;
+		// FIXME: urlDecode should not be necessary, as the REST paramters are
+		//        already decoded.
 		return pkg.urlDecode().findSplitBefore(":")[0];
 	}
 }
