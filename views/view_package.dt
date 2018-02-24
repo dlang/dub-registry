@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- import std.algorithm;
-	- import std.array : join;
+	- import std.array : join, split;
 	- import std.range;
 	- import vibe.data.json;
 	- import vibe.inet.url;
@@ -108,7 +108,7 @@ block body
 			//- TODO: move this if only for the button after adding more actions
 			.actions
 				- if (isMine)
-					a(href="#{req.rootDir}my_packages/#{packageName}")
+					a(href="#{req.rootDir}my_packages/#{packageName.split(':')[0]}")
 						button.primary.large Manage this package
 				- if (packageInfo["donation_url"].get!string.length)
 					a(href=packageInfo["donation_url"].get!string)
@@ -196,9 +196,8 @@ block body
 							strong= stats.downloads.total
 							|  downloads total
 
-			- if ("showrating" in req.query)
-				dt Rating:
-				dd#rating(title="#{formatPackageStats(stats)}")= formatRating(stats.rating)
+			dt Score:
+			dd#score(title="#{formatPackageStats(stats)}")!= formatScore(req.rootDir, stats.score)
 
 	script(type="application/javascript", src="/scripts/clipboard.min.js")
 	:javascript

@@ -114,7 +114,7 @@ class DubRegistryWebFrontend {
 		switch (sort) {
 			default: std.algorithm.sorting.sort!compare(packages); break;
 			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
-			case "rating": std.algorithm.sorting.sort!((a, b) => a.stats.rating > b.stats.rating)(packages); break;
+			case "score": std.algorithm.sorting.sort!((a, b) => a.stats.score > b.stats.score)(packages); break;
 			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
 		}
 
@@ -322,11 +322,15 @@ class DubRegistryWebFrontend {
 			else if (path.length == 2)
 				cat.indentedDescription = "\u00a0└ " ~ cat.description;
 			else cat.indentedDescription = cat.description;
-			foreach_reverse (i; 0 .. path.length)
-				if (existsFile("public/images/categories/"~path[0 .. i+1].join(".")~".png")) {
-					cat.imageName = path[0 .. i+1].join(".");
+			Json icons = json["icons"];
+			foreach_reverse (i; 0 .. path.length) {
+				string dotPath = path[0 .. i+1].join(".");
+				if (dotPath in icons) {
+					cat.imageName = icons[dotPath].get!string;
+					cat.imageDescription = path[0 .. i+1].join("/");
 					break;
 				}
+			}
 
 			catmap[cat.name] = cat;
 
@@ -338,7 +342,7 @@ class DubRegistryWebFrontend {
 		}
 
 		Category[] cats;
-		foreach (top_level_cat; json)
+		foreach (top_level_cat; json["list"])
 			cats ~= processNode(top_level_cat, null);
 
 		m_categories = cats;
@@ -464,7 +468,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		];
 
 		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)) {
-			auto name = Path(de.name).head.toString();
+			auto name = NativePath(de.name).head.name;
 
 			foreach (platform, rexes; platformPatterns) {
 				foreach (rex; rexes) {
@@ -711,6 +715,6 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 }
 
 final class Category {
-	string name, description, indentedDescription, imageName;
+	string name, description, indentedDescription, imageName, imageDescription;
 	Category[] subCategories;
 }

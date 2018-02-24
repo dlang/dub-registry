@@ -20,6 +20,8 @@ import vibe.textfilter.urlencode;
 
 
 class GitLabRepository : Repository {
+@safe:
+
 	private {
 		string m_owner;
 		string m_project;
@@ -29,7 +31,7 @@ class GitLabRepository : Repository {
 
 	static void register(string auth_token, string url)
 	{
-		Repository factory(DbRepository info){
+		Repository factory(DbRepository info) @safe {
 			return new GitLabRepository(info.owner, info.project, auth_token, url.length ? URL(url) : URL("https://gitlab.com/"));
 		}
 		addRepositoryFactory("gitlab", &factory);
@@ -90,7 +92,7 @@ class GitLabRepository : Repository {
 		return ret;
 	}
 
-	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader)
+	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
 		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_project ~ "/raw/" ~ commit_sha) ~ path.toString() ~ "?private_token="~m_authToken;
@@ -101,21 +103,23 @@ class GitLabRepository : Repository {
 
 	string getDownloadUrl(string ver)
 	{
+		import std.uri : encodeComponent;
 		if (m_authToken.length > 0) return null; // don't make private token public
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
-		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~ver;
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~venc;
 	}
 
-	void download(string ver, scope void delegate(scope InputStream) del)
+	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
-		if( ver.startsWith("~") ) ver = ver[1 .. $];
-		else ver = ver;
-		auto url = m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~ver~"&private_token="~m_authToken;
+		auto url = getDownloadUrl(ver);
+		url ~= "&private_token="~m_authToken;
 		downloadCached(url, del);
 	}
 
-	private string getAPIURLPrefix() {
+	private string getAPIURLPrefix()
+	{
 		return m_baseURL.toString() ~ "api/v3/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
 	}
 }

@@ -14,6 +14,8 @@ import vibe.core.sync;
 import vibe.utils.array : FixedRingBuffer;
 
 final class PackageWorkQueue {
+@safe:
+
 	private {
 		FixedRingBuffer!string m_queue;
 		string m_current;
@@ -24,7 +26,7 @@ final class PackageWorkQueue {
 		SysTime m_lastSignOfLifeOfUpdateTask;
 	}
 
-	this(void delegate(string) handler)
+	this(void delegate(string) @safe handler)
 	{
 		m_handler = handler;
 		m_queue.capacity = 10000;
@@ -86,7 +88,7 @@ final class PackageWorkQueue {
 			try m_handler(pack);
 			catch (Exception e) {
 				logWarn("Failed to handle package %s: %s", pack, e.msg);
-				logDiagnostic("Full error: %s", e.toString().sanitize);
+				() @trusted { logDiagnostic("Full error: %s", e.toString().sanitize); } ();
 			}
 		}
 	}

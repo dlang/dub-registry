@@ -16,6 +16,8 @@ import vibe.vibe;
 
 
 class DbController {
+@safe:
+
 	private {
 		MongoCollection m_packages;
 		MongoCollection m_downloads;
@@ -36,14 +38,14 @@ class DbController {
 			bool any_change = false;
 			if (p["branches"].type == Bson.Type.object) {
 				Bson[] branches;
-				foreach( b; p["branches"] )
+				foreach (b; p["branches"].byValue)
 					branches ~= b;
 				p["branches"] = branches;
 				any_change = true;
 			}
 			if (p["branches"].type == Bson.Type.array) {
 				auto versions = p["versions"].get!(Bson[]);
-				foreach (b; p["branches"]) versions ~= b;
+				foreach (b; p["branches"].byValue) versions ~= b;
 				p["branches"] = Bson(null);
 				p["versions"] = Bson(versions);
 				any_change = true;
@@ -58,25 +60,34 @@ class DbController {
 		DbPackageStats stats;
 		m_packages.update(["stats": ["$exists": false]], ["$set": ["stats": stats]], UpdateFlags.multiUpdate);
 
-		float rating = 0;
-		m_packages.update(["stats.rating": ["$exists": false]], ["$set": ["stats.rating": rating]], UpdateFlags.multiUpdate);
+		// rename stats.rating -> stats.score
+		m_packages.update(Bson.emptyObject(), ["$rename": ["stats.rating": "stats.score"]], UpdateFlags.multiUpdate);
+
+		// default initialize missing scores with zero
+		float score = 0;
+		m_packages.update(["stats.score": ["$exists": false]], ["$set": ["stats.score": score]], UpdateFlags.multiUpdate);
 
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
-		m_packages.ensureIndex([tuple("stats.rating", 1)]);
+		m_packages.ensureIndex([tuple("stats.score", 1)]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
+
+		// drop old text index versions
+		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
+		// add current text index
 
 		Bson[string] doc;
 		doc["v"] = 1;
 		doc["key"] = ["_fts": Bson("text"), "_ftsx": Bson(1)];
 		doc["ns"] = db.name ~ "." ~ m_packages.name;
-		doc["name"] = "packages_full_text_search_index";
+		doc["name"] = "packages_full_text_search_index_v2";
 		doc["weights"] = [
 			"name": Bson(4),
+			"categories": Bson(3),
 			"versions.info.description" : Bson(3),
-			// TODO: try to index readme
 			"versions.info.homepage" : Bson(1),
 			"versions.info.author" : Bson(1),
+			"versions.readme" : Bson(2),
 		];
 		doc["background"] = true;
 		db["system.indexes"].insert(doc);
@@ -197,9 +208,11 @@ class DbController {
 			new_versions.sort!((a, b) => vcmp(a, b));
 
 			// remove versions with invalid dependency names to avoid the findAndModify below to fail
-			new_versions = new_versions.filter!(
+			() @trusted {
+				new_versions = new_versions.filter!(
 					v => !v.info["dependencies"].opt!(Json[string]).byKey.canFind!(k => k.canFind("."))
 				).array;
+			} ();
 
 			//assert((cast(Json)bversions).toString() == (cast(Json)serializeToBson(versions)).toString());
 
@@ -255,7 +268,7 @@ class DbController {
 
 		if (!query.strip.length) {
 			return m_packages.find()
-				.sort(["stats.rating": 1])
+				.sort(["stats.score": 1])
 				.map!(deserializeBson!DbPackage)
 				.array;
 		}
@@ -265,8 +278,8 @@ class DbController {
 			.sort(["score": bson(["$meta": "textScore"])])
 			.map!(deserializeBson!DbPackage)
 			.array
-			// sort by bucketized rating preserving FTS score order
-			.sort!((a, b) => a.stats.rating.round > b.stats.rating.round, SwapStrategy.stable)
+			// sort by bucketized score preserving FTS score order
+			.sort!((a, b) => a.stats.score.round > b.stats.score.round, SwapStrategy.stable)
 			.release;
 	}
 
@@ -334,7 +347,7 @@ class DbController {
 	DbStatDistributions getStatDistributions()
 	{
 		auto aggregate(T, string prefix, string groupBy)()
-		{
+		@safe {
 			auto group = ["_id": Bson(groupBy ? "$"~groupBy : null)];
 			Bson[string] project;
 			foreach (mem; __traits(allMembers, T))
@@ -362,7 +375,7 @@ class DbController {
 			else
 			{
 				T[string] ret;
-				foreach (doc; res)
+				foreach (doc; res.byValue)
 					ret[doc["_id"].get!string] = doc.deserializeBson!T;
 				return ret;
 			}
@@ -444,13 +457,13 @@ struct DbPackageStats {
 	SysTime updatedAt;
 	DbDownloadStats downloads;
 	DbRepoStats repo;
-	float rating = 0; // 0 - invalid, 1-5 - higher means more relevant
-	enum minRating = 0;
-	enum maxRating = 5;
+	float score = 0; // 0 - invalid, 1-5 - higher means more relevant
+	enum minScore = 0;
+	enum maxScore = 5;
 
 	invariant
 	{
-		assert(minRating <= rating && rating <= maxRating, rating.to!string);
+		assert(minScore <= score && score <= maxScore, score.to!string);
 	}
 }
 
@@ -473,18 +486,18 @@ struct DbStatDistributions {
 }
 
 bool vcmp(DbPackageVersion a, DbPackageVersion b)
-{
+@safe {
 	return vcmp(a.version_, b.version_);
 }
 
 bool vcmp(string va, string vb)
-{
+@safe {
 	import dub.dependency;
 	return Version(va) < Version(vb);
 }
 
 private string[] splitAlphaNumParts(string str)
-{
+@safe {
 	string[] ret;
 	while (!str.empty) {
 		while (!str.empty && !str.front.isIdentChar()) str.popFront();
@@ -505,6 +518,6 @@ private string[] splitAlphaNumParts(string str)
 }
 
 private bool isIdentChar(dchar ch)
-{
+@safe {
 	return std.uni.isAlpha(ch) || std.uni.isNumber(ch);
 }

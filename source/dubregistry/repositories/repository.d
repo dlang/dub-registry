@@ -14,7 +14,7 @@ import std.typecons;
 
 
 Repository getRepository(DbRepository repinfo)
-{
+@safe {
 	if( auto pr = repinfo in s_repositories )
 		return *pr;
 
@@ -27,27 +27,28 @@ Repository getRepository(DbRepository repinfo)
 }
 
 void addRepositoryFactory(string kind, RepositoryFactory factory)
-{
+@safe {
 	assert(kind !in s_repositoryFactories);
 	s_repositoryFactories[kind] = factory;
 }
 
 bool supportsRepositoryKind(string kind)
-{
+@safe {
 	return (kind in s_repositoryFactories) !is null;
 }
 
 
-alias RepositoryFactory = Repository delegate(DbRepository);
+alias RepositoryFactory = Repository delegate(DbRepository) @safe;
 
 interface Repository {
+@safe:
 	RefInfo[] getTags();
 	RefInfo[] getBranches();
 	/// Get basic repository information, throws FileNotFoundException when the repo no longer exists.
 	RepositoryInfo getInfo();
-	void readFile(string commit_sha, Path path, scope void delegate(scope InputStream) reader);
+	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader);
 	string getDownloadUrl(string tag_or_branch);
-	void download(string tag_or_branch, scope void delegate(scope InputStream) del);
+	void download(string tag_or_branch, scope void delegate(scope InputStream) @safe del);
 }
 
 struct RepositoryInfo {
@@ -61,7 +62,7 @@ struct RefInfo {
 	BsonDate date;
 
 	this(string name, string sha, SysTime date)
-	{
+	@safe {
 		this.name = name;
 		this.sha = sha;
 		this.date = BsonDate(date);
@@ -69,7 +70,7 @@ struct RefInfo {
 }
 
 package Json readJson(string url, bool sanitize = false, bool cache_priority = false)
-{
+@safe {
 	import dubregistry.internal.utils : black;
 
 	Json ret;

@@ -35,6 +35,8 @@ class DubRegistrySettings {
 }
 
 class DubRegistry {
+@safe:
+
 	private {
 		DubRegistrySettings m_settings;
 		DbController m_db;
@@ -51,9 +53,9 @@ class DubRegistry {
 		m_settings = settings;
 		m_db = new DbController(settings.databaseName);
 
-		// recompute ratings on startup to pick up any algorithm changes
+		// recompute scores on startup to pick up any algorithm changes
 		m_statDistributions = m_db.getStatDistributions();
-		recomputeRatings(m_statDistributions);
+		recomputeScores(m_statDistributions);
 
 		m_updateQueue = new PackageWorkQueue(&updatePackage);
 		m_updateStatsQueue = new PackageWorkQueue((p) { updatePackageStats(p); });
@@ -163,15 +165,15 @@ class DubRegistry {
 			stats.repo = getRepositoryInfo(pack.repository).stats;
 		} catch (FileNotFoundException e) {
 			// repo no longer exists, rate it down to zero (#221)
-			logInfo("Zero rating %s because the repo no longer exists.", packname);
-			stats.rating = 0;
+			logInfo("Zero scoring %s because the repo no longer exists.", packname);
+			stats.score = 0;
 		} catch (Exception e) {
 			logWarn("Failed to get repository info for %s: %s", packname, e.msg);
 			return typeof(return).init;
 		}
 
 		if (auto pStatDist = pack.repository.kind in m_statDistributions.repos)
-			stats.rating = computeRating(stats, m_statDistributions.downloads, *pStatDist);
+			stats.score = computeScore(stats, m_statDistributions.downloads, *pStatDist);
 		else
 			logError("Missing stat distribution for %s repositories.", pack.repository.kind);
 
@@ -240,7 +242,7 @@ class DubRegistry {
 		auto nfo = v.info.get!(Json[string]).dup;
 		nfo["version"] = v.version_;
 		nfo["date"] = v.date.toISOExtString();
-		nfo["readmeFile"] = v.readme;
+		nfo["readme"] = v.readme;
 		nfo["commitID"] = v.commitID;
 
 		PackageVersionInfo ret;
@@ -254,25 +256,26 @@ class DubRegistry {
 
 	string getReadme(Json version_info, DbRepository repository)
 	{
-		string ret;
-		auto file = version_info["readmeFile"].opt!string;
-		try {
-			if (!file.startsWith('/')) return null;
-			auto rep = getRepository(repository);
-			logDebug("reading readme file for %s: %s", version_info["name"].get!string, file);
-			rep.readFile(version_info["commitID"].get!string, Path(file), (scope data) {
-				ret = data.readAllUTF8();
-			});
-			logDebug("reading readme file done");
-		} catch (Exception e) {
-			logDiagnostic("Failed to read README file (%s) for %s %s: %s",
-				file, version_info["name"].get!string,
-				version_info["version"].get!string, e.msg);
+		auto readme = version_info["readme"].opt!string;
+
+		// compat migration, read file from repo if README hasn't yet been stored in the db
+		if (readme.length && readme.length < 256 && readme[0] == '/') {
+			try {
+				auto rep = getRepository(repository);
+				logDebug("reading readme file for %s: %s", version_info["name"].get!string, readme);
+				rep.readFile(version_info["commitID"].get!string, InetPath(readme), (scope data) {
+					readme = data.readAllUTF8();
+				});
+			} catch (Exception e) {
+				logDiagnostic("Failed to read README file (%s) for %s %s: %s",
+					readme, version_info["name"].get!string,
+					version_info["version"].get!string, e.msg);
+			}
 		}
-		return ret;
+		return readme;
 	}
 
-	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) del)
+	void downloadPackageZip(string packname, string vers, void delegate(scope InputStream) @safe del)
 	{
 		DbPackage pack = m_db.getPackage(packname);
 		auto rep = getRepository(pack.repository);
@@ -313,7 +316,7 @@ class DubRegistry {
 	void updatePackages()
 	{
 		logDiagnostic("Triggering package update...");
-		// update stat distributions before rating packages
+		// update stat distributions before score packages
 		m_statDistributions = m_db.getStatDistributions();
 		foreach (packname; this.availablePackages)
 			triggerPackageUpdate(packname);
@@ -395,12 +398,6 @@ class DubRegistry {
 			format("Package name (%s) does not match the original package name (%s). Check %s.",
 				info.info["name"].get!string, packname, info.info["packageDescriptionFile"].get!string));
 
-		if ("description" !in info.info || "license" !in info.info) {
-		//enforce("description" in info.info && "license" in info.info,
-			throw new Exception(
-			"Published packages must contain \"description\" and \"license\" fields.");
-		}
-
 		foreach( string n, vspec; info.info["dependencies"].opt!(Json[string]) )
 			foreach (p; n.split(":"))
 				checkPackageName(p, "Check "~info.info["packageDescriptionFile"].get!string~".");
@@ -412,8 +409,7 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		try {
-			rep.readFile(reference.sha, Path("/README.md"), (scope input) { input.readAll(); });
-			dbver.readme = "/README.md";
+			rep.readFile(reference.sha, InetPath("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
 		} catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
 
 		if (m_db.hasVersion(packname, ver)) {
@@ -422,6 +418,10 @@ class DubRegistry {
 			return false;
 		}
 
+		if ("description" !in info.info || "license" !in info.info) {
+			throw new Exception(
+			"Published packages must contain \"description\" and \"license\" fields.");
+		}
 		//enforce(!m_db.hasVersion(packname, dbver.version_), "Version already exists.");
 		if (auto pv = "version" in info.info)
 			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
@@ -446,7 +446,7 @@ class DubRegistry {
 		try pack = getPackageInfo(packname);
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
-			logDebug("%s", sanitize(e.toString()));
+			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
 			return;
 		}
 
@@ -454,7 +454,7 @@ class DubRegistry {
 		try rep = getRepository(pack.info["repository"].deserializeJson!DbRepository);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
-			logDebug("%s", sanitize(e.toString()));
+			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
 			return;
 		}
 
@@ -481,7 +481,7 @@ class DubRegistry {
 					logInfo("Package %s: added version %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for version %s of %s: %s", name, packname, e.msg);
-				logDebug("Full error: %s", sanitize(e.toString()));
+				() @trusted  { logDebug("Full error: %s", sanitize(e.toString())); } ();
 				errors ~= format("Version %s: %s", name, e.msg);
 			}
 		}
@@ -494,7 +494,7 @@ class DubRegistry {
 					logInfo("Package %s: added branch %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for branch %s of %s: %s", name, packname, e.msg);
-				logDebug("Full error: %s", sanitize(e.toString()));
+				() @trusted { logDebug("Full error: %s", sanitize(e.toString())); } ();
 				if (branch.name != "gh-pages") // ignore errors on the special GitHub website branch
 					errors ~= format("Branch %s: %s", name, e.msg);
 			}
@@ -513,34 +513,37 @@ class DubRegistry {
 		m_updateStatsQueue.put(packname);
 	}
 
-	/// recompute all ratings based on cached stats, e.g. after updating algorithm
-	private void recomputeRatings(DbStatDistributions dists)
+	/// recompute all scores based on cached stats, e.g. after updating algorithm
+	private void recomputeScores(DbStatDistributions dists)
 	{
 		foreach (packname; this.availablePackages)
 		{
 			const pack = m_db.getPackage(packname);
 			auto stats = m_db.getPackageStats(packname);
-			stats.rating = computeRating(stats, dists.downloads, dists.repos[pack.repository.kind]);
+			stats.score = computeScore(stats, dists.downloads, dists.repos[pack.repository.kind]);
 			m_db.updatePackageStats(pack._id, stats);
 		}
 	}
 }
 
-private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, Path sub_path = Path("/"))
-{
+private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string first_filename_try, InetPath sub_path = InetPath("/"))
+@safe {
 	import dub.recipe.io;
 	import dub.recipe.json;
 
 	PackageVersionInfo ret;
 	ret.date = commit.date.toSysTime();
 	ret.sha = commit.sha;
-	foreach (filename; chain((&first_filename_try)[0 .. 1], packageInfoFilenames.filter!(f => f != first_filename_try))) {
+	string[1] first_try;
+	first_try[0] = first_filename_try;
+	auto all_filenames = () @trusted { return packageInfoFilenames(); } ();
+	foreach (filename; chain(first_try[], all_filenames.filter!(f => f != first_filename_try))) {
 		if (!filename.length) continue;
 		try {
-			rep.readFile(commit.sha, sub_path ~ filename, (scope input) {
+			rep.readFile(commit.sha, sub_path ~ filename, (scope input) @safe {
 				auto text = input.readAllUTF8(false);
-				auto recipe = parsePackageRecipe(text, filename);
-				ret.info = recipe.toJson();
+				auto recipe = () @trusted { return parsePackageRecipe(text, filename); } ();
+				ret.info = () @trusted { return recipe.toJson(); } ();
 			});
 
 			ret.info["packageDescriptionFile"] = filename;
@@ -567,7 +570,7 @@ private PackageVersionInfo getVersionInfo(Repository rep, RefInfo commit, string
 }
 
 private void checkPackageName(string n, string error_suffix)
-{
+@safe {
 	enforce(n.length > 0, "Package names may not be empty. "~error_suffix);
 	foreach( ch; n ){
 		switch(ch){
@@ -595,9 +598,10 @@ struct PackageInfo {
 	Json info; /// JSON package information, as reported to the client
 }
 
-/// Computes a package rating from given package stats and global distributions of those stats.
-private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
-{
+/// Computes a package score from given package stats and global distributions of those stats.
+private float computeScore(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
+@safe {
+	import std.algorithm.comparison : max;
 	import std.math : log1p, round, tanh;
 
     if (!downDist.total.sum) // no stat distribution yet
@@ -605,10 +609,10 @@ private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, Dow
 
 	/// Using monthly downloads to penalize stale packages, logarithm to
 	/// offset exponential distribution, and tanh as smooth limiter to [0..1].
-	immutable downloadRating = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
-	logDebug("downloadRating %s %s %s", downloadRating, stats.downloads.monthly, downDist.monthly.mean);
+	immutable downloadScore = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
+	logDebug("downloadScore %s %s %s", downloadScore, stats.downloads.monthly, downDist.monthly.mean);
 
-	// Compute rating for repo
+	// Compute score for repo
 	float sum=0, wsum=0;
 	void add(T)(float weight, float value, T dist)
 	{
@@ -627,14 +631,14 @@ private float computeRating(DownDist, RepoDist)(in ref DbPackageStats stats, Dow
 		add(-1.0f, issues, d.issues); // penalize many open issues/PRs
 	}
 
-	immutable repoRating = max(0.0, tanh(sum / wsum));
-	logDebug("repoRating: %s %s %s", repoRating, sum, wsum);
+	immutable repoScore = max(0.0, tanh(sum / wsum));
+	logDebug("repoScore: %s %s %s", repoScore, sum, wsum);
 
-	// average ratings
-	immutable avgRating = (repoRating + downloadRating) / 2;
-	assert(0 <= avgRating && avgRating <= 1.0, "%s %s".format(repoRating, downloadRating));
-	immutable scaled = stats.minRating + avgRating * (stats.maxRating - stats.minRating);
-	logDebug("rating: %s %s %s %s %s %s", stats.downloads.monthly, downDist.monthly.mean, downloadRating, repoRating, avgRating, scaled);
+	// average scores
+	immutable avgScore = (repoScore + downloadScore) / 2;
+	assert(0 <= avgScore && avgScore <= 1.0, "%s %s".format(repoScore, downloadScore));
+	immutable scaled = stats.minScore + avgScore * (stats.maxScore - stats.minScore);
+	logDebug("score: %s %s %s %s %s %s", stats.downloads.monthly, downDist.monthly.mean, downloadScore, repoScore, avgScore, scaled);
 
 	return scaled;
 }

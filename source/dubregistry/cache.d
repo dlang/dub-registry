@@ -6,6 +6,7 @@
 module dubregistry.cache;
 
 import vibe.core.log;
+import vibe.core.stream;
 import vibe.db.mongo.mongo;
 import vibe.http.client;
 import vibe.stream.memory;
@@ -24,6 +25,7 @@ enum CacheMatchMode {
 
 
 class URLCache {
+@safe:
 	private {
 		MongoClient m_db;
 		MongoCollection m_entries;
@@ -42,16 +44,17 @@ class URLCache {
 		m_entries.remove(["url": url.toString()]);
 	}
 
-	void get(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
+	void get(URL url, scope void delegate(scope InputStream str) @safe callback, bool cache_priority = false)
 	{
 		get(url, callback, cache_priority ? CacheMatchMode.always : CacheMatchMode.etag);
 	}
 
-	void get(URL url, scope void delegate(scope InputStream str) callback, CacheMatchMode mode = CacheMatchMode.etag)
+	void get(URL url, scope void delegate(scope InputStream str) @safe callback, CacheMatchMode mode = CacheMatchMode.etag)
 	{
 		import std.datetime : Clock, UTC;
 		import vibe.http.auth.basic_auth;
 		import dubregistry.internal.utils : black;
+		import vibe.internal.interfaceproxy : asInterface;
 
 		auto user = url.username;
 		auto password = url.password;
@@ -70,7 +73,7 @@ class URLCache {
 				// invalidate out of date cache entries
 				if (be["_id"].get!BsonObjectID.timeStamp < now - m_maxCacheTime)
 					m_entries.remove(["_id": be["_id"]]);
-				
+
 				deserializeBson(entry, be);
 				if (mode == CacheMatchMode.always) {
 					// directly return cache result for cache_priority == true
@@ -80,7 +83,8 @@ class URLCache {
 						continue;
 					} else {
 						auto data = be["data"].get!BsonBinData().rawData();
-						scope tmpresult = createMemoryStream(cast(ubyte[])data, false);
+						auto mdata = () @trusted { return cast(ubyte[])data; } ();
+						scope tmpresult = createMemoryStream(mdata, false);
 						callback(tmpresult);
 						return;
 					}
@@ -138,7 +142,7 @@ class URLCache {
 
 							logDiagnostic("Cache MISS (no etag): %s", url.toString());
 							handled_uncached = true;
-							callback(res.bodyReader);
+							callback(res.bodyReader.asInterface!InputStream);
 							break;
 					}
 				}
@@ -173,24 +177,24 @@ private struct CacheEntry {
 
 private URLCache s_cache;
 
-void downloadCached(URL url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
-{
+void downloadCached(URL url, scope void delegate(scope InputStream str) @safe callback, bool cache_priority = false)
+@safe {
 	if (!s_cache) s_cache = new URLCache;
 	s_cache.get(url, callback, cache_priority);
 }
 
-void downloadCached(string url, scope void delegate(scope InputStream str) callback, bool cache_priority = false)
-{
+void downloadCached(string url, scope void delegate(scope InputStream str) @safe callback, bool cache_priority = false)
+@safe {
 	return downloadCached(URL.parse(url), callback, cache_priority);
 }
 
 void clearCacheEntry(URL url)
-{
+@safe {
 	if (!s_cache) s_cache = new URLCache;
 	s_cache.clearEntry(url);
 }
 
 void clearCacheEntry(string url)
-{
+@safe {
 	clearCacheEntry(URL(url));
 }

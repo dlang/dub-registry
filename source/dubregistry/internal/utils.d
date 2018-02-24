@@ -12,16 +12,14 @@ import std.path;
 import std.process;
 
 URL black(URL url)
-{
-	if (url.username.length > 0)
-		url.username = "***";
-	if (url.password.length > 0)
-		url.password = "***";
+@safe {
+	if (url.username.length > 0) url.username = "***";
+	if (url.password.length > 0) url.password = "***";
 	return url;
 }
 
 string black(string url)
-{
+@safe {
 	return black(URL(url)).toString();
 }
 

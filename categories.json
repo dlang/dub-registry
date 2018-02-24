@@ -1,79 +1,124 @@
-[
-	{"name": "application", "description": "Stand-alone applications", "categories": [
-		{"name": "desktop", "description": "Desktop applications", "categories": [
-			{"name": "development", "description": "Development tools", "categories": [
-				{"name": "analyzer", "description": "Profilers, Code analyzers, etc."},
-				{"name": "build", "description": "Build tools"},
-				{"name": "compiler", "description": "Compilers"},
-				{"name": "debugger", "description": "Debuggers"},
-				{"name": "documentation", "description": "Documentation processors"},
-				{"name": "packaging", "description": "Packaging tools"},
-				{"name": "plugin", "description": "Plugin/modification"},
-				{"name": "ide", "description": "Integrated development environments"}
+{
+	"list": [
+		{"name": "application", "description": "Stand-alone applications", "categories": [
+			{"name": "desktop", "description": "Desktop applications", "categories": [
+				{"name": "development", "description": "Development tools", "categories": [
+					{"name": "analyzer", "description": "Profilers, Code analyzers, etc."},
+					{"name": "build", "description": "Build tools"},
+					{"name": "compiler", "description": "Compilers"},
+					{"name": "debugger", "description": "Debuggers"},
+					{"name": "documentation", "description": "Documentation processors"},
+					{"name": "packaging", "description": "Packaging tools"},
+					{"name": "plugin", "description": "Plugin/modification"},
+					{"name": "ide", "description": "Integrated development environments"}
+				]},
+				{"name": "editor", "description": "Text editors"},
+				{"name": "game", "description": "Games"},
+				{"name": "graphics", "description": "Graphics editing"},
+				{"name": "network", "description": "Network tools"},
+				{"name": "photo", "description": "Photographic applications"},
+				{"name": "productivity", "description": "Office and productivity"},
+				{"name": "web", "description": "Web tools"}
 			]},
-			{"name": "editor", "description": "Text editors"},
-			{"name": "game", "description": "Games"},
-			{"name": "graphics", "description": "Graphics editing"},
-			{"name": "network", "description": "Network tools"},
-			{"name": "photo", "description": "Photographic applications"},
-			{"name": "productivity", "description": "Office and productivity"},
-			{"name": "web", "description": "Web tools"}
+			{"name": "mobile", "description": "Mobile device applications"},
+			{"name": "server", "description": "Server software", "categories": [
+				{"name": "messaging", "description": "Chat/email servers"},
+				{"name": "database", "description": "Database servers"},
+				{"name": "game", "description": "Game servers"},
+				{"name": "web", "description": "Web servers"}
+			]},
+			{"name": "web", "description": "Web applications/sites", "categories": [
+				{"name": "development", "description": "Development tools"},
+				{"name": "communication", "description": "Blogs, chats, forums, etc."},
+				{"name": "productivity", "description": "Office and productivity"}
+			]}
 		]},
-		{"name": "mobile", "description": "Mobile device applications"},
-		{"name": "server", "description": "Server software", "categories": [
-			{"name": "messaging", "description": "Chat/email servers"},
-			{"name": "database", "description": "Database servers"},
-			{"name": "game", "description": "Game servers"},
-			{"name": "web", "description": "Web servers"}
-		]},
-		{"name": "web", "description": "Web applications/sites", "categories": [
-			{"name": "development", "description": "Development tools"},
-			{"name": "communication", "description": "Blogs, chats, forums, etc."},
-			{"name": "productivity", "description": "Office and productivity"}
+		{"name": "library", "description": "Development library", "categories": [
+			{"name": "std_aspirant", "description": "Candidate for inclusion in the D standard library"},
+			{"name": "audio", "description": "Audio libraries"},
+			{"name": "binding", "description": "D language bindings", "categories": [
+				{"name": "deimos", "description": "Deimos header-only binding"}
+			]},
+			{"name": "crypto", "description": "Cryptographic libraries"},
+			{"name": "development", "description": "Development support libraries", "categories": [
+				{"name": "parsing", "description": "Parsers and lexers"}
+			]},
+			{"name": "data", "description": "Data storage and format support"},
+			{"name": "data_structures", "description": "Data Structures and Containers"},
+			{"name": "database", "description": "Database clients or implementations"},
+			{"name": "filesystem", "description": "File system libraries"},
+			{"name": "gamedev", "description": "Libraries aimed at game development"},
+			{"name": "graphics", "description": "2D/3D graphics"},
+			{"name": "gui", "description": "Graphical user interfaces"},
+			{"name": "tui", "description": "Text user interfaces"},
+			{"name": "memory", "description": "Memory allocation, managment and other related routines"},
+			{"name": "network", "description": "Networking libraries", "categories": [
+				{"name": "messaging", "description": "Network messaging library"}
+			]},
+			{"name": "scripting", "description": "Scripting language support"},
+			{"name": "vcs", "description": "Version control"},
+			{"name": "video", "description": "Video libraries"},
+			{"name": "vibed", "description": "vibe.d compatible library"},
+			{"name": "web", "description": "Web related", "categories": [
+				{"name": "auth", "description": "Authentication and user management"},
+				{"name": "communication", "description": "Communication components"},
+				{"name": "framework", "description": "Web framework"}
+			]},
+			{"name": "general", "description": "Base libraries and code collections"},
+			{"name": "generic", "description": "Library with generic code"},
+			{"name": "encoding", "description": "String encoding and conversion"},
+			{"name": "i18n", "description": "Internationalization and localization"},
+			{"name": "scientific", "description": "Scientific", "categories": [
+				{"name": "linalg", "description": "Linear algebra"},
+				{"name": "numeric", "description": "Numerical methods and algorithms"},
+				{"name": "newton", "description": "Newton physics"},
+				{"name": "bioinformatics", "description": "Bioinformatics"}
+			]},
+			{"name": "optimized_cpu", "description": "Optimized for fast execution"},
+			{"name": "optimized_mem", "description": "Optimized for low memory usage"},
+			{"name": "nogc", "description": "Suitable for @nogc use"}
 		]}
-	]},
-	{"name": "library", "description": "Development library", "categories": [
-		{"name": "std_aspirant", "description": "Candidate for inclusion in the D standard library"},
-		{"name": "audio", "description": "Audio libraries"},
-		{"name": "binding", "description": "D language bindings", "categories": [
-			{"name": "deimos", "description": "Deimos header-only binding"}
-		]},
-		{"name": "crypto", "description": "Cryptographic libraries"},
-		{"name": "development", "description": "Development support libraries", "categories": [
-			{"name": "parsing", "description": "Parsers and lexers"}
-		]},
-		{"name": "data", "description": "Data storage and format support"},
-		{"name": "data_structures", "description": "Data Structures and Containers"},
-		{"name": "database", "description": "Database clients or implementations"},
-		{"name": "filesystem", "description": "File system libraries"},
-		{"name": "gamedev", "description": "Libraries aimed at game development"},
-		{"name": "graphics", "description": "2D/3D graphics"},
-		{"name": "gui", "description": "Graphical user interfaces"},
-		{"name": "memory", "description": "Memory allocation, managment and other related routines"},
-		{"name": "network", "description": "Networking libraries", "categories": [
-			{"name": "messaging", "description": "Network messaging library"}
-		]},
-		{"name": "scripting", "description": "Scripting language support"},
-		{"name": "vcs", "description": "Version control"},
-		{"name": "video", "description": "Video libraries"},
-		{"name": "vibed", "description": "vibe.d compatible library"},
-		{"name": "web", "description": "Web related", "categories": [
-			{"name": "auth", "description": "Authentication and user management"},
-			{"name": "communication", "description": "Communication components"},
-			{"name": "framework", "description": "Web framework"}
-		]},
-		{"name": "general", "description": "Base libraries and code collections"},
-		{"name": "generic", "description": "Library with generic code"},
-		{"name": "encoding", "description": "String encoding and conversion"},
-		{"name": "i18n", "description": "Internationalization and localization"},
-		{"name": "scientific", "description": "Scientific", "categories": [
-			{"name": "linalg", "description": "Linear algebra"},
-			{"name": "numeric", "description": "Numerical methods and algorithms"},
-			{"name": "newton", "description": "Newton physics"},
-			{"name": "bioinformatics", "description": "Bioinformatics"}
-		]},
-		{"name": "optimized_cpu", "description": "Optimized for fast execution"},
-		{"name": "optimized_mem", "description": "Optimized for low memory usage"},
-		{"name": "nogc", "description": "Suitable for @nogc use"}
-	]}
-]
+	],
+	"icons": {
+		"application.desktop": "desktop",
+		"library.gui": "desktop",
+		"application.server.database": "database",
+		"library.database": "database",
+		"application.desktop.web": "web",
+		"library.web": "web",
+		"library.scientific": "scientific",
+		"application.desktop.game": "game",
+		"library.gamedev": "game",
+		"application.desktop.editor": "editor",
+		"application.desktop.development.ide": "editor",
+		"application.web.development": "editor",
+		"library.audio": "audio",
+		"library.network": "network",
+		"application.desktop.network": "network",
+		"application.desktop.photo": "photo",
+		"application.desktop.productivity": "productivity",
+		"application.web.productivity": "productivity",
+		"application.server": "server",
+		"library.video": "video",
+		"library.graphics": "3d",
+		"library.i18n": "i18n",
+		"library": "library",
+		"application.desktop.graphics": "graphics",
+		"library.generic": "generic",
+		"library.web.auth": "auth",
+		"library.crypto": "crypto",
+		"library.optimized_cpu": "cpu",
+		"library.optimized_mem": "mem",
+		"library.nogc": "gc",
+		"library.data": "data",
+		"library.data_structures": "data",
+		"library.std_aspirant": "std",
+		"application.mobile": "mobile",
+		"application.server.messaging": "communication",
+		"application.web.communication": "communication",
+		"library.web.communication": "communication",
+		"application.desktop.development": "development",
+		"library.development": "development",
+		"library.binding": "binding"
+	}
+}
