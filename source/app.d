@@ -68,7 +68,7 @@ shared static this()
 	}
 
 	import dub.internal.utils : jsonFromFile;
-	auto regsettingsjson = jsonFromFile(Path("settings.json"), true);
+	auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
 	auto ghuser = regsettingsjson["github-user"].opt!string;
 	auto ghpassword = regsettingsjson["github-password"].opt!string;
 	auto glurl = regsettingsjson["gitlab-url"].opt!string;
@@ -92,10 +92,10 @@ shared static this()
 		// user management
 		auto udbsettings = new UserManSettings;
 		udbsettings.serviceName = "DUB - The D package registry";
-		udbsettings.serviceUrl = URL("http://code.dlang.org/");
+		udbsettings.serviceURL = URL("http://code.dlang.org/");
 		udbsettings.serviceEmail = "noreply@vibed.org";
 		udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
-		udbsettings.requireAccountValidation = false;
+		udbsettings.requireActivation = false;
 		userdb = createUserManController(udbsettings);
 	}
 

@@ -8,6 +8,7 @@ module dubregistry.scheduler;
 import std.datetime;
 import vibe.core.core;
 import vibe.core.file;
+import vibe.core.path;
 import vibe.data.json;
 
 
@@ -19,6 +20,8 @@ import vibe.data.json;
 	will only be triggered a single time instead of three times.
 */
 class PersistentScheduler {
+@safe:
+
 	enum EventKind {
 		singular,
 		periodic,
@@ -33,16 +36,16 @@ class PersistentScheduler {
 		SysTime next;
 		Duration period;
 		Timer timer;
-		void delegate() handler;
+		void delegate() @safe nothrow handler;
 	}
 
 	private {
-		Path m_persistentFilePath;
+		NativePath m_persistentFilePath;
 		Event[string] m_events;
 		bool m_deferUpdates;
 	}
 
-	this(Path persistent_file)
+	this(NativePath persistent_file)
 	{
 		import std.conv : to;
 
@@ -51,7 +54,7 @@ class PersistentScheduler {
 		if (existsFile(persistent_file)) {
 			m_deferUpdates = true;
 			auto data = readJsonFile(persistent_file);
-			foreach (string name, desc; data) {
+			foreach (string name, desc; data.byKeyValue) {
 				auto tp = desc["kind"].get!string.to!EventKind;
 				auto next = SysTime.fromISOExtString(desc["next"].get!string);
 				final switch (tp) with (EventKind) {
@@ -73,7 +76,7 @@ class PersistentScheduler {
 	void scheduleWeeklyEvent(string name, SysTime first_time) { scheduleEvent(name, EventKind.weekly, first_time); }
 	void scheduleMonthlyEvent(string name, SysTime first_time) { scheduleEvent(name, EventKind.monthly, first_time); }
 	void scheduleYearlyEvent(string name, SysTime first_time) { scheduleEvent(name, EventKind.yearly, first_time); }
-	
+
 	void scheduleEvent(string name, EventKind kind, SysTime first_time, Duration repeat_period = 0.seconds)
 	{
 		auto now = Clock.currTime(UTC());
@@ -96,7 +99,7 @@ class PersistentScheduler {
 			else pevt.timer.rearm(pevt.next - now);
 		}
 	}
-	
+
 	void deleteEvent(string name)
 	{
 		if (auto pevt = name in m_events) {
@@ -110,7 +113,7 @@ class PersistentScheduler {
 		return (name in m_events) !is null;
 	}
 
-	void setEventHandler(string name, void delegate() handler)
+	void setEventHandler(string name, void delegate() @safe nothrow handler)
 	{
 		auto pevt = name in m_events;
 		assert(pevt !is null, "Non-existent event: "~name);
@@ -123,18 +126,20 @@ class PersistentScheduler {
 	}
 
 	private void onTimerFired(string name)
-	{
+	nothrow {
 		auto pevt = name in m_events;
 		if (!pevt || !pevt.handler) return;
 
-		auto now = Clock.currTime(UTC());
+		SysTime now;
+		try now = Clock.currTime(UTC());
+		catch (Exception e) assert(false, "Failed to get current time: "~e.msg);
 
 		if (pevt.next <= now) fireEvent(name, now);
 		else pevt.timer.rearm(pevt.next - now);
 	}
 
 	private void fireEvent(string name, SysTime now)
-	{
+	nothrow {
 		auto pevt = name in m_events;
 		assert(pevt.next <= now);
 		assert(pevt.handler !is null);
@@ -169,7 +174,11 @@ class PersistentScheduler {
 		if (pevt.kind == EventKind.singular) m_events.remove(name);
 		else pevt.timer.rearm(pevt.next - now);
 
-		writePersistentFile();
+		try writePersistentFile();
+		catch (Exception e) {
+			import vibe.core.log : logError;
+			logError("Failed to write persistent scheduling file: %s", e.msg);
+		}
 
 		handler();
 	}
@@ -177,7 +186,7 @@ class PersistentScheduler {
 	private void writePersistentFile()
 	{
 		import std.conv : to;
-		
+
 		if (m_deferUpdates) return;
 
 		Json jevents = Json.emptyObject;
@@ -193,8 +202,8 @@ class PersistentScheduler {
 	}
 }
 
-private Json readJsonFile(Path path)
-{
+private Json readJsonFile(NativePath path)
+@safe {
 	import vibe.stream.operations;
 
 	auto fil = openFile(path);
@@ -202,12 +211,12 @@ private Json readJsonFile(Path path)
 	return parseJsonString(fil.readAllUTF8());
 }
 
-private void writeJsonFile(Path path, Json data)
-{
+private void writeJsonFile(NativePath path, Json data)
+@safe {
 	import vibe.stream.wrapper;
 	auto fil = openFile(path, FileMode.createTrunc);
 	scope (exit) fil.close();
-	auto rng = StreamOutputRange(fil);
-	auto prng = &rng;
+	auto rng = streamOutputRange(fil);
+	auto prng = () @trusted { return &rng; } ();
 	writePrettyJsonString(prng, data);
 }

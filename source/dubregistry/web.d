@@ -452,7 +452,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		];
 
 		foreach(de; dirEntries("public/files", "*.*", SpanMode.shallow)) {
-			auto name = Path(de.name).head.toString();
+			auto name = NativePath(de.name).head.name;
 
 			foreach (platform, rexes; platformPatterns) {
 				foreach (rex; rexes) {

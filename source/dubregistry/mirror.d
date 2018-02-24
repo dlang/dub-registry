@@ -43,7 +43,7 @@ void mirrorRegistry(DubRegistry registry, URL url)
 nothrow {
 	logInfo("Polling '%s' for updates...", url);
 	try {
-		auto packs = requestHTTP(url ~ Path("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
+		auto packs = requestHTTP(url ~ InetPath("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
 
 		bool[BsonObjectID] current_packs;
 		foreach (p; packs) current_packs[p._id] = true;
