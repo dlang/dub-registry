@@ -7,12 +7,13 @@ module dubregistry.registry;
 
 import dubregistry.cache : FileNotFoundException;
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.internal.workqueue;
 import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : canFind, countUntil, filter, map, sort, swap;
+import std.algorithm : canFind, countUntil, filter, map, sort, swap, any;
 import std.array;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
@@ -222,6 +223,9 @@ class DubRegistry {
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
+		nfo["logo"] = pack.logo;
+		nfo["donation_url"] = pack.donation_url;
+		nfo["donation_detail"] = pack.donation_detail;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -281,6 +285,25 @@ class DubRegistry {
 	void setPackageCategories(string pack_name, string[] categories)
 	{
 		m_db.setPackageCategories(pack_name, categories);
+	}
+
+	void setPackageDonationDetails(string pack_name, string url, string detail)
+	{
+		m_db.setPackageDonationDetails(pack_name, url, detail);
+	}
+
+	void setPackageLogo(string pack_name, Path path)
+	{
+		auto success = generateLogo(path, pack_name, true, true);
+		if (success[].any)
+			m_db.enablePackageLogo(pack_name);
+		else
+			throw new Exception("Failed to generate logo");
+	}
+
+	void unsetPackageLogo(string pack_name)
+	{
+		m_db.removePackageLogo(pack_name);
 	}
 
 	void setPackageRepository(string pack_name, DbRepository repository)

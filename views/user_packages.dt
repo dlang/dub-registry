@@ -1,0 +1,33 @@
+extends layout
+
+block title
+	- auto title = mine ? "My packages" : user.name ~ "'s packages";
+
+block body
+	- import dubregistry.viewutils;
+	- import vibe.data.json;
+	- import std.algorithm;
+	- import std.array : array;
+
+	include package_render.inc.dt
+
+	- if (packages.empty)
+		h1 Oops!
+		p Looks like #{mine ? "you haven't" : "this user hasn't"} registered any packages yet.
+			- if (mine)
+				a.blind(href="#{req.rootDir}publish")  Learn more.
+		- if (mine)
+			.inputForm
+				form(method="GET", action="#{req.rootDir}register_package")
+					button(type="submit") Register new package
+
+	- else
+		h1 #{user.name}'s packages
+		- if (mine)
+			.inputForm(style="padding-bottom: 1em")
+				form(method="GET", action="#{req.rootDir}register_package")
+					button(type="submit") Register new package
+		.packageList
+			- foreach (p; sort!((a, b) => a < b)(packages.array))
+				- auto pack = registry.getPackageInfo(p, mine).info;
+				- renderPackage(p, pack, true);

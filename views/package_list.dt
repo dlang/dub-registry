@@ -1,0 +1,122 @@
+extends layout
+
+block title
+	- import dubregistry.viewutils;
+	- import dubregistry.web;
+	- import vibe.data.json;
+	- import std.algorithm.comparison : min;
+	- import std.algorithm.iteration : map;
+	- import std.string : replace, split;
+	- auto title = "Find, Use and Share DUB Packages";
+	script(type="application/javascript", src="scripts/home.js")
+	script(type="application/javascript").
+		window.categories = #{serializeToJson(info.categories).toString()};
+
+block body
+	- auto category = req.query.get("category", null);
+	- auto sort_mode = req.query.get("sort", "updated");
+
+	- string makeHomeURL(string sort, string category, ulong skip, ulong limit) {
+	-   import std.conv : to;
+	-   return "?sort=" ~ sort ~ "&category=" ~ category ~ "&skip=" ~ skip.to!string ~ "&limit=" ~ limit.to!string;
+	- }
+
+	- auto mirror = req.params.get("mirror", "");
+	- if (mirror.length)
+		p This is a mirror of #[a(href=mirror)= mirror].
+	- else
+		p Welcome to DUB, the D package registry. The following list shows all available packages:
+
+		form#category-form(method="GET", action="")
+			input(type="hidden", name="sort", value=sort_mode)
+			input(type="hidden", name="limit", value=info.limit)
+			p Select category:
+				select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
+					- void outputCat(Category cat)
+						- if (!cat)
+							option(value="") All packages
+						- else
+							option(value=cat.name, selected=cat.name==category)= cat.indentedDescription
+						- if (!cat || cat.subCategories.length)
+							- foreach (c; cat ? cat.subCategories : info.categories)
+								- outputCat(c);
+					- outputCat(null);
+				button#category-submit(type="submit") Update
+		#category-dynamic-form(style="display: none")
+			p Select category:
+				- foreach (i; 0 .. 6)
+					select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
+			:javascript
+				setupCategoryForm();
+
+	table
+
+		- static immutable browse_kinds = ["name;Name", "updated;Last update", "score;Score", "added;Registered", ";Description"];
+		tr
+			- foreach (i, c; browse_kinds)
+				- auto cp = c.split(";");
+				- if (cp[0].length == 0)
+					th= cp[1]
+				- else if (sort_mode == cp[0])
+					th.selected= cp[1]
+				- else
+					th
+						a(href=makeHomeURL(cp[0], category, info.skip, info.limit))= cp[1]
+
+		- foreach (pl; info.packages)
+			- if( pl["versions"].length )
+				- auto vidx = getBestVersionIndex(pl["versions"].get!(Json[]).map!(v => v["version"].opt!string));
+				- auto p = pl["versions"][vidx];
+				- auto desc = p["description"].opt!string;
+				- auto ver = p["version"].opt!string();
+				tr
+					td
+						- import std.string : startsWith;
+						- string image, imageDescription;
+						- bool isApplication;
+						- if (pl["categories"].length)
+							- foreach (category; pl["categories"])
+								- if (category.get!string.startsWith("application"))
+									- isApplication = true;
+									- break;
+							- if (auto pc = pl["categories"][0].get!string in info.categoryMap)
+								- image = pc.imageName;
+								- imageDescription = pc.imageDescription;
+						- if (!image.length) image = "unknown";
+						- if (!imageDescription.length) imageDescription = "unknown";
+						span(class="category-icon icon-category-#{image} #{isApplication ? `application` : ``}", title=imageDescription)
+						a(href='packages/#{pl["name"].get!string}')= pl["name"].get!string
+					td.nobreak
+						- if (ver.length <= 20)
+							|= ver
+						- else
+							| #{ver[0 .. 18]}&hellip;
+						span.dull.nobreak(title=formatDateTime(p["date"]))<> , #{formatFuzzyDate(p["date"])}
+					td.nobreak(title="#{formatPackageStats(pl.stats)}", style="color: #B03931;")!= formatScore(req.rootDir, pl.stats.score)
+					td.nobreak(title=formatDateTime(pl["dateAdded"]))= formatDate(pl["dateAdded"])
+					- if (desc.length <= 100)
+						td= desc
+					- else
+						td #{desc[0 .. 98]}&hellip;
+
+	ul.pageNav
+		- foreach (i; 0 .. (info.packageCount + info.limit - 1) / info.limit)
+			- if (i * info.limit == info.skip)
+				li.selected= i+1
+			- else
+				li: a(href=makeHomeURL(sort_mode, category, i*info.limit, info.limit))= i+1
+	ul.pageNav.perPage
+		- static immutable limit_enum = [10, 20, 50, 100];
+		- foreach (limit; limit_enum)
+			- if (info.limit == limit)
+				li.selected= limit
+			- else
+				li: a(href=makeHomeURL(sort_mode, category, info.skip, limit))= limit
+
+	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.packageCount)} of #{info.packageCount} packages found.
+
+	- if (!mirror.length)
+		- if (req.session)
+			p: a(href="my_packages") Manage my packages
+		- else
+			p Please #[a(href="login?redirect=/my_packages") log in] to manage your own packages.

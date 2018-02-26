@@ -6,6 +6,7 @@
 module dubregistry.web;
 
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
@@ -54,8 +55,23 @@ class DubRegistryWebFrontend {
 		updatePackageList();
 	}
 
+	@path("/home")
+	void getHome()
+	{
+		render!"home.dt";
+	}
+
 	@path("/")
-	void getHome(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
+	void getRoot(scope HTTPServerRequest req)
+	{
+		if (req.queryString.length)
+			redirect("/packages?" ~ req.queryString);
+		else
+			redirect("/packages");
+	}
+
+	@path("/packages")
+	void getPackages(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
 	{
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
@@ -112,7 +128,7 @@ class DubRegistryWebFrontend {
 		info.categories = m_categories;
 		info.categoryMap = m_categoryMap;
 
-		render!("home.dt", info);
+		render!("package_list.dt", info);
 	}
 
 	// compatibility route
@@ -483,13 +499,24 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		res.writeBody(info.latest);
 	}
 
+	@path("/users/:userid")
+	void getUser(string _userid)
+	{
+		User user = m_userman.getUser(User.ID.fromString(_userid));
+		auto registry = m_registry;
+		auto packages = registry.getPackages(user.id);
+		bool mine = false;
+		render!("user_packages.dt", user, registry, mine, packages);
+	}
 
 	@auth
 	void getMyPackages(User _user)
 	{
 		auto user = _user;
 		auto registry = m_registry;
-		render!("my_packages.dt", user, registry);
+		auto packages = registry.getPackages(user.id);
+		bool mine = true;
+		render!("user_packages.dt", user, registry, mine, packages);
 	}
 
 	@auth @path("/register_package")
@@ -560,6 +587,45 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages");
 	}
 
+	@auth @path("/my_packages/:packname/set_logo")
+	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		Path path;
+		foreach (key, file; request.files) {
+			if (key != "logo")
+				removeFile(file.tempPath);
+			else {
+				path = Path(tempDir()) ~ PathEntry(file.tempPath.toNativeString.baseName
+					~ file.filename.name.extension);
+				moveFile(file.tempPath, path);
+			}
+		}
+		enforceBadRequest(!path.empty);
+		m_registry.setPackageLogo(_packname, path);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/delete_logo")
+	void getDeleteLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.unsetPackageLogo(_packname);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_donation_url")
+	void postSetDonationUrl(string donation_url, string donation_detail, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		// TODO: repository ownership verification
+		m_registry.setPackageDonationDetails(_packname, donation_url, donation_detail);
+
+		redirect("/my_packages/"~_packname);
+	}
+
 	@auth @path("/my_packages/:packname/set_categories")
 	void postSetPackageCategories(string[] categories, string _packname, User _user)
 	{
@@ -601,6 +667,32 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		import dub.commandline;
 		auto commands = getCommands();
 		render!("docs.commandline.dt", commands);
+	}
+
+	@path("/logos/:logo")
+	void getLogo(scope HTTPServerRequest req, scope HTTPServerResponse res, string _logo)
+	{
+		import std.algorithm : canFind;
+
+		auto dot = _logo.countUntil('.');
+		if (dot != -1)
+			_logo = _logo[0 .. dot];
+
+		bool[logoFormats.length] exists;
+		NativePath[logoFormats.length] paths;
+		foreach (i, format; logoFormats)
+		{
+			paths[i] = NativePath(logoOutputFolder) ~ NativePath.Segment.validateFilename(_logo ~ format);
+			exists[i] = existsFile(paths[i]);
+		}
+
+		auto settings = new HTTPFileServerSettings();
+		settings.maxAge = 365.days;
+
+		if (exists[0])
+			sendFile(req, res, paths[0], settings);
+		else
+			sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
 	}
 
 	private void enforceUserPackage(User user, string package_name)

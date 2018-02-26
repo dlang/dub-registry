@@ -172,6 +172,23 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
 	}
 
+	void setPackageDonationDetails(string packname, string url, string detail)
+	{
+		m_packages.update(["name": packname], ["$set": ["donation_url": url, "donation_detail": detail]]);
+	}
+
+	void enablePackageLogo(string packname)
+	{
+		// revving of logo because of extremely long cache.
+		string revv = Clock.currStdTime.to!string(36);
+		m_packages.update(["name": packname], ["$set": ["logo": "/logos/" ~ packname ~ "." ~ revv]]);
+	}
+
+	void removePackageLogo(string packname)
+	{
+		m_packages.update(["name": packname], ["$set": ["logo": ""]]);
+	}
+
 	void setPackageRepository(string packname, DbRepository repo)
 	{
 		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
@@ -403,6 +420,9 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
+	@optional string logo;
+	@optional string donation_url;
+	@optional string donation_detail;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;
