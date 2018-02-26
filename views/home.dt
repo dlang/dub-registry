@@ -4,7 +4,6 @@ block title
 	- auto title = "DUB Package Manager";
 
 block body
-	h1 DUB
 	h2 D&apos;s Official Package Manager
 	p.
 		DUB allows you to easily share your libraries and applications with others
@@ -33,7 +32,7 @@ block body
 		.
 		├── dub.json
 		└── source
-				└── app.d
+			└── app.d
 
 		1 directory, 2 files
 	p.
