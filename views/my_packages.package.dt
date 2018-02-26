@@ -19,6 +19,19 @@ block body
 				|= e.get!string
 				br
 
+	h2 General
+
+	.inputForm
+		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
+			h3 Logo
+			- string existing = pack["logo"].get!string;
+			- string logoPath = existing.length ? existing : (req.rootDir ~ "images/default-logo.png");
+			img.packageLogo(src=logoPath)
+			input(name="logo", type="file", accept="image/*", onchange="updateLogoPreview(this)")
+			button(type="submit") Upload
+		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
+			button.danger(type="submit") Delete
+
 	h2 Downloads
 	p
 		- auto stats = registry.getPackageStats(packageName).downloads;
@@ -112,3 +125,10 @@ block body
 	.inputForm
 		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
 			button.danger(type="submit") Remove this package
+
+	:javascript
+		function updateLogoPreview(input) {
+			var f = input.files[0];
+			if (!f) return;
+			document.querySelector("img.packageLogo").src = window.URL.createObjectURL(f);
+		}

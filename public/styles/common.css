@@ -276,6 +276,30 @@ button {
 	}
 }
 
+img.packageLogo {
+	float: right;
+	max-width: 150px;
+	max-height: 150px;
+	margin: 0 0 1em 1em;
+}
+
+@media only screen and (max-width: 480px) {
+	img.packageLogo {
+		display: block;
+		float: none;
+		max-width: 100%;
+		max-height: none;
+		margin: 1em auto;
+	}
+}
+
+.inputForm > form > img.packageLogo {
+	float: none;
+	outline: 1px solid rgba(0, 0, 0, 0.5);
+	max-width: 256px;
+	max-height: 256px;
+}
+
 div.packageInfo {
 	text-align: left; /* override justify */
 }

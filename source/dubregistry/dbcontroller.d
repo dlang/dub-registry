@@ -177,6 +177,25 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
 	}
 
+	void setPackageLogo(string packname, string revision)
+	{
+		if (revision.length)
+			m_packages.update(["name": packname], ["$set": ["logo": "/packages/%s/logo?%s".format(packname, revision)]]);
+		else
+			m_packages.update(["name": packname], ["$set": ["logo": ""]]);
+	}
+
+	string getPackageLogo(string packname)
+	{
+		auto bpack = m_packages.findOne(["name": packname]);
+		if (bpack.isNull)
+			return null;
+		auto logo = bpack.tryIndex("logo");
+		if (logo.isNull)
+			return null;
+		return logo.get.get!string;
+	}
+
 	void addVersion(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
@@ -403,6 +422,7 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
+	@optional string logo;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;

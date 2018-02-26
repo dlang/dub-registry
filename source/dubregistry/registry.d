@@ -7,13 +7,15 @@ module dubregistry.registry;
 
 import dubregistry.cache : FileNotFoundException;
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.internal.workqueue;
 import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : canFind, countUntil, filter, map, sort, swap;
+import std.algorithm : any, canFind, countUntil, filter, map, sort, swap;
 import std.array;
+import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;
 import std.encoding : sanitize;
 import std.exception : enforce;
@@ -222,6 +224,7 @@ class DubRegistry {
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
+		nfo["logo"] = pack.logo;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -288,6 +291,27 @@ class DubRegistry {
 		auto new_name = validateRepository(repository);
 		enforce(pack_name == new_name, "The package name of the new repository doesn't match the existing one: "~new_name);
 		m_db.setPackageRepository(pack_name, repository);
+	}
+
+	void setPackageLogo(string pack_name, NativePath path)
+	{
+		string rev = Clock.currTime.toUnixTime.to!string;
+		// file names may contain @, it's even the standard way to make DPI scaled images when developing for android.
+		auto success = generateLogo(path, pack_name ~ "@" ~ rev, true, true);
+		if (success[].any)
+			m_db.setPackageLogo(pack_name, rev);
+		else
+			throw new Exception("Failed to generate logo");
+	}
+
+	void unsetPackageLogo(string pack_name)
+	{
+		m_db.setPackageLogo(pack_name, "");
+	}
+
+	string getPackageLogo(string pack_name)
+	{
+		return m_db.getPackageLogo(pack_name);
 	}
 
 	void updatePackages()

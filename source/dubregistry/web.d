@@ -6,6 +6,7 @@
 module dubregistry.web;
 
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
@@ -137,6 +138,42 @@ class DubRegistryWebFrontend {
 	void getPackage(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
 		getPackageVersion(req, res, _packname, null);
+	}
+
+	@path("/packages/:packname/logo")
+	void getPackageLogo(HTTPServerRequest req, HTTPServerResponse res, string _packname)
+	{
+		string rev = req.queryString;
+		if (!rev.length)
+		{
+			// get latest revision of file
+			auto logo = m_registry.getPackageLogo(_packname);
+			if (logo == req.requestPath.toString)
+				throw new Exception("Invalid package logo");
+			if (logo.length)
+			{
+				res.redirect(logo);
+				return;
+			}
+		}
+
+		string logo = _packname ~ "@" ~ rev;
+
+		bool[logoFormats.length] exists;
+		NativePath[logoFormats.length] paths;
+		foreach (i, format; logoFormats)
+		{
+			paths[i] = NativePath(logoOutputFolder) ~ NativePath.Segment(logo ~ format);
+			exists[i] = existsFile(paths[i]);
+		}
+
+		auto settings = new HTTPFileServerSettings();
+		settings.maxAge = 365.days;
+
+		if (exists[0])
+			sendFile(req, res, paths[0], settings);
+		else
+			sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
 	}
 
 	@path("/packages/:packname/:version")
@@ -591,6 +628,29 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		rep.owner = owner;
 		rep.project = project;
 		m_registry.setPackageRepository(_packname, rep);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_logo")
+	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		const(FilePart) logo = request.files.get("logo");
+		enforceBadRequest(logo != FilePart.init);
+		auto path = NativePath(tempDir()) ~ NativePath.Segment(logo.tempPath.toNativeString.baseName
+					~ logo.filename.name.extension);
+		moveFile(logo.tempPath, path);
+		m_registry.setPackageLogo(_packname, path);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/delete_logo")
+	void postDeleteLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.unsetPackageLogo(_packname);
 
 		redirect("/my_packages/"~_packname);
 	}
