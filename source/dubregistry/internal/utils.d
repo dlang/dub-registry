@@ -2,6 +2,7 @@ module dubregistry.internal.utils;
 
 import vibe.core.core;
 import vibe.core.concurrency;
+import vibe.core.file;
 import vibe.core.task;
 import vibe.inet.url;
 import vibe.inet.path;
@@ -25,7 +26,7 @@ string black(string url)
 
 static immutable string logoOutputFolder = "uploads/logos";
 
-static immutable string[] logoFormats = [".webp", ".png"];
+static immutable string[] logoFormats = [".png"];
 
 /// 
 /// Params:
@@ -33,7 +34,7 @@ static immutable string[] logoFormats = [".webp", ".png"];
 ///   name = the logo name to put in uploads/logos
 ///   deleteExisting = if false, throw an exception if the files already exist
 ///   deleteFinish = if true, delete the input file after at least one successful conversion
-auto generateLogo(Path file, string name, bool deleteExisting = false, bool deleteFinish = true)
+auto generateLogo(NativePath file, string name, bool deleteExisting = false, bool deleteFinish = true) @safe
 {
 	if (!name.length)
 		throw new Exception("name may not be empty");
@@ -45,8 +46,8 @@ auto generateLogo(Path file, string name, bool deleteExisting = false, bool dele
 			else
 				throw new Exception("logo " ~ format ~ " already exists");
 		}
-	auto t = runWorkerTaskH(&generateLogoUnsafe, Task.getThis(), file, name);
-	auto success = receiveOnlyCompat!(bool[logoFormats.length]);
+	auto t = (() @trusted => runWorkerTaskH(&generateLogoUnsafe, Task.getThis(), file, name))();
+	auto success = (() @trusted => receiveOnly!(bool[logoFormats.length]))();
 	foreach (i, format; logoFormats)
 		if (existsFile(buildPath(logoOutputFolder, name ~ format)) && !success[i])
 			removeFile(buildPath(logoOutputFolder, name ~ format));
@@ -55,29 +56,23 @@ auto generateLogo(Path file, string name, bool deleteExisting = false, bool dele
 	return success;
 }
 
-private void generateLogoUnsafe(Task owner, Path file, string name)
+private void generateLogoUnsafe(Task owner, NativePath file, string name) @safe
 {
 	try
 	{
 		bool[logoFormats.length] success;
 		scope (success)
-			sendCompat(owner, success);
+			(() @trusted => send(owner, success))();
 
 		string base = buildPath(logoOutputFolder, name);
 		string pngOutput = base ~ ".png";
 		auto png = spawnProcess(["convert", file.toNativeString, "-resize", "512x512>", pngOutput]);
 
 		if (png.wait == 0)
-			success[1] = true;
-
-		string webpOutput = base ~ ".webp";
-		auto webp = spawnProcess(["cwebp", "-q", "85", pngOutput, "-o", webpOutput]);
-
-		if (webp.wait == 0)
 			success[0] = true;
 	}
 	catch (Exception e)
 	{
-		sendCompat(owner, e);
+		(() @trusted => send(owner, e.toString()))();
 	}
 }

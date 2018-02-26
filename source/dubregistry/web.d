@@ -674,27 +674,23 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		import std.algorithm : canFind;
 
-		bool supportsWebP = req.headers.get("Accept").canFind("image/webp");
-
 		auto dot = _logo.countUntil('.');
 		if (dot != -1)
 			_logo = _logo[0 .. dot];
 
 		bool[logoFormats.length] exists;
-		Path[logoFormats.length] paths;
+		NativePath[logoFormats.length] paths;
 		foreach (i, format; logoFormats)
 		{
-			paths[i] = Path(logoOutputFolder) ~ PathEntry.validateFilename(_logo ~ format);
+			paths[i] = NativePath(logoOutputFolder) ~ NativePath.Segment.validateFilename(_logo ~ format);
 			exists[i] = existsFile(paths[i]);
 		}
 
 		auto settings = new HTTPFileServerSettings();
 		settings.maxAge = 365.days;
 
-		if (supportsWebP && exists[0])
+		if (exists[0])
 			sendFile(req, res, paths[0], settings);
-		else if (exists[1])
-			sendFile(req, res, paths[1], settings);
 		else
 			sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
 	}
