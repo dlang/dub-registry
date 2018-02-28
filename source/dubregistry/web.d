@@ -13,7 +13,7 @@ import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import dub.semver;
-import std.algorithm : sort, startsWith;
+import std.algorithm : sort, startsWith, splitter;
 import std.array;
 import std.file;
 import std.path;
@@ -144,14 +144,13 @@ class DubRegistryWebFrontend {
 	void getPackageLogo(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
 		string rev = req.queryString;
-		if (!rev.length)
-		{
+		if (!rev.length) {
 			// get latest revision of file
 			auto logo = m_registry.getPackageLogo(_packname);
+			// make sure we don't redirect to ourself
 			if (logo == req.requestPath.toString)
 				throw new Exception("Invalid package logo");
-			if (logo.length)
-			{
+			if (logo.length) {
 				res.redirect(logo);
 				return;
 			}
@@ -159,21 +158,34 @@ class DubRegistryWebFrontend {
 
 		string logo = _packname ~ "@" ~ rev;
 
-		bool[logoFormats.length] exists;
+		bool[logoFormats.length] imageExists;
 		NativePath[logoFormats.length] paths;
 		foreach (i, format; logoFormats)
 		{
 			paths[i] = NativePath(logoOutputFolder) ~ NativePath.Segment(logo ~ format);
-			exists[i] = existsFile(paths[i]);
+			imageExists[i] = existsFile(paths[i]);
 		}
 
 		auto settings = new HTTPFileServerSettings();
 		settings.maxAge = 365.days;
 
-		if (exists[0])
+		if (imageExists[0]) {
 			sendFile(req, res, paths[0], settings);
-		else
-			sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
+		} else {
+			bool acceptsSVG;
+			// make sure requester actually supports svg, if a custom IDE or tool for fetching images is used it should only get png if it doesn't support svg.
+			// if requester is an IDE sending Accept: */*, but not accepting SVG it's their own fault.
+			foreach (accept; req.headers.get("Accept", "").splitter(",")) {
+				if (accept.startsWith("image/*", "image/svg", "*/*", "*/svg")) {
+					acceptsSVG = true;
+					break;
+				}
+			}
+			if (acceptsSVG)
+				sendFile(req, res, NativePath("public/images/default-logo.svg"), settings);
+			else
+				sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
+		}
 	}
 
 	@path("/packages/:packname/:version")
