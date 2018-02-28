@@ -15,7 +15,7 @@
 		"stdx-allocator": "2.77.0",
 		"taggedalgebraic": "0.10.9",
 		"userman": "0.3.8",
-		"vibe-core": "1.4.0-alpha.1",
-		"vibe-d": "0.8.3-alpha.4"
+		"vibe-core": "1.4.0-rc.1",
+		"vibe-d": "0.8.3-beta.1"
 	}
 }
