@@ -46,8 +46,10 @@ auto generateLogo(NativePath file, string name, bool deleteExisting = false, boo
 			else
 				throw new Exception("logo " ~ format ~ " already exists");
 		}
-	auto t = (() @trusted => runWorkerTaskH(&generateLogoUnsafe, Task.getThis(), file, name))();
-	auto success = (() @trusted => receiveOnly!(bool[logoFormats.length]))();
+	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
+	static assert (isWeaklyIsolated!NativePath);
+	static assert (isWeaklyIsolated!string);
+	auto success = (() @trusted => async(&generateLogoUnsafe, file, name).getResult())();
 	foreach (i, format; logoFormats)
 		if (existsFile(buildPath(logoOutputFolder, name ~ format)) && !success[i])
 			removeFile(buildPath(logoOutputFolder, name ~ format));
@@ -56,23 +58,16 @@ auto generateLogo(NativePath file, string name, bool deleteExisting = false, boo
 	return success;
 }
 
-private void generateLogoUnsafe(Task owner, NativePath file, string name) @safe
+private bool[logoFormats.length] generateLogoUnsafe(NativePath file, string name) @safe
 {
-	try
-	{
-		bool[logoFormats.length] success;
-		scope (success)
-			(() @trusted => send(owner, success))();
+	bool[logoFormats.length] success;
 
-		string base = buildPath(logoOutputFolder, name);
-		string pngOutput = base ~ ".png";
-		auto png = spawnProcess(["convert", file.toNativeString, "-resize", "512x512>", pngOutput]);
+	string base = buildPath(logoOutputFolder, name);
+	string pngOutput = base ~ ".png";
+	auto png = spawnProcess(["convert", file.toNativeString, "-resize", "512x512>", pngOutput]);
 
-		if (png.wait == 0)
-			success[0] = true;
-	}
-	catch (Exception e)
-	{
-		(() @trusted => send(owner, e.toString()))();
-	}
+	if (png.wait == 0)
+		success[0] = true;
+
+	return success;
 }
