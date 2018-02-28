@@ -298,7 +298,7 @@ class DubRegistry {
 		string rev = Clock.currTime.toUnixTime.to!string;
 		// file names may contain @, it's even the standard way to make DPI scaled images when developing for android.
 		auto success = generateLogo(path, pack_name ~ "@" ~ rev, true, true);
-		if (success[].any)
+		if (success)
 			m_db.setPackageLogo(pack_name, rev);
 		else
 			throw new Exception("Failed to generate logo");

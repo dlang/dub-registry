@@ -25,8 +25,7 @@ string black(string url)
 }
 
 static immutable string logoOutputFolder = "uploads/logos";
-
-static immutable string[] logoFormats = [".png"];
+static immutable string logoFormat = ".png";
 
 /// 
 /// Params:
@@ -38,36 +37,34 @@ auto generateLogo(NativePath file, string name, bool deleteExisting = false, boo
 {
 	if (!name.length)
 		throw new Exception("name may not be empty");
-	foreach (format; logoFormats)
-		if (existsFile(buildPath(logoOutputFolder, name ~ format)))
-		{
-			if (deleteExisting)
-				removeFile(buildPath(logoOutputFolder, name ~ format));
-			else
-				throw new Exception("logo " ~ format ~ " already exists");
-		}
+	if (existsFile(buildPath(logoOutputFolder, name ~ logoFormat)))
+	{
+		if (deleteExisting)
+			removeFile(buildPath(logoOutputFolder, name ~ logoFormat));
+		else
+			throw new Exception("logo " ~ logoFormat ~ " already exists");
+	}
 	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
 	static assert (isWeaklyIsolated!NativePath);
 	static assert (isWeaklyIsolated!string);
 	auto success = (() @trusted => async(&generateLogoUnsafe, file, name).getResult())();
-	foreach (i, format; logoFormats)
-		if (existsFile(buildPath(logoOutputFolder, name ~ format)) && !success[i])
-			removeFile(buildPath(logoOutputFolder, name ~ format));
-	if (deleteFinish && success[].any)
+	if (existsFile(buildPath(logoOutputFolder, name ~ logoFormat)) && !success)
+		removeFile(buildPath(logoOutputFolder, name ~ logoFormat));
+	if (deleteFinish && success)
 		removeFile(file);
 	return success;
 }
 
-private bool[logoFormats.length] generateLogoUnsafe(NativePath file, string name) @safe
+private bool generateLogoUnsafe(NativePath file, string name) @safe
 {
-	bool[logoFormats.length] success;
+	bool success;
 
 	string base = buildPath(logoOutputFolder, name);
 	string pngOutput = base ~ ".png";
 	auto png = spawnProcess(["convert", file.toNativeString, "-resize", "512x512>", pngOutput]);
 
 	if (png.wait == 0)
-		success[0] = true;
+		success = true;
 
 	return success;
 }

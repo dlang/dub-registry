@@ -158,19 +158,14 @@ class DubRegistryWebFrontend {
 
 		string logo = _packname ~ "@" ~ rev;
 
-		bool[logoFormats.length] imageExists;
-		NativePath[logoFormats.length] paths;
-		foreach (i, format; logoFormats)
-		{
-			paths[i] = NativePath(logoOutputFolder) ~ NativePath.Segment(logo ~ format);
-			imageExists[i] = existsFile(paths[i]);
-		}
+		NativePath path = NativePath(logoOutputFolder) ~ NativePath.Segment(logo ~ logoFormat);
+		bool imageExists = existsFile(path);
 
 		auto settings = new HTTPFileServerSettings();
 		settings.maxAge = 365.days;
 
-		if (imageExists[0]) {
-			sendFile(req, res, paths[0], settings);
+		if (imageExists) {
+			sendFile(req, res, path, settings);
 		} else {
 			bool acceptsSVG;
 			// make sure requester actually supports svg, if a custom IDE or tool for fetching images is used it should only get png if it doesn't support svg.
