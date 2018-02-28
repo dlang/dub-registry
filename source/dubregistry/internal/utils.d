@@ -11,6 +11,7 @@ import std.algorithm : any;
 import std.file : tempDir;
 import std.path;
 import std.process;
+import std.typecons;
 
 URL black(URL url)
 @safe {
@@ -27,13 +28,21 @@ string black(string url)
 static immutable string logoOutputFolder = "uploads/logos";
 static immutable string logoFormat = ".png";
 
-/// 
-/// Params:
-///   file = the file to convert
-///   name = the logo name to put in uploads/logos
-///   deleteExisting = if false, throw an exception if the files already exist
-///   deleteFinish = if true, delete the input file after at least one successful conversion
-auto generateLogo(NativePath file, string name, bool deleteExisting = false, bool deleteFinish = true) @safe
+/// throw an exception if the files already exist
+alias DeleteExisting = Flag!"deleteExisting";
+/// delete the input file after a successful conversion
+alias DeleteFinish = Flag!"deleteFinish";
+
+/**
+ * Params:
+ *   file = the file to convert
+ *   name = the logo name to put in uploads/logos
+ *   deleteExisting = if false, throw an exception if the files already exist
+ *   deleteFinish = if true, delete the input file after a successful conversion
+ * Returns: true on success, false otherwise
+ * Throws: Exception if name is empty or logo already exists and deleteExisting is not true
+ */
+bool generateLogo(NativePath file, string name, DeleteExisting deleteExisting = DeleteExisting.no, DeleteFinish deleteFinish = DeleteFinish.yes) @safe
 {
 	if (!name.length)
 		throw new Exception("name may not be empty");
