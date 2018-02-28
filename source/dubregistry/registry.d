@@ -75,7 +75,7 @@ class DubRegistry {
 
 	void triggerPackageUpdate(string pack_name)
 	{
-		m_updateQueue.put(pack_name);
+		m_updateQueue.putFront(pack_name);
 	}
 
 	bool isPackageScheduledForUpdate(string pack_name)
