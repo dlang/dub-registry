@@ -10,10 +10,13 @@ block title
 	- import userman.controller;
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 
+	- auto normalizedPackageName = packageName.splitter(':').front;
+	- auto normalizedPackageURL = (req.tls ? "https://" : "http://") ~ req.host ~ "/packages/" ~ normalizedPackageName;
+
 	// facebook & co.
-	meta(property="og:url", content="http#{req.tls ? `s` : ``}://#{req.host}/packages/#{packageName.split(':')[0]}")
+	meta(property="og:url", content="")
 	meta(property="og:type", content="article")
-	meta(property="og:title", content="Package #{packageName.split(':')[0]} on DUB")
+	meta(property="og:title", content="Package #{normalizedPackageName} on DUB")
 	meta(property="og:image", content=packageInfo["logo"].opt("#{req.rootDir}public/images/default-logo.png"))
 	meta(property="og:description", content=versionInfo["description"].opt!string)
 	meta(property="og:site_name", content="DUB Package Registry")
@@ -24,8 +27,8 @@ block title
 	meta(name="twitter:card", content="summary")
 	//- TODO: register dub twitter account
 	meta(name="twitter:site", content="@D_Programming")
-	meta(name="twitter:url", content="http#{req.tls ? `s` : ``}://#{req.host}/packages/#{packageName.split(':')[0]}")
-	meta(name="twitter:title", content="Package #{packageName.split(':')[0]} on DUB")
+	meta(name="twitter:url", content=normalizedPackageURL)
+	meta(name="twitter:title", content="Package #{normalizedPackageName} on DUB")
 	meta(name="twitter:description", content=versionInfo["description"].opt!string)
 	meta(name="twitter:image", content=packageInfo["logo"].opt("#{req.rootDir}public/images/default-logo.png"))
 
@@ -38,12 +41,12 @@ block body
 	.main
 		- import vibe.data.bson;
 		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
-			a(href="#{req.rootDir}my_packages/#{packageName.split(':')[0]}") Manage this package
+			a(href="#{req.rootDir}my_packages/#{normalizedPackageName}") Manage this package
 
 		- auto logo = packageInfo["logo"].opt("");
 
 		- if (logo.length)
-			img.packageLogo(src=logo, alt="#{packageName.split(':')[0]} logo")
+			img.packageLogo(src=logo, alt="#{normalizedPackageName} logo")
 
 		- if(packageName.canFind(":"))
 			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);
