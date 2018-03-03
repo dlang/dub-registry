@@ -288,7 +288,7 @@ img.packageLogo {
 		display: block;
 		float: none;
 		max-width: 100%;
-		max-height: none;
+		max-height: 220px;
 		margin: 1em auto;
 	}
 }
