@@ -63,6 +63,7 @@
 				{"name": "auth", "description": "Authentication and user management"},
 				{"name": "communication", "description": "Communication components"},
 				{"name": "framework", "description": "Web framework"}
+				{"name": "cms", "description": "Content management system"}
 			]},
 			{"name": "general", "description": "Base libraries and code collections"},
 			{"name": "generic", "description": "Library with generic code"},
