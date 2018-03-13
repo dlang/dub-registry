@@ -17,7 +17,7 @@ block title
 	meta(property="og:url", content="")
 	meta(property="og:type", content="article")
 	meta(property="og:title", content="Package #{normalizedPackageName} on DUB")
-	meta(property="og:image", content=packageInfo["logo"].opt("#{req.rootDir}public/images/default-logo.png"))
+	meta(property="og:image", content="/packages/#{normalizedPackageName}/logo")
 	meta(property="og:description", content=versionInfo["description"].opt!string)
 	meta(property="og:site_name", content="DUB Package Registry")
 	meta(property="og:locale", content="en_US")
@@ -30,7 +30,7 @@ block title
 	meta(name="twitter:url", content=normalizedPackageURL)
 	meta(name="twitter:title", content="Package #{normalizedPackageName} on DUB")
 	meta(name="twitter:description", content=versionInfo["description"].opt!string)
-	meta(name="twitter:image", content=packageInfo["logo"].opt("#{req.rootDir}public/images/default-logo.png"))
+	meta(name="twitter:image", content="/packages/#{normalizedPackageName}/logo")
 
 block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
@@ -43,10 +43,7 @@ block body
 		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
 			a(href="#{req.rootDir}my_packages/#{normalizedPackageName}") Manage this package
 
-		- auto logo = packageInfo["logo"].opt("");
-
-		- if (logo.length)
-			img.packageLogo(src=logo, alt="#{normalizedPackageName} logo")
+		img.packageLogo(src="/packages/#{normalizedPackageName}/logo", alt="#{normalizedPackageName} logo")
 
 		- if(packageName.canFind(":"))
 			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);

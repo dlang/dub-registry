@@ -143,29 +143,12 @@ class DubRegistryWebFrontend {
 	@path("/packages/:packname/logo")
 	void getPackageLogo(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
-		string rev = req.queryString;
-		if (!rev.length) {
-			// get latest revision of file
-			auto logo = m_registry.getPackageLogo(_packname);
-			// make sure we don't redirect to ourself
-			if (logo == req.requestPath.toString)
-				throw new Exception("Invalid package logo");
-			if (logo.length) {
-				res.redirect(logo);
-				return;
-			}
-		}
+		bdata_t rev, logo;
+		logo = m_registry.getPackageLogo(_packname, rev);
 
-		string logo = _packname ~ "@" ~ rev;
-
-		NativePath path = NativePath(logoOutputFolder) ~ NativePath.Segment(logo ~ logoFormat);
-		bool imageExists = existsFile(path);
-
-		auto settings = new HTTPFileServerSettings();
-		settings.maxAge = 365.days;
-
-		if (imageExists) {
-			sendFile(req, res, path, settings);
+		if (logo.length) {
+			// TODO: add caching, etag (using rev), content-control, etc.
+			res.writeBody(logo, "image/png");
 		} else {
 			bool acceptsSVG;
 			// make sure requester actually supports svg, if a custom IDE or tool for fetching images is used it should only get png if it doesn't support svg.
@@ -176,6 +159,7 @@ class DubRegistryWebFrontend {
 					break;
 				}
 			}
+			auto settings = new HTTPFileServerSettings();
 			if (acceptsSVG)
 				sendFile(req, res, NativePath("public/images/default-logo.svg"), settings);
 			else
@@ -645,10 +629,11 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceUserPackage(_user, _packname);
 		const(FilePart) logo = request.files.get("logo");
 		enforceBadRequest(logo != FilePart.init);
-		auto path = NativePath(tempDir()) ~ NativePath.Segment(logo.tempPath.toNativeString.baseName
-					~ logo.filename.name.extension);
-		moveFile(logo.tempPath, path);
-		m_registry.setPackageLogo(_packname, path);
+		auto renamed = NativePath.fromString(logo.tempPath.toString ~ logo.filename.name.extension);
+		moveFile(logo.tempPath, renamed, true);
+		scope (exit)
+			removeFile(renamed);
+		m_registry.setPackageLogo(_packname, renamed);
 
 		redirect("/my_packages/"~_packname);
 	}

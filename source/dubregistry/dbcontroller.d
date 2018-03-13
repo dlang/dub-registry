@@ -177,15 +177,22 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
 	}
 
-	void setPackageLogo(string packname, string revision)
+	void setPackageLogo(string packname, bdata_t png)
 	{
-		if (revision.length)
-			m_packages.update(["name": packname], ["$set": ["logo": "/packages/%s/logo?%s".format(packname, revision)]]);
+		import std.digest.md : md5Of;
+
+		if (png.length)
+		{
+			m_packages.update(["name": packname], ["$set": [
+				"logo": BsonBinData(BsonBinData.Type.generic, png),
+				"logoHash": BsonBinData(BsonBinData.Type.md5, cast(bdata_t)md5Of(png)[].idup)
+			]]);
+		}
 		else
-			m_packages.update(["name": packname], ["$set": ["logo": ""]]);
+			m_packages.update(["name": packname], ["$unset": ["logo": 1, "logoHash": 1]]);
 	}
 
-	string getPackageLogo(string packname)
+	bdata_t getPackageLogo(string packname, out bdata_t rev)
 	{
 		auto bpack = m_packages.findOne(["name": packname]);
 		if (bpack.isNull)
@@ -193,7 +200,10 @@ class DbController {
 		auto logo = bpack.tryIndex("logo");
 		if (logo.isNull)
 			return null;
-		return logo.get.get!string;
+		auto hash = bpack.tryIndex("logoHash");
+		if (!hash.isNull)
+			rev = hash.get.get!BsonBinData.rawData;
+		return logo.get.get!BsonBinData.rawData;
 	}
 
 	void addVersion(string packname, DbPackageVersion ver)
@@ -422,7 +432,7 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
-	@optional string logo;
+	@optional BsonBinData logo;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;

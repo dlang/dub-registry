@@ -24,8 +24,7 @@ block body
 	.inputForm
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
 			h3 Logo
-			- string existing = pack["logo"].get!string;
-			- string logoPath = existing.length ? existing : (req.rootDir ~ "images/default-logo.png");
+			- string logoPath = "/packages/" ~ packageName ~ "/logo";
 			img.packageLogo(src=logoPath)
 			input(name="logo", type="file", accept="image/*", onchange="updateLogoPreview(this)")
 			button(type="submit") Upload

@@ -224,7 +224,6 @@ class DubRegistry {
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
-		nfo["logo"] = pack.logo;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -295,23 +294,21 @@ class DubRegistry {
 
 	void setPackageLogo(string pack_name, NativePath path)
 	{
-		string rev = Clock.currTime.toUnixTime.to!string;
-		// file names may contain @, it's even the standard way to make DPI scaled images when developing for android.
-		auto success = generateLogo(path, pack_name ~ "@" ~ rev, DeleteExisting.yes, DeleteFinish.yes);
-		if (success)
-			m_db.setPackageLogo(pack_name, rev);
+		auto png = generateLogo(path);
+		if (png.length)
+			m_db.setPackageLogo(pack_name, png);
 		else
 			throw new Exception("Failed to generate logo");
 	}
 
 	void unsetPackageLogo(string pack_name)
 	{
-		m_db.setPackageLogo(pack_name, "");
+		m_db.setPackageLogo(pack_name, null);
 	}
 
-	string getPackageLogo(string pack_name)
+	bdata_t getPackageLogo(string pack_name, out bdata_t rev)
 	{
-		return m_db.getPackageLogo(pack_name);
+		return m_db.getPackageLogo(pack_name, rev);
 	}
 
 	void updatePackages()

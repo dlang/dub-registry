@@ -3,7 +3,9 @@ module dubregistry.internal.utils;
 import vibe.core.core;
 import vibe.core.concurrency;
 import vibe.core.file;
+import vibe.core.log;
 import vibe.core.task;
+import vibe.data.bson;
 import vibe.inet.url;
 import vibe.inet.path;
 
@@ -25,55 +27,41 @@ string black(string url)
 	return black(URL(url)).toString();
 }
 
-static immutable string logoOutputFolder = "uploads/logos";
-static immutable string logoFormat = ".png";
-
-/// throw an exception if the files already exist
-alias DeleteExisting = Flag!"deleteExisting";
-/// delete the input file after a successful conversion
-alias DeleteFinish = Flag!"deleteFinish";
-
 /**
  * Params:
  *   file = the file to convert
- *   name = the logo name to put in uploads/logos
- *   deleteExisting = if false, throw an exception if the files already exist
  *   deleteFinish = if true, delete the input file after a successful conversion
- * Returns: true on success, false otherwise
+ * Returns: the PNG stream of the icon or empty on failure
  * Throws: Exception if name is empty or logo already exists and deleteExisting is not true
  */
-bool generateLogo(NativePath file, string name, DeleteExisting deleteExisting = DeleteExisting.no, DeleteFinish deleteFinish = DeleteFinish.yes) @safe
+bdata_t generateLogo(NativePath file) @safe
 {
-	if (!name.length)
-		throw new Exception("name may not be empty");
-	if (existsFile(buildPath(logoOutputFolder, name ~ logoFormat)))
-	{
-		if (deleteExisting)
-			removeFile(buildPath(logoOutputFolder, name ~ logoFormat));
-		else
-			throw new Exception("logo " ~ logoFormat ~ " already exists");
-	}
 	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
 	static assert (isWeaklyIsolated!NativePath);
-	static assert (isWeaklyIsolated!string);
-	auto success = (() @trusted => async(&generateLogoUnsafe, file, name).getResult())();
-	if (existsFile(buildPath(logoOutputFolder, name ~ logoFormat)) && !success)
-		removeFile(buildPath(logoOutputFolder, name ~ logoFormat));
-	if (deleteFinish && success)
-		removeFile(file);
-	return success;
+	return (() @trusted => async(&generateLogoUnsafe, file).getResult())();
 }
 
-private bool generateLogoUnsafe(NativePath file, string name) @safe
+private bdata_t generateLogoUnsafe(NativePath file) @safe
 {
-	bool success;
+	import std.array : appender;
 
-	string base = buildPath(logoOutputFolder, name);
-	string pngOutput = base ~ ".png";
-	auto png = spawnProcess(["convert", file.toNativeString, "-resize", "512x512>", pngOutput]);
+	auto png = pipeProcess(["convert", file.toNativeString, "-resize", "512x512>", "-"]);
 
-	if (png.wait == 0)
-		success = true;
+	if (png.pid.wait != 0)
+	{
+		(() @trusted {
+			foreach (error; png.stderr.byLine)
+				logDebug("convert error: %s", error);
+		})();
+		return bdata_t.init;
+	}
 
-	return success;
+	auto a = appender!(ubyte[])();
+
+	(() @trusted {
+		foreach (chunk; png.stdout.byChunk(4096))
+			a.put(chunk);
+	})();
+
+	return cast(bdata_t)a.data.idup;
 }
