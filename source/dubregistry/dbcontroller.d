@@ -433,6 +433,7 @@ struct DbPackage {
 	BsonObjectID owner;
 	string name;
 	@optional BsonBinData logo;
+	@optional BsonBinData logoHash;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;

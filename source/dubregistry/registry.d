@@ -17,6 +17,7 @@ import std.algorithm : any, canFind, countUntil, filter, map, sort, swap;
 import std.array;
 import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;
+import std.digest.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;
@@ -224,6 +225,7 @@ class DubRegistry {
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
+		nfo["logoHash"] = pack.logoHash.rawData.toHexString;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
