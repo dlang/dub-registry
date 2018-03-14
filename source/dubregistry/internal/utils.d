@@ -56,12 +56,12 @@ private bdata_t generateLogoUnsafe(NativePath file) @safe
 		return bdata_t.init;
 	}
 
-	auto a = appender!(ubyte[])();
+	auto a = appender!(immutable(ubyte)[])();
 
 	(() @trusted {
 		foreach (chunk; png.stdout.byChunk(4096))
 			a.put(chunk);
 	})();
 
-	return cast(bdata_t)a.data.idup;
+	return a.data;
 }

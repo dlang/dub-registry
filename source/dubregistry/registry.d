@@ -13,7 +13,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : any, canFind, countUntil, filter, map, sort, swap;
+import std.algorithm : canFind, countUntil, filter, map, sort, swap;
 import std.array;
 import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;

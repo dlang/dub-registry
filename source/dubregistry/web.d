@@ -627,7 +627,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);
-		const(FilePart) logo = request.files.get("logo");
+		const FilePart logo = request.files.get("logo");
 		enforceBadRequest(logo != FilePart.init);
 		auto renamed = NativePath.fromString(logo.tempPath.toString ~ logo.filename.name.extension);
 		moveFile(logo.tempPath, renamed, true);
