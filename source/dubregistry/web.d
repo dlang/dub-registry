@@ -629,6 +629,8 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceUserPackage(_user, _packname);
 		const FilePart logo = request.files.get("logo");
 		enforceBadRequest(logo != FilePart.init);
+		auto info = getFileInfo(logo.tempPath);
+		enforceBadRequest(info.size < 1024 * 1024, "Logo too big, at most 1 MB");
 		auto renamed = NativePath.fromString(logo.tempPath.toString ~ logo.filename.name.extension);
 		moveFile(logo.tempPath, renamed, true);
 		scope (exit)

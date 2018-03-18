@@ -9,8 +9,10 @@ import vibe.data.bson;
 import vibe.inet.url;
 import vibe.inet.path;
 
-import std.algorithm : any;
+import core.time;
+import std.algorithm : any, among;
 import std.file : tempDir;
+import std.format;
 import std.path;
 import std.process;
 import std.typecons;
@@ -30,31 +32,54 @@ string black(string url)
 /**
  * Params:
  *   file = the file to convert
- *   deleteFinish = if true, delete the input file after a successful conversion
  * Returns: the PNG stream of the icon or empty on failure
- * Throws: Exception if name is empty or logo already exists and deleteExisting is not true
+ * Throws: Exception if input is invalid format, invalid dimension or times out
  */
 bdata_t generateLogo(NativePath file) @safe
 {
 	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
 	static assert (isWeaklyIsolated!NativePath);
-	return (() @trusted => async(&generateLogoUnsafe, file).getResult())();
+	static assert (isWeaklyIsolated!LogoGenerateResponse);
+	auto res = (() @trusted => async(&generateLogoUnsafe, file).getResult())();
+	if (res.error.length)
+		throw new Exception("Failed to generate logo: " ~ res.error);
+	return res.data;
 }
 
-private bdata_t generateLogoUnsafe(NativePath file) @safe
+private struct LogoGenerateResponse
+{
+	bdata_t data;
+	string error;
+}
+
+// need to return * here because stack returned values get destroyed for some reason...
+private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe
 {
 	import std.array : appender;
 
-	auto png = pipeProcess(["convert", file.toNativeString, "-resize", "512x512>", "-"]);
+	// TODO: replace imagemagick command line tools with something like imageformats on dub
 
-	if (png.pid.wait != 0)
-	{
-		(() @trusted {
-			foreach (error; png.stderr.byLine)
-				logDebug("convert error: %s", error);
-		})();
-		return bdata_t.init;
-	}
+	// use [0] to only get first frame in gifs, has no effect on static images.
+	string firstFrame = file.toNativeString ~ "[0]";
+
+	auto sizeInfo = execute(["identify", "-format", "%w %h %m", firstFrame]);
+	if (sizeInfo.status != 0)
+		return new LogoGenerateResponse(null, "Malformed image.");
+	int width, height;
+	string format;
+	uint filled = formattedRead(sizeInfo.output, "%d %d %s", width, height, format);
+	if (filled < 3)
+		return new LogoGenerateResponse(null, "Malformed metadata.");
+	if (!format.among("PNG", "JPEG", "GIF", "BMP"))
+		return new LogoGenerateResponse(null, "Invalid image format, only supporting png, jpeg, gif and bmp.");
+	if (width < 2 || height < 2 || width > 2048 || height > 2048)
+		return new LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
+
+	auto png = pipeProcess(["convert", firstFrame, "-resize", "512x512>", "png:-"]);
+	auto timer = (() @trusted => setTimer(3.seconds, {
+		logDiagnostic("Killing image convert request for file %s", firstFrame);
+		png.pid.kill();
+	}))();
 
 	auto a = appender!(immutable(ubyte)[])();
 
@@ -63,5 +88,18 @@ private bdata_t generateLogoUnsafe(NativePath file) @safe
 			a.put(chunk);
 	})();
 
-	return a.data;
+	auto result = png.pid.wait;
+	timer.stop();
+	if (result != 0)
+	{
+		if (!timer.pending)
+			return new LogoGenerateResponse(null, "Conversion timed out");
+		(() @trusted {
+			foreach (error; png.stderr.byLine)
+				logDiagnostic("convert error: %s", error);
+		})();
+		return new LogoGenerateResponse(null, "An unexpected error occured");
+	}
+
+	return new LogoGenerateResponse(a.data);
 }
