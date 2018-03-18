@@ -189,7 +189,7 @@ class DbController {
 			]]);
 		}
 		else
-			m_packages.update(["name": packname], ["$unset": ["logo": 1, "logoHash": 1]]);
+			m_packages.update(["name": packname], ["$unset": ["logo": 0, "logoHash": 0]]);
 	}
 
 	bdata_t getPackageLogo(string packname, out bdata_t rev)
