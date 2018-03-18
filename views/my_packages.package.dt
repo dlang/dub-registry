@@ -26,7 +26,10 @@ block body
 			h3 Logo
 			- string logoPath = "/packages/" ~ packageName ~ "/logo";
 			img.packageLogo(src=logoPath)
-			input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
+			p.logoError.error
+			label
+				| Select new Logo (at most 1 MiB, optimal size 512x512)
+				input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
 			button(type="submit") Upload
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
 			button.danger(type="submit") Delete
@@ -129,5 +132,18 @@ block body
 		function updateLogoPreview(input) {
 			var f = input.files[0];
 			if (!f) return;
-			document.querySelector("img.packageLogo").src = window.URL.createObjectURL(f);
+			document.querySelector(".logoError").textContent = "";
+			if (f.size > 1024 * 1024)
+				document.querySelector(".logoError").textContent += "Error: Image file size too large! ";
+			if (f.type != "image/png" && f.type != "image/gif" && f.type != "image/jpeg" && f.type != "image/bmp")
+				document.querySelector(".logoError").textContent += "Warning: Invalid image type. ";
+			var img = document.querySelector("img.packageLogo");
+			img.src = window.URL.createObjectURL(f);
+			img.onload = function () {
+				if (img.naturalWidth && img.naturalHeight) {
+					if (img.naturalWidth < 2 || img.naturalHeight < 2 || img.naturalWidth > 2048 || img.naturalHeight > 2048) {
+						document.querySelector(".logoError").textContent += "Invalid image dimenstions, must be between 2x2 and 2048x2048. ";
+					}
+				}
+			};
 		}
