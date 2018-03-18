@@ -26,7 +26,7 @@ block body
 			h3 Logo
 			- string logoPath = "/packages/" ~ packageName ~ "/logo";
 			img.packageLogo(src=logoPath)
-			input(name="logo", type="file", accept="image/*", onchange="updateLogoPreview(this)")
+			input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
 			button(type="submit") Upload
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
 			button.danger(type="submit") Delete
