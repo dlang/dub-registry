@@ -75,11 +75,7 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe
 	if (width < 2 || height < 2 || width > 2048 || height > 2048)
 		return new LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
 
-	auto png = pipeProcess(["convert", firstFrame, "-resize", "512x512>", "png:-"]);
-	auto timer = (() @trusted => setTimer(3.seconds, {
-		logDiagnostic("Killing image convert request for file %s", firstFrame);
-		png.pid.kill();
-	}))();
+	auto png = pipeProcess(["timeout", "3", "convert", firstFrame, "-resize", "512x512>", "png:-"]);
 
 	auto a = appender!(immutable(ubyte)[])();
 
@@ -89,10 +85,9 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe
 	})();
 
 	auto result = png.pid.wait;
-	timer.stop();
 	if (result != 0)
 	{
-		if (!timer.pending)
+		if (result == 126)
 			return new LogoGenerateResponse(null, "Conversion timed out");
 		(() @trusted {
 			foreach (error; png.stderr.byLine)
