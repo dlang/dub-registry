@@ -30,7 +30,7 @@ block body
 			label
 				| Select new Logo (max. 1 MiB, optimal size 512x512)
 				input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
-			button(type="submit") Upload
+			button#logo-upload-button(type="submit") Upload
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
 			button.danger(type="submit") Delete
 
@@ -129,21 +129,30 @@ block body
 			button.danger(type="submit") Remove this package
 
 	:javascript
+		var logoUploadButton = document.getElementById("logo-upload-button");
+		logoUploadButton.disabled = true;
 		function updateLogoPreview(input) {
 			var f = input.files[0];
 			if (!f) return;
+			logoUploadButton.disabled = true;
+			var error = false;
 			document.querySelector(".logoError").textContent = "";
 			if (f.type != "image/png" && f.type != "image/gif" && f.type != "image/jpeg" && f.type != "image/bmp")
 				document.querySelector(".logoError").textContent += "Warning: Invalid image type. ";
-			else if (f.size > 1024 * 1024)
+			else if (f.size > 1024 * 1024) {
 				document.querySelector(".logoError").textContent += "Error: Image file size too large! ";
+				error = true;
+			}
 			var img = document.querySelector("img.packageLogo");
 			img.src = window.URL.createObjectURL(f);
 			img.onload = function () {
 				if (img.naturalWidth && img.naturalHeight) {
 					if (img.naturalWidth < 2 || img.naturalHeight < 2 || img.naturalWidth > 2048 || img.naturalHeight > 2048) {
 						document.querySelector(".logoError").textContent += "Invalid image dimenstions, must be between 2x2 and 2048x2048. ";
+						error = true;
 					}
+					if (!error)
+						logoUploadButton.disabled = false;
 				}
 			};
 		}
