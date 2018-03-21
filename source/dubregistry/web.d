@@ -6,13 +6,14 @@
 module dubregistry.web;
 
 import dubregistry.dbcontroller;
+import dubregistry.internal.utils;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import dub.semver;
-import std.algorithm : sort, startsWith;
+import std.algorithm : sort, startsWith, splitter;
 import std.array;
 import std.file;
 import std.path;
@@ -137,6 +138,33 @@ class DubRegistryWebFrontend {
 	void getPackage(HTTPServerRequest req, HTTPServerResponse res, string _packname)
 	{
 		getPackageVersion(req, res, _packname, null);
+	}
+
+	@path("/packages/:packname/logo")
+	void getPackageLogo(HTTPServerRequest req, HTTPServerResponse res, string _packname)
+	{
+		bdata_t rev, logo;
+		logo = m_registry.getPackageLogo(_packname, rev);
+
+		if (logo.length) {
+			// TODO: add caching, etag (using rev), content-control, etc.
+			res.writeBody(logo, "image/png");
+		} else {
+			bool acceptsSVG;
+			// make sure requester actually supports svg, if a custom IDE or tool for fetching images is used it should only get png if it doesn't support svg.
+			// if requester is an IDE sending Accept: */*, but not accepting SVG it's their own fault.
+			foreach (accept; req.headers.get("Accept", "").splitter(",")) {
+				if (accept.startsWith("image/*", "image/svg", "*/*", "*/svg")) {
+					acceptsSVG = true;
+					break;
+				}
+			}
+			auto settings = new HTTPFileServerSettings();
+			if (acceptsSVG)
+				sendFile(req, res, NativePath("public/images/default-logo.svg"), settings);
+			else
+				sendFile(req, res, NativePath("public/images/default-logo.png"), settings);
+		}
 	}
 
 	@path("/packages/:packname/:version")
@@ -591,6 +619,32 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		rep.owner = owner;
 		rep.project = project;
 		m_registry.setPackageRepository(_packname, rep);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_logo")
+	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		const FilePart logo = request.files.get("logo");
+		enforceBadRequest(logo != FilePart.init);
+		auto info = getFileInfo(logo.tempPath);
+		enforceBadRequest(info.size < 1024 * 1024, "Logo too big, at most 1 MB");
+		auto renamed = NativePath.fromString(logo.tempPath.toString ~ logo.filename.name.extension);
+		moveFile(logo.tempPath, renamed, true);
+		scope (exit)
+			removeFile(renamed);
+		m_registry.setPackageLogo(_packname, renamed);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/delete_logo")
+	void postDeleteLogo(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.unsetPackageLogo(_packname);
 
 		redirect("/my_packages/"~_packname);
 	}

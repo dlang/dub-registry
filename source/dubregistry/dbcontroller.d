@@ -177,6 +177,35 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
 	}
 
+	void setPackageLogo(string packname, bdata_t png)
+	{
+		import std.digest.md : md5Of;
+
+		if (png.length)
+		{
+			m_packages.update(["name": packname], ["$set": [
+				"logo": BsonBinData(BsonBinData.Type.generic, png),
+				"logoHash": BsonBinData(BsonBinData.Type.md5, cast(bdata_t)md5Of(png)[].idup)
+			]]);
+		}
+		else
+			m_packages.update(["name": packname], ["$unset": ["logo": 0, "logoHash": 0]]);
+	}
+
+	bdata_t getPackageLogo(string packname, out bdata_t rev)
+	{
+		auto bpack = m_packages.findOne(["name": packname]);
+		if (bpack.isNull)
+			return null;
+		auto logo = bpack.tryIndex("logo");
+		if (logo.isNull)
+			return null;
+		auto hash = bpack.tryIndex("logoHash");
+		if (!hash.isNull)
+			rev = hash.get.get!BsonBinData.rawData;
+		return logo.get.get!BsonBinData.rawData;
+	}
+
 	void addVersion(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
@@ -403,6 +432,8 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
+	@optional BsonBinData logo;
+	@optional BsonBinData logoHash;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;
