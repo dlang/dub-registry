@@ -13,7 +13,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : canFind, countUntil, filter, map, sort, swap;
+import std.algorithm : canFind, countUntil, filter, map, sort, swap, equal, startsWith, endsWith;
 import std.array;
 import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;
@@ -21,8 +21,9 @@ import std.digest.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;
-import std.string : format, startsWith, endsWith, toLower, toUpper;
+import std.string : format, toLower, representation;
 import std.typecons;
+import std.uni : asUpperCase;
 import userman.db.controller;
 import vibe.core.core;
 import vibe.core.log;
@@ -412,20 +413,22 @@ class DubRegistry {
 			auto files = rep.listFiles(reference.sha, InetPath("/"));
 			// check exactly for readme.me
 			ptrdiff_t readme;
-			readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper == "README.MD");
+			readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README.MD"));
 			if (readme == -1) {
 				// check exactly for readme
-				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper == "README");
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README"));
 			}
 			if (readme == -1) {
 				// check for all other readmes such as README.txt, README.jp.md, etc.
-				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper.startsWith("README"));
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.startsWith("README"));
 			}
 
 			if (readme != -1) {
 				rep.readFile(reference.sha, files[readme].path, (scope input) {
 					dbver.readme = input.readAllUTF8();
-					dbver.readmeMarkdown = files[readme].path.head.name.toLower.endsWith(".md");
+					string ext = files[readme].path.head.name;
+					// endsWith doesn't like to work with asLowerCase
+					dbver.readmeMarkdown = ext.endsWith(".md") || ext.endsWith(".MD") || ext.endsWith(".Md") || ext.endsWith(".mD");
 				});
 			} else logDiagnostic("No README.md found for %s %s", packname, ver);
 
