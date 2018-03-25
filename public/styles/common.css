@@ -163,12 +163,88 @@ h3 {
 	color: #505692;
 }
 
-/*section.repositoryReadme {
-	margin-top: 30pt;
+.subtabsHeader {
+	margin-top: 1em;
+	border-bottom: 1px #98312A solid;
+	padding: 0 10pt;
+	white-space: nowrap;
+	overflow-x: auto;
+	overflow-y: visible;
+}
+
+.subtabsHeader > a.tab {
+	text-decoration: none;
+	color: white;
+}
+
+.subtabsHeader > .tab {
+	display: inline-block;
+	padding: 10pt 15pt;
+	background-color: #B03931;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	margin-right: 4pt;
+}
+
+.subtabsHeader > .tab.active, .subtabsHeader > .tab:hover, .subtabsHeader > .tab:focus {
+	background-color: #98312A;
+}
+
+.subtabsHeader > .tab.external::after {
+	content: " \f08e"; /* link-ext */
+	font-family: fontello;
+}
+
+.subtabsHeader > .tab::after {
+	padding-left: 0.5em;
+	font-family: "fontello";
+}
+
+.subtabsHeader + div.repositoryReadme {
+	margin-top: 0;
 	padding: 10pt;
 	background-color: #F8F8F8;
 	border: 1px solid #ddd;
-}*/
+	border-top: none;
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+}
+
+@media (max-width: 600px) {
+	.subtabsHeader > .tab {
+		display: block;
+		padding: 1em;
+		border-radius: 0;
+		margin-right: 0;
+	}
+
+	.subtabsHeader {
+		overflow: inherit;
+		border: none;
+		padding: 0;
+	}
+
+	.subtabsHeader > .tab:first-child {
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
+	}
+
+	.subtabsHeader > .tab:last-child {
+		border-bottom-left-radius: 4px;
+		border-bottom-right-radius: 4px;
+	}
+
+	.subtabsHeader > .tab:not(.active) {
+		border: 1px #98312A solid;
+	}
+
+	.subtabsHeader + div.repositoryReadme {
+		border-top-left-radius: 4px;
+		border-top-right-radius: 4px;
+		margin-top: 10pt;
+		border-top: 1px solid #ddd;
+	}
+}
 
 #content ul.pageNav.perPage:before {
 	content: "Per Page: ";
@@ -216,14 +292,26 @@ div#content {
 /********************/
 
 button {
-    color: #333;
-    background: white;
-    border: 1px solid #CCC;
-    border-radius: 4px;
-    padding: 0.3em 0.6em;
-    display: inline-block;
-    text-decoration: none;
-    cursor: pointer;
+	color: #333;
+	background: white;
+	border: 1px solid #CCC;
+	border-radius: 4px;
+	padding: 0.3em 0.6em;
+	display: inline-block;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+button.primary {
+	color: white;
+	font-weight: bold;
+	background: #B03931;
+	border-color: #98312A;
+}
+
+button.primary:hover, button.primary:focus {
+	background: #742620;
+	border-color: #943029;
 }
 
 /*********************/
@@ -231,17 +319,17 @@ button {
 /*********************/
 
 .clipboard-pkg {
-    padding-top: 5px;
+	padding-top: 5px;
 }
 
 .clipboard-pkg-title {
-    font-weight: bold;
-    display: inline-block;
-    width: 60px;
+	font-weight: bold;
+	display: inline-block;
+	width: 60px;
 }
 
 .clipboard-pkg-row input {
-    width: 280px;
+	width: 280px;
 }
 
 /********************/
@@ -249,18 +337,18 @@ button {
 /********************/
 
 #copy-shields div {
-    padding-left: 10px;
+	padding-left: 10px;
 }
 
 #copy-shields .img-wrapper {
-    width: 140px;
-    display: inline-block;
-    padding-left: 5px;
-    vertical-align: middle;
+	width: 140px;
+	display: inline-block;
+	padding-left: 5px;
+	vertical-align: middle;
 }
 
 #copy-shields input {
-    width: 280px;
+	width: 280px;
 }
 
 @media only screen and (min-width: 54em) {
@@ -310,7 +398,7 @@ div.packageInfo > *:first-child {
 
 div.packageInfo > ul {
 	margin-left: 0 !important;
-	margin-bottom: 1em;
+	margin-bottom: 1.5em;
 }
 
 div.packageInfo > * {
@@ -367,6 +455,45 @@ div.packageInfo > dl > dt:not(:first-child) {
 div.packageInfo > dl > dd {
 	padding: 0.25em 0 0.25em 0.5em;
 	margin: 0;
+	margin-bottom: 0.2em;
+}
+
+div.packageInfo > dl > dd > ul.authors {
+	margin-left: 0 !important;
+	padding: 0;
+}
+
+div.packageInfo > dl > dd > ul.authors > li {
+	margin-bottom: 4pt;
+}
+
+div.packageInfo > .actions {
+	margin-bottom: 2em;
+}
+
+div.packageInfo > .actions > .detail {
+	color: rgba(0, 0, 0, 0.54);
+	text-align: center;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+div.packageInfo > .actions > .detail:hover {
+	text-overflow: unset;
+	overflow: visible;
+	white-space: normal;
+}
+
+div.packageInfo > .actions > a > button {
+	padding: 0.7em 0;
+	width: 100%;
+	margin-bottom: 5pt;
+}
+
+div.packageInfo > .actions > a + p.detail {
+	margin-top: 0;
+	line-height: 1em;
 }
 
 #repository a:before {

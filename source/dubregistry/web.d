@@ -251,7 +251,10 @@ class DubRegistryWebFrontend {
 			auto packageName = pname;
 			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, urlFilter, registry);
+			//auto sampleURLs = ["test1", "test2"]; /* TODO: actually make this array exist and embed samples generated from repository */
+			string[] sampleURLs;
+			auto activeTab = req.query.get("tab", "info");
+			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, sampleURLs, urlFilter, registry, activeTab);
 		}
 	}
 

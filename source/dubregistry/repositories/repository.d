@@ -46,6 +46,7 @@ interface Repository {
 	RefInfo[] getBranches();
 	/// Get basic repository information, throws FileNotFoundException when the repo no longer exists.
 	RepositoryInfo getInfo();
+	RepositoryFile[] listFiles(string commit_sha, InetPath path);
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader);
 	string getDownloadUrl(string tag_or_branch);
 	void download(string tag_or_branch, scope void delegate(scope InputStream) @safe del);
@@ -67,6 +68,23 @@ struct RefInfo {
 		this.sha = sha;
 		this.date = BsonDate(date);
 	}
+}
+
+struct RepositoryFile {
+	enum Type {
+		directory,
+		file
+		// submodule
+	}
+
+	/// A commit where this file/directory has the specified properties, not neccessarily the last change.
+	string commitSha;
+	/// Absolute path of the file in the repository.
+	InetPath path;
+	/// Size of the file or size_t.max if unknown.
+	size_t size = size_t.max;
+	/// Type of the entry (directory or file)
+	Type type;
 }
 
 package Json readJson(string url, bool sanitize = false, bool cache_priority = false)

@@ -454,6 +454,8 @@ struct DbPackageVersion {
 	@optional string commitID;
 	Json info;
 	@optional string readme;
+	@optional bool readmeMarkdown;
+	@optional string docFolder;
 }
 
 struct DbPackageDownload {

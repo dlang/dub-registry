@@ -80,6 +80,31 @@ class BitbucketRepository : Repository {
 		return ret;
 	}
 
+	RepositoryFile[] listFiles(string commit_sha, InetPath path)
+	{
+		assert(path.absolute, "Passed relative path to listFiles.");
+		auto url = "https://bitbucket.org/api/2.0/repositories/"~m_owner~"/"~m_project~"/src/"~commit_sha~path.toString()~"?pagelen=100";
+		auto ls = readJson(url)["values"].get!(Json[]);
+		RepositoryFile[] ret;
+		ret.reserve(ls.length);
+		foreach (entry; ls) {
+			string type = entry["type"].get!string;
+			RepositoryFile file;
+			if (type == "commit_directory") {
+				file.type = RepositoryFile.Type.directory;
+			}
+			else if (type == "commit_file") {
+				file.type = RepositoryFile.Type.file;
+				file.size = entry["size"].get!size_t;
+			}
+			else continue;
+			file.commitSha = entry["commit"]["hash"].get!string;
+			file.path = InetPath("/" ~ entry["path"].get!string);
+			ret ~= file;
+		}
+		return ret;
+	}
+
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");

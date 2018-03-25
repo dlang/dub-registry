@@ -21,7 +21,7 @@ import std.digest.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;
-import std.string : format, startsWith, toLower;
+import std.string : format, startsWith, endsWith, toLower, toUpper;
 import std.typecons;
 import userman.db.controller;
 import vibe.core.core;
@@ -409,8 +409,29 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		try {
-			rep.readFile(reference.sha, InetPath("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
-		} catch (Exception e) { logDiagnostic("No README.md found for %s %s", packname, ver); }
+			auto files = rep.listFiles(reference.sha, InetPath("/"));
+			// check exactly for readme.me
+			ptrdiff_t readme;
+			readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper == "README.MD");
+			if (readme == -1) {
+				// check exactly for readme
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper == "README");
+			}
+			if (readme == -1) {
+				// check for all other readmes such as README.txt, README.jp.md, etc.
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.toUpper.startsWith("README"));
+			}
+
+			if (readme != -1) {
+				rep.readFile(reference.sha, files[readme].path, (scope input) {
+					dbver.readme = input.readAllUTF8();
+					dbver.readmeMarkdown = files[readme].path.head.name.toLower.endsWith(".md");
+				});
+			} else logDiagnostic("No README.md found for %s %s", packname, ver);
+
+			// TODO: load in example(s), sample(s), test(s) and docs for the view package page here.
+			// possibly also parsing the README.md file for a documentation link
+		} catch (Exception e) { logDiagnostic("Failed to read README.md for %s %s: %s", packname, ver, e.msg); }
 
 		if (m_db.hasVersion(packname, ver)) {
 			logDebug("Updating existing version info.");

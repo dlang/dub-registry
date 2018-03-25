@@ -95,6 +95,7 @@ h2 {
 .icon-category-crypto:before { content: '\e82b'; }
 .icon-search:before { content: '\f002'; }
 .icon-category-scientific:before { content: '\f016'; }
+.icon-link-ext:before { content: '\f08e'; }
 .icon-category-binding:before { content: '\f097'; }
 .icon-github-circled:before { content: '\f09b'; }
 .icon-menu:before { content: '\f0c9'; }
