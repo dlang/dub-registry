@@ -516,12 +516,11 @@ class DubRegistry {
 	/// recompute all scores based on cached stats, e.g. after updating algorithm
 	private void recomputeScores(DbStatDistributions dists)
 	{
-		foreach (packname; this.availablePackages)
-		{
-			const pack = m_db.getPackage(packname);
-			auto stats = m_db.getPackageStats(packname);
+		foreach (pack; this.getPackageDump()) {
+			auto stats = pack.stats;
 			stats.score = computeScore(stats, dists.downloads, dists.repos[pack.repository.kind]);
-			m_db.updatePackageStats(pack._id, stats);
+			if (stats.score != pack.stats.score)
+				m_db.updatePackageStats(pack._id, stats);
 		}
 	}
 }
