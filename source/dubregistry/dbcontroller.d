@@ -113,23 +113,24 @@ class DbController {
 
 	DbPackage getPackage(string packname)
 	{
-		auto bpack = m_packages.findOne(["name": packname]);
-		enforce!RecordNotFound(!bpack.isNull(), "Unknown package name.");
-		return deserializeBson!DbPackage(bpack);
+		auto pack = m_packages.findOne!DbPackage(["name": packname]);
+		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
+		return pack;
 	}
 
 	BsonObjectID getPackageID(string packname)
 	{
-		auto bpack = m_packages.findOne(["name": packname], ["_id": 1]);
-		enforce(!bpack.isNull(), "Unknown package name.");
-		return bpack["_id"].get!BsonObjectID;
+		static struct PID { BsonObjectID _id; }
+		auto pid = m_packages.findOne!PID(["name": packname], ["_id": 1]);
+		enforce(!pid.isNull(), "Unknown package name.");
+		return pid._id;
 	}
 
 	DbPackage getPackage(BsonObjectID id)
 	{
-		auto bpack = m_packages.findOne(["_id": id]);
-		enforce!RecordNotFound(!bpack.isNull(), "Unknown package ID.");
-		return deserializeBson!DbPackage(bpack);
+		auto pack = m_packages.findOne!DbPackage(["_id": id]);
+		enforce!RecordNotFound(!pack.isNull(), "Unknown package ID.");
+		return pack;
 	}
 
 	auto getAllPackages()
@@ -144,7 +145,7 @@ class DbController {
 
 	auto getPackageDump()
 	{
-		return m_packages.find(Bson.emptyObject).map!(p => p.deserializeBson!DbPackage);
+		return m_packages.find!DbPackage(Bson.emptyObject);
 	}
 
 	auto getUserPackages(BsonObjectID user_id)
@@ -154,7 +155,9 @@ class DbController {
 
 	bool isUserPackage(BsonObjectID user_id, string package_name)
 	{
-		return !m_packages.findOne(["owner": Bson(user_id), "name": Bson(package_name)]).isNull();
+		static struct PO { BsonObjectID owner; }
+		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1]);
+		return !p.isNull && p.owner == user_id;
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -309,10 +312,11 @@ class DbController {
 
 	DbPackageStats getPackageStats(string packname)
 	{
-		auto pack = m_packages.findOne(["name": Bson(packname)], ["stats": true]);
+		static struct PS { DbPackageStats stats; }
+		auto pack = m_packages.findOne!PS(["name": Bson(packname)], ["stats": true]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
-		logDebug("getPackageStats(%s) %s", packname, pack["stats"]);
-		return pack["stats"].deserializeBson!DbPackageStats;
+		logDebug("getPackageStats(%s) %s", packname, pack.stats);
+		return pack.stats;
 	}
 
 	void updatePackageStats(BsonObjectID packId, ref DbPackageStats stats)
