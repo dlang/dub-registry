@@ -219,13 +219,13 @@ class DubRegistry {
 
 		PackageInfo ret;
 		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+		ret.logo = pack.logo;
 
 		Json nfo = Json.emptyObject;
 		nfo["id"] = pack._id.toString();
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
-		nfo["logoHash"] = pack.logoHash.rawData.toHexString;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -593,6 +593,7 @@ struct PackageVersionInfo {
 
 struct PackageInfo {
 	PackageVersionInfo[] versions;
+	BsonObjectID logo;
 	Json info; /// JSON package information, as reported to the client
 }
 

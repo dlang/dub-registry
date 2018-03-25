@@ -21,6 +21,7 @@ class DbController {
 	private {
 		MongoCollection m_packages;
 		MongoCollection m_downloads;
+		MongoCollection m_files;
 	}
 
 	private alias bson = serializeToBson;
@@ -30,6 +31,7 @@ class DbController {
 		auto db = connectMongoDB("127.0.0.1").getDatabase(dbname);
 		m_packages = db["packages"];
 		m_downloads = db["downloads"];
+		m_files = db["files"];
 
 		//
 		// migrations:
@@ -70,6 +72,9 @@ class DbController {
 		// default initialize missing scores with zero
 		float score = 0;
 		m_packages.update(["stats.score": ["$exists": false]], ["$set": ["stats.score": score]], UpdateFlags.multiUpdate);
+
+		// remove old logo fields
+		m_packages.update(["logoHash": ["$exists": true]], ["$unset": ["logo": 0, "logoHash": 0]], UpdateFlags.multiUpdate);
 
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
@@ -190,31 +195,42 @@ class DbController {
 
 	void setPackageLogo(string packname, bdata_t png)
 	{
-		import std.digest.md : md5Of;
+		Bson update;
 
-		if (png.length)
-		{
-			m_packages.update(["name": packname], ["$set": [
-				"logo": BsonBinData(BsonBinData.Type.generic, png),
-				"logoHash": BsonBinData(BsonBinData.Type.md5, cast(bdata_t)md5Of(png)[].idup)
-			]]);
+		if (png.length) {
+			auto id = BsonObjectID.generate();
+			m_files.insert([
+				"_id": Bson(id),
+				"data": Bson(BsonBinData(BsonBinData.Type.generic, png))
+			]);
+
+			update = serializeToBson(["$set": ["logo": id]]);
+		} else {
+			update = serializeToBson(["$unset": ["logo": 0]]);
 		}
-		else
-			m_packages.update(["name": packname], ["$unset": ["logo": 0, "logoHash": 0]]);
+
+		// remove existing logo file
+		auto l = m_packages.findOne(["name": packname], ["logo": 1]);
+		if (!l.isNull && !l.tryIndex("logo").isNull)
+			m_files.remove(["_id": l["logo"]]);
+
+		// set the new logo
+		m_packages.update(["name": packname], update);
 	}
 
 	bdata_t getPackageLogo(string packname, out bdata_t rev)
 	{
-		auto bpack = m_packages.findOne(["name": packname]);
-		if (bpack.isNull)
-			return null;
-		auto logo = bpack.tryIndex("logo");
-		if (logo.isNull)
-			return null;
-		auto hash = bpack.tryIndex("logoHash");
-		if (!hash.isNull)
-			rev = hash.get.get!BsonBinData.rawData;
-		return logo.get.get!BsonBinData.rawData;
+		auto bpack = m_packages.findOne(["name": packname], ["logo": 1]);
+		if (bpack.isNull) return null;
+
+		auto id = bpack.tryIndex("logo");
+		if (id.isNull) return null;
+
+		auto data = m_files.findOne!DbPackageFile(["_id": id.get]);
+		if (data.isNull()) return null;
+
+		rev = (cast(ubyte[])id.get.get!BsonObjectID).idup;
+		return data.get.data.rawData;
 	}
 
 	void addVersion(string packname, DbPackageVersion ver)
@@ -444,20 +460,24 @@ struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
-	@optional BsonBinData logo;
-	@optional BsonBinData logoHash;
 	DbRepository repository;
 	DbPackageVersion[] versions;
 	DbPackageStats stats;
 	string[] errors;
 	string[] categories;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
+	@optional BsonObjectID logo; // reference to m_files
 }
 
 struct DbRepository {
 	string kind;
 	string owner;
 	string project;
+}
+
+struct DbPackageFile {
+	BsonObjectID _id;
+	BsonBinData data;
 }
 
 struct DbPackageVersion {
