@@ -251,7 +251,7 @@ class DubRegistryWebFrontend {
 			auto packageName = pname;
 			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, urlFilter, registry);
+			render!("view_package.dt", packageName, user, packinfo, versionInfo, readmeContents, urlFilter, registry);
 		}
 	}
 
@@ -623,7 +623,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname);
 	}
 
-	@auth @path("/my_packages/:packname/set_logo")
+	@auth @path("/my_packages/:packname/set_logo") @errorDisplay!getMyPackagesPackage
 	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);

@@ -9,11 +9,12 @@ block title
 	- import dubregistry.viewutils;
 	- import userman.controller;
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
+	- auto packageInfo = packinfo.info;
 
 	- auto normalizedPackageName = packageName.splitter(':').front;
 	- auto normalizedPackageURL = (req.tls ? "https://" : "http://") ~ req.host ~ "/packages/" ~ normalizedPackageName;
 
-	- string logoURL = "/packages/" ~ normalizedPackageName ~ "/logo?s=" ~ packageInfo["logoHash"].get!string;
+	- string logoURL = "/packages/" ~ normalizedPackageName ~ "/logo?s=" ~ packinfo.logo.toString;
 
 	// facebook & co.
 	meta(property="og:url", content="")
@@ -45,7 +46,7 @@ block body
 		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
 			a(href="#{req.rootDir}my_packages/#{normalizedPackageName}") Manage this package
 
-		- if (packageInfo["logoHash"].get!string.length)
+		- if (packinfo.logo != BsonObjectID.init)
 			img.packageLogo(src=logoURL, alt="#{normalizedPackageName} logo")
 
 		- if(packageName.canFind(":"))
