@@ -213,6 +213,21 @@ class DubRegistry {
 		return getPackageInfo(pack, include_errors);
 	}
 
+	/** Gets information about multiple packages at once.
+
+		The order of the returned packages is undefined and some of the package
+		names may not result in a `PackageInfo` to be returned at all, if no
+		package with the given name exists, so that the returned range needs
+		to be manually matched against the list of names.
+
+		This function requires only a single query to the database.
+	*/
+	auto getPackageInfos(scope string[] pack_names, bool include_errors = false)
+	{
+		return m_db.getPackages(pack_names)
+			.map!(pack => getPackageInfo(pack, include_errors));
+	}
+
 	PackageInfo getPackageInfo(DbPackage pack, bool include_errors)
 	{
 		auto rep = getRepository(pack.repository);
