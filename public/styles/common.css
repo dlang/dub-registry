@@ -640,3 +640,122 @@ div.packageInfo > .actions > a + p.detail {
 		border-bottom: 1px solid rgba(0,0,0,0.1);
 	}
 }
+
+/**
+Front page package item listing for
+responsive "Most popular" / "Recently added" / "Newly added" section
+*/
+
+#front-packages {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+
+@media (min-width: 750px) {
+	#front-packages > div {
+		padding: 4px;
+	}
+	#front-packages .front-page-package-list {
+		width: 350px;
+	}
+}
+
+#front-packages .front-page-package-list {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+@media (max-width: 750px) {
+	#front-packages .front-page-package-list .dub-package-card {
+		width: 100%;
+	}
+	#front-packages > div {
+		max-width: 95%;
+	}
+}
+
+#top-scored > a, #top-added > a, #top-updated > a {
+	font-size: 1.4em;
+	text-decoration: none;
+	padding-bottom: 10px;
+	display: block;
+}
+
+/**
+Individual DUB package CSS definitions
+*/
+
+#front-packages .dub-package-card {
+	border-radius: 5px;
+	box-shadow: 0 2px 5px #d7d3d1;
+	padding: 14px;
+	margin-top: 20px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#front-packages .dub-package-logo,
+#front-packages .dub-package-name,
+#front-packages .dub-package-version {
+	display: inline-block;
+}
+#front-packages .dub-package-name {
+	font-size: 1.3em;
+}
+#front-packages .dub-package-version {
+	background-color: #B03931;
+	border-radius: 2px;
+	color: white;
+	font-size: 0.8em;
+	padding: 2px;
+	padding-left: 4px;
+	padding-right: 4px;
+	margin-left: 5px;
+}
+
+#front-packages .dub-package-logo {
+	float: left;
+	padding-right: 10px;
+	max-height: 80px;
+	max-width: 80px;
+}
+#front-packages .dub-package-logo img {
+	max-width: 64px;
+	max-height: 64px;
+}
+
+#front-packages .dub-package-second-line {
+	font-size: 0.8em;
+	color: grey;
+	border-top: 1px solid #80808075;
+    margin-top: 5px;
+    padding-top: 5px;
+}
+
+#front-packages .dub-package-desc {
+	height: 4.3em;
+	overflow: hidden;
+}
+
+#front-packages .dub-package-date {
+	display: inline-block;
+}
+#front-packages .dub-package-author {
+	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 150px;
+	font-size: 0.8em;
+	color: grey;
+}
+
+#top-updated .dub-package-author,
+#top-added .dub-package-author {
+	float: right;
+}
+#front-view-all-btn {
+	text-align: right;
+}

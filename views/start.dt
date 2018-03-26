@@ -1,0 +1,82 @@
+extends layout
+
+block title
+	- import dubregistry.viewutils;
+	- import dubregistry.web;
+	- import vibe.data.json;
+	- import std.algorithm.iteration : map;
+	- auto title = "Find, Use and Share DUB Packages";
+	script(type="application/javascript", src="scripts/home.js")
+	script(type="application/javascript").
+		window.categories = #{serializeToJson(info.categories).toString()};
+
+block body
+	- auto mirror = req.params.get("mirror", "");
+	- if (mirror.length)
+		p This is a mirror of #[a(href=mirror)= mirror].
+	- else
+		p Welcome to DUB, the D package registry.
+
+	- string makeHomeURL(string sort) {
+	-   return "?sort=" ~ sort;
+	- }
+
+	p Total #[a(href="?") #{info.packageCount} packages] found.
+
+		form#category-form(method="GET", action="")
+			p Select category:
+				select#category(name="category", size="1", onChange='document.getElementById("category-form").submit()')
+					- void outputCat(Category cat)
+						- if (!cat)
+							option(value="") All packages
+						- else
+							option(value=cat.name)= cat.indentedDescription
+						- if (!cat || cat.subCategories.length)
+							- foreach (c; cat ? cat.subCategories : info.categories)
+								- outputCat(c);
+					- outputCat(null);
+				button#category-submit(type="submit") Update
+		#category-dynamic-form(style="display: none")
+			p Select category:
+				- foreach (i; 0 .. 6)
+					select(id="categories_#{i}", name="categories_#{i}", onChange='setCategoryFromSelector(#{i})')
+			:javascript
+				setupCategoryForm();
+
+		- void listPackages(P, F)(P packages, F secondLine)
+			ul.front-page-package-list
+				- foreach (pl; packages)
+					- if( pl["versions"].length )
+						- auto vidx = getBestVersionIndex(pl["versions"].get!(Json[]).map!(v => v["version"].opt!string));
+						- auto p = pl["versions"][vidx];
+						- auto desc = p["description"].opt!string;
+						- auto ver = p["version"].opt!string();
+						- auto secondDesc = secondLine(p);
+						li.dub-package-card
+							.dub-package-logo
+								img(src='packages/#{pl["name"].get!string}/logo')
+							.dub-package-name
+								a(href='packages/#{pl["name"].get!string}')= pl["name"].get!string
+							.dub-package-version
+								| #{ ver.length <= 20 ? ver : ver[0 .. 18] ~ "&hellip;" }
+							.dub-package-desc
+								|= desc
+							.dub-package-author
+								|= secondDesc
+
+		#front-packages
+			#top-scored
+				a(href=makeHomeURL("score")) Most popular
+				- listPackages(topScored, (Json p) => p["authors"].type == Json.Type.array ? "by " ~ p["authors"][0].get!string : "");
+			#top-updated
+				a(href=makeHomeURL("updated")) Recently updated
+				- listPackages(topUpdated, (Json p) => "updated " ~ formatFuzzyDate(p["date"]));
+			#top-added
+				a(href=makeHomeURL("added")) Newly added
+				- listPackages(topAdded, (Json p) => "created " ~ formatFuzzyDate(p["date"]));
+
+	- if (!mirror.length)
+		- if (req.session)
+			p: a(href="my_packages") Manage my packages
+		- else
+			p Please #[a(href="login?redirect=/my_packages") log in] to manage your own packages.
