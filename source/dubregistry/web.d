@@ -623,7 +623,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname);
 	}
 
-	@auth @path("/my_packages/:packname/set_logo")
+	@auth @path("/my_packages/:packname/set_logo") @errorDisplay!getMyPackagesPackage
 	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);
