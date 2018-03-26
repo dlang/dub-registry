@@ -135,7 +135,10 @@ class PersistentScheduler {
 		catch (Exception e) assert(false, "Failed to get current time: "~e.msg);
 
 		if (pevt.next <= now) fireEvent(name, now);
-		else pevt.timer.rearm(pevt.next - now);
+		else {
+			scope (failure) assert(false);
+			pevt.timer.rearm(pevt.next - now);
+		}
 	}
 
 	private void fireEvent(string name, SysTime now)
@@ -172,7 +175,10 @@ class PersistentScheduler {
 		}
 
 		if (pevt.kind == EventKind.singular) m_events.remove(name);
-		else pevt.timer.rearm(pevt.next - now);
+		else {
+			scope (failure) assert(false);
+			pevt.timer.rearm(pevt.next - now);
+		}
 
 		try writePersistentFile();
 		catch (Exception e) {

@@ -59,7 +59,7 @@ final class PackageWorkQueue {
 		// watchdog for update task
 		if (m_task.running && Clock.currTime(UTC()) - m_lastSignOfLifeOfUpdateTask > 2.hours) {
 			logError("Update task has hung. Trying to interrupt.");
-			m_task.interrupt();
+			() @trusted { m_task.interrupt(); } ();
 		}
 
 		if (!m_task.running)
