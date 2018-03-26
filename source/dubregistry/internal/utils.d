@@ -102,3 +102,33 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe nothrow
 		return new LogoGenerateResponse(null, "Failed to invoke the logo conversion process.");
 	}
 }
+
+
+/** Performs deduplication and compact re-allocation of individual strings.
+
+	Strings are allocated out of 64KB blocks of memory.
+*/
+struct PackedStringAllocator {
+	private {
+		char[] memory;
+		string[string] map;
+	}
+
+	@disable this(this);
+
+	string alloc(in char[] chars)
+	@safe {
+		import std.algorithm.comparison : max;
+
+		if (auto pr = chars in map)
+			return *pr;
+
+		if (memory.length < chars.length) memory = new char[](max(chars.length, 64*1024));
+		auto str = memory[0 .. chars.length];
+		memory = memory[chars.length .. $];
+		str[] = chars[];
+		auto istr = () @trusted { return cast(string)str; } ();
+		map[istr] = istr;
+		return istr;
+	}
+}
