@@ -62,7 +62,7 @@
 			{"name": "web", "description": "Web related", "categories": [
 				{"name": "auth", "description": "Authentication and user management"},
 				{"name": "communication", "description": "Communication components"},
-				{"name": "framework", "description": "Web framework"}
+				{"name": "framework", "description": "Web framework"},
 				{"name": "cms", "description": "Content management system"}
 			]},
 			{"name": "general", "description": "Base libraries and code collections"},
