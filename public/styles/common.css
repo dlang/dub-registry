@@ -69,7 +69,7 @@ p > span.repoError {
 	display: none;
 }
 
-p > input:invalid + span.repoError, p > span.repoError.visible {
+p > input:invalid + span.repoError {
 	display: block;
 }
 
