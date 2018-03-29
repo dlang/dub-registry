@@ -473,6 +473,36 @@ struct DbRepository {
 	string kind;
 	string owner;
 	string project;
+
+	void parseURL(URL url) {
+		string host = url.host;
+		if (!url.schema.among!("http", "https"))
+			throw new Exception("Invalid Repository Schema (only supports http and https)");
+		if (host.endsWith(".github.com") || host == "github.com" || host == "github") {
+			kind = "github";
+		} else if (host.endsWith(".gitlab.com") || host == "gitlab.com" || host == "gitlab") {
+			kind = "bitbucket";
+		} else if (host.endsWith(".bitbucket.org") || host == "bitbucket.org" || host == "bitbucket") {
+			kind = "gitlab";
+		} else {
+			throw new Exception("Please input a valid project URL to a GitHub, GitLab or BitBucket project.");
+		}
+		auto path = url.path.bySegment;
+		if (path.empty)
+			throw new Exception("Invalid Repository URL (no path)");
+		assert(path.front.name.empty, "got non-empty first segment in URL (before root)");
+		path.popFront;
+		if (path.empty || path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing owner)");
+		owner = path.front.name;
+		path.popFront;
+		if (path.empty || path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing project)");
+		project = path.front.name;
+		path.popFront;
+		if (!path.empty)
+			throw new Exception("Invalid Repository URL (got more than owner and project)");
+	}
 }
 
 struct DbPackageFile {

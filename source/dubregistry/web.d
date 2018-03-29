@@ -521,21 +521,25 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	}
 
 	@auth @path("/register_package")
-	void getRegisterPackage(User _user, string kind = null, string owner = null, string project = null, string _error = null)
+	void getRegisterPackage(User _user, string url = null, string _error = null)
 	{
 		auto user = _user;
 		string error = _error;
 		auto registry = m_registry;
-		render!("my_packages.register.dt", user, kind, owner, project, error, registry);
+		render!("my_packages.register.dt", user, url, error, registry);
 	}
 
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
-	void postRegisterPackage(string kind, string owner, string project, User _user, bool ignore_fork = false)
+	void postRegisterPackage(string url, User _user, bool ignore_fork = false)
 	{
 		DbRepository rep;
-		rep.kind = kind;
-		rep.owner = owner;
-		rep.project = project;
+		if (!url.canFind("://"))
+			url = "https://" ~ url;
+		rep.parseURL(URL.fromString(url));
+
+		string kind = rep.kind;
+		string owner = rep.owner;
+		string project = rep.project;
 
 		if (!ignore_fork) {
 			auto info = m_registry.getRepositoryInfo(rep);
