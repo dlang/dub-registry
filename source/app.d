@@ -30,9 +30,9 @@ void startMonitoring()
 {
 	void monitorPackages()
 	{
-		sleep(10.seconds()); // give the cache a chance to warm up first
+		sleep(1.seconds()); // give the cache a chance to warm up first
 		while(true){
-			if (s_mirror.length) s_registry.mirrorRegistry(URL(s_mirror));
+			if (s_mirror.length) s_registry.mirrorRegistry(s_mirror);
 			else s_registry.updatePackages();
 			sleep(30.minutes());
 		}
