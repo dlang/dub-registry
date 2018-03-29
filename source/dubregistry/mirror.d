@@ -18,6 +18,11 @@ void validateMirrorURL(ref string base_url)
 {
 	import std.exception : enforce;
 	import std.algorithm.searching : endsWith;
+	import vibe.core.file : existsFile;
+
+	// Local JSON files are allowed
+	if (NativePath(base_url).existsFile)
+		return;
 
 	// ensure the URL has a trailing slash
 	if (!base_url.endsWith('/')) base_url ~= '/';
@@ -39,11 +44,27 @@ void validateMirrorURL(ref string base_url)
 	}
 }
 
-void mirrorRegistry(DubRegistry registry, URL url)
+void mirrorRegistry(DubRegistry registry, string fileOrUrl)
 nothrow {
-	logInfo("Polling '%s' for updates...", url);
+	logInfo("Polling '%s' for updates...", fileOrUrl);
 	try {
-		auto packs = requestHTTP(url ~ InetPath("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
+		import vibe.core.file : existsFile, readFileUTF8;
+
+		DbPackage[] packs;
+		URL url;
+		auto path = NativePath(fileOrUrl);
+
+		if (path.existsFile)
+		{
+			packs = path.readFileUTF8.deserializeJson!(DbPackage[]);
+		}
+		else
+		{
+			url = URL(fileOrUrl);
+			packs = requestHTTP(url ~ InetPath("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
+		}
+
+		logInfo("Updates for '%s' downloaded.", url);
 
 		bool[BsonObjectID] current_packs;
 		foreach (p; packs) current_packs[p._id] = true;
@@ -71,6 +92,8 @@ nothrow {
 				logDiagnostic("Full error: %s", e.toString().sanitize);
 			}
 		}
+
+		logInfo("Updates for '%s' successfully processed.", fileOrUrl);
 	} catch (Exception e) {
 		logError("Fetching updated packages failed: %s", e.msg);
 		logDiagnostic("Full error: %s", e.toString().sanitize);
