@@ -13,6 +13,13 @@ block body
 		- if (latest.type == Json.Type.Object)
 			|  #[strong.badge= latest["version"].opt!string]
 
+	- if (error.length)
+		- import std.string : splitLines;
+		p.redAlert
+			- foreach (ln; error.splitLines)
+				|= ln
+				br
+
 	- if (pack["errors"].length)
 		p.redAlert
 			- foreach_reverse(e; pack["errors"])
@@ -85,13 +92,6 @@ block body
 
 	h2#repository Repository
 
-	- if (error.length)
-		- import std.string : splitLines;
-		p.redAlert
-			- foreach (ln; error.splitLines)
-				|= ln
-				br
-
 	.inputForm
 		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
 			p
@@ -100,7 +100,7 @@ block body
 					- import dubregistry.repositories.repository;
 					- auto rkind = pack["repository"]["kind"].get!string;
 					- if (supportsRepositoryKind("github"))
-						option(value="github", selected=rkind == "github") GitHub 
+						option(value="github", selected=rkind == "github") GitHub
 					- if (supportsRepositoryKind("bitbucket"))
 						option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket
 					- if (supportsRepositoryKind("gitlab"))

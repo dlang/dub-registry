@@ -10,11 +10,12 @@ block title
 	- import dubregistry.viewutils;
 	- import userman.controller;
 	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
+	- auto packageInfo = packinfo.info;
 
 	- auto normalizedPackageName = packageName.splitter(':').front;
 	- auto normalizedPackageURL = (req.tls ? "https://" : "http://") ~ req.host ~ "/packages/" ~ normalizedPackageName;
 
-	- string logoURL = "/packages/" ~ normalizedPackageName ~ "/logo?s=" ~ packageInfo["logoHash"].get!string;
+	- string logoURL = "/packages/" ~ normalizedPackageName ~ "/logo?s=" ~ packinfo.logo.toString;
 
 	- string description = versionInfo["description"].opt!string;
 
@@ -51,7 +52,7 @@ block body
 		- import vibe.data.bson;
 		- bool isMine = req.session && user.id == User.ID.fromString(req.session.get!string("userID"));
 
-		- if (packageInfo["logoHash"].get!string.length)
+		- if (packinfo.logo != BsonObjectID.init)
 			img.packageLogo(src=logoURL, alt="#{normalizedPackageName} logo")
 
 		- if(packageName.canFind(":"))

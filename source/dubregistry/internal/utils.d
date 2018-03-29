@@ -53,7 +53,7 @@ private struct LogoGenerateResponse
 }
 
 // need to return * here because stack returned values get destroyed for some reason...
-private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe
+private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe nothrow
 {
 	import std.array : appender;
 
@@ -62,39 +62,43 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe
 	// use [0] to only get first frame in gifs, has no effect on static images.
 	string firstFrame = file.toNativeString ~ "[0]";
 
-	auto sizeInfo = execute(["identify", "-format", "%w %h %m", firstFrame]);
-	if (sizeInfo.status != 0)
-		return new LogoGenerateResponse(null, "Malformed image.");
-	int width, height;
-	string format;
-	uint filled = formattedRead(sizeInfo.output, "%d %d %s", width, height, format);
-	if (filled < 3)
-		return new LogoGenerateResponse(null, "Malformed metadata.");
-	if (!format.among("PNG", "JPEG", "GIF", "BMP"))
-		return new LogoGenerateResponse(null, "Invalid image format, only supporting png, jpeg, gif and bmp.");
-	if (width < 2 || height < 2 || width > 2048 || height > 2048)
-		return new LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
+	try {
+		auto sizeInfo = execute(["identify", "-format", "%w %h %m", firstFrame]);
+		if (sizeInfo.status != 0)
+			return new LogoGenerateResponse(null, "Malformed image.");
+		int width, height;
+		string format;
+		uint filled = formattedRead(sizeInfo.output, "%d %d %s", width, height, format);
+		if (filled < 3)
+			return new LogoGenerateResponse(null, "Malformed metadata.");
+		if (!format.among("PNG", "JPEG", "GIF", "BMP"))
+			return new LogoGenerateResponse(null, "Invalid image format, only supporting png, jpeg, gif and bmp.");
+		if (width < 2 || height < 2 || width > 2048 || height > 2048)
+			return new LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
 
-	auto png = pipeProcess(["timeout", "3", "convert", firstFrame, "-resize", "512x512>", "png:-"]);
+		auto png = pipeProcess(["timeout", "3", "convert", firstFrame, "-resize", "512x512>", "png:-"]);
 
-	auto a = appender!(immutable(ubyte)[])();
+		auto a = appender!(immutable(ubyte)[])();
 
-	(() @trusted {
-		foreach (chunk; png.stdout.byChunk(4096))
-			a.put(chunk);
-	})();
-
-	auto result = png.pid.wait;
-	if (result != 0)
-	{
-		if (result == 126)
-			return new LogoGenerateResponse(null, "Conversion timed out");
 		(() @trusted {
-			foreach (error; png.stderr.byLine)
-				logDiagnostic("convert error: %s", error);
+			foreach (chunk; png.stdout.byChunk(4096))
+				a.put(chunk);
 		})();
-		return new LogoGenerateResponse(null, "An unexpected error occured");
-	}
 
-	return new LogoGenerateResponse(a.data);
+		auto result = png.pid.wait;
+		if (result != 0)
+		{
+			if (result == 126)
+				return new LogoGenerateResponse(null, "Conversion timed out");
+			(() @trusted {
+				foreach (error; png.stderr.byLine)
+					logDiagnostic("convert error: %s", error);
+			})();
+			return new LogoGenerateResponse(null, "An unexpected error occured");
+		}
+
+		return new LogoGenerateResponse(a.data);
+	} catch (Exception e) {
+		return new LogoGenerateResponse(null, "Failed to invoke the logo conversion process.");
+	}
 }

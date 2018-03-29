@@ -254,7 +254,7 @@ class DubRegistryWebFrontend {
 			//auto sampleURLs = ["test1", "test2"]; /* TODO: actually make this array exist and embed samples generated from repository */
 			string[] sampleURLs;
 			auto activeTab = req.query.get("tab", "info");
-			render!("view_package.dt", packageName, user, packageInfo, versionInfo, readmeContents, sampleURLs, urlFilter, registry, activeTab);
+			render!("view_package.dt", packageName, user, packinfo, versionInfo, readmeContents, sampleURLs, urlFilter, registry, activeTab);
 		}
 	}
 
@@ -524,21 +524,25 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	}
 
 	@auth @path("/register_package")
-	void getRegisterPackage(User _user, string kind = null, string owner = null, string project = null, string _error = null)
+	void getRegisterPackage(User _user, string url = null, string _error = null)
 	{
 		auto user = _user;
 		string error = _error;
 		auto registry = m_registry;
-		render!("my_packages.register.dt", user, kind, owner, project, error, registry);
+		render!("my_packages.register.dt", user, url, error, registry);
 	}
 
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
-	void postRegisterPackage(string kind, string owner, string project, User _user, bool ignore_fork = false)
+	void postRegisterPackage(string url, User _user, bool ignore_fork = false)
 	{
 		DbRepository rep;
-		rep.kind = kind;
-		rep.owner = owner;
-		rep.project = project;
+		if (!url.canFind("://"))
+			url = "https://" ~ url;
+		rep.parseURL(URL.fromString(url));
+
+		string kind = rep.kind;
+		string owner = rep.owner;
+		string project = rep.project;
 
 		if (!ignore_fork) {
 			auto info = m_registry.getRepositoryInfo(rep);
@@ -626,7 +630,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname);
 	}
 
-	@auth @path("/my_packages/:packname/set_logo")
+	@auth @path("/my_packages/:packname/set_logo") @errorDisplay!getMyPackagesPackage
 	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);
@@ -634,7 +638,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceBadRequest(logo != FilePart.init);
 		auto info = getFileInfo(logo.tempPath);
 		enforceBadRequest(info.size < 1024 * 1024, "Logo too big, at most 1 MB");
-		auto renamed = NativePath.fromString(logo.tempPath.toString ~ logo.filename.name.extension);
+		auto renamed = NativePath(logo.tempPath.toString ~ logo.filename.name.extension);
 		moveFile(logo.tempPath, renamed, true);
 		scope (exit)
 			removeFile(renamed);

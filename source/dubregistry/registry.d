@@ -220,13 +220,13 @@ class DubRegistry {
 
 		PackageInfo ret;
 		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+		ret.logo = pack.logo;
 
 		Json nfo = Json.emptyObject;
 		nfo["id"] = pack._id.toString();
 		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
 		nfo["owner"] = pack.owner.toString();
 		nfo["name"] = pack.name;
-		nfo["logoHash"] = pack.logoHash.rawData.toHexString;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
@@ -379,12 +379,11 @@ class DubRegistry {
 		return name;
 	}
 
-	protected bool addVersion(string packname, string ver, Repository rep, RefInfo reference)
+	protected bool addVersion(in ref DbPackage dbpack, string ver, Repository rep, RefInfo reference)
 	{
-		logDiagnostic("Adding new version info %s for %s", ver, packname);
+		logDiagnostic("Adding new version info %s for %s", ver, dbpack.name);
 		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
 
-		auto dbpack = m_db.getPackage(packname);
 		string deffile;
 		foreach (t; dbpack.versions)
 			if (t.version_ == ver) {
@@ -395,9 +394,9 @@ class DubRegistry {
 
 		//assert(info.info.name == info.info.name.get!string.toLower(), "Package names must be all lower case.");
 		info.info["name"] = info.info["name"].get!string.toLower();
-		enforce(info.info["name"] == packname,
+		enforce(info.info["name"] == dbpack.name,
 			format("Package name (%s) does not match the original package name (%s). Check %s.",
-				info.info["name"].get!string, packname, info.info["packageDescriptionFile"].get!string));
+				info.info["name"].get!string, dbpack.name, info.info["packageDescriptionFile"].get!string));
 
 		foreach( string n, vspec; info.info["dependencies"].opt!(Json[string]) )
 			foreach (p; n.split(":"))
@@ -430,15 +429,15 @@ class DubRegistry {
 					// endsWith doesn't like to work with asLowerCase
 					dbver.readmeMarkdown = ext.endsWith(".md") || ext.endsWith(".MD") || ext.endsWith(".Md") || ext.endsWith(".mD");
 				});
-			} else logDiagnostic("No README.md found for %s %s", packname, ver);
+			} else logDiagnostic("No README.md found for %s %s", dbpack.name, ver);
 
 			// TODO: load in example(s), sample(s), test(s) and docs for the view package page here.
 			// possibly also parsing the README.md file for a documentation link
-		} catch (Exception e) { logDiagnostic("Failed to read README.md for %s %s: %s", packname, ver, e.msg); }
+		} catch (Exception e) { logDiagnostic("Failed to read README.md for %s %s: %s", dbpack.name, ver, e.msg); }
 
-		if (m_db.hasVersion(packname, ver)) {
+		if (m_db.hasVersion(dbpack.name, ver)) {
 			logDebug("Updating existing version info.");
-			m_db.updateVersion(packname, dbver);
+			m_db.updateVersion(dbpack.name, dbver);
 			return false;
 		}
 
@@ -450,7 +449,7 @@ class DubRegistry {
 		if (auto pv = "version" in info.info)
 			enforce(pv.get!string == ver, format("Package description contains an obsolete \"version\" field and does not match tag %s: %s", ver, pv.get!string));
 		logDebug("Adding new version info.");
-		m_db.addVersion(packname, dbver);
+		m_db.addVersion(dbpack.name, dbver);
 		return true;
 	}
 
@@ -466,8 +465,8 @@ class DubRegistry {
 		import std.encoding;
 		string[] errors;
 
-		PackageInfo pack;
-		try pack = getPackageInfo(packname);
+		DbPackage pack;
+		try pack = m_db.getPackage(packname);
 		catch( Exception e ){
 			errors ~= format("Error getting package info: %s", e.msg);
 			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
@@ -475,7 +474,7 @@ class DubRegistry {
 		}
 
 		Repository rep;
-		try rep = getRepository(pack.info["repository"].deserializeJson!DbRepository);
+		try rep = getRepository(pack.repository);
 		catch( Exception e ){
 			errors ~= format("Error accessing repository: %s", e.msg);
 			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
@@ -501,7 +500,7 @@ class DubRegistry {
 			auto name = tag.name[1 .. $];
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep, tag))
+				if (addVersion(pack, name, rep, tag))
 					logInfo("Package %s: added version %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for version %s of %s: %s", name, packname, e.msg);
@@ -514,7 +513,7 @@ class DubRegistry {
 			auto name = "~" ~ branch.name;
 			existing[name] = true;
 			try {
-				if (addVersion(packname, name, rep, branch))
+				if (addVersion(pack, name, rep, branch))
 					logInfo("Package %s: added branch %s", packname, name);
 			} catch( Exception e ){
 				logDiagnostic("Error for branch %s of %s: %s", name, packname, e.msg);
@@ -524,7 +523,7 @@ class DubRegistry {
 			}
 		}
 		if (got_all_tags_and_branches) {
-			foreach (v; pack.versions) {
+			foreach (ref v; pack.versions) {
 				auto ver = v.version_;
 				if (ver !in existing) {
 					logInfo("Package %s: removing version %s as the branch/tag was removed.", packname, ver);
@@ -540,12 +539,11 @@ class DubRegistry {
 	/// recompute all scores based on cached stats, e.g. after updating algorithm
 	private void recomputeScores(DbStatDistributions dists)
 	{
-		foreach (packname; this.availablePackages)
-		{
-			const pack = m_db.getPackage(packname);
-			auto stats = m_db.getPackageStats(packname);
+		foreach (pack; this.getPackageDump()) {
+			auto stats = pack.stats;
 			stats.score = computeScore(stats, dists.downloads, dists.repos[pack.repository.kind]);
-			m_db.updatePackageStats(pack._id, stats);
+			if (stats.score != pack.stats.score)
+				m_db.updatePackageStats(pack._id, stats);
 		}
 	}
 }
@@ -619,6 +617,7 @@ struct PackageVersionInfo {
 
 struct PackageInfo {
 	PackageVersionInfo[] versions;
+	BsonObjectID logo;
 	Json info; /// JSON package information, as reported to the client
 }
 

@@ -129,19 +129,24 @@ class GitLabRepository : Repository {
 
 	string getDownloadUrl(string ver)
 	{
-		import std.uri : encodeComponent;
-		if (m_authToken.length > 0) return null; // don't make private token public
-		if( ver.startsWith("~") ) ver = ver[1 .. $];
-		else ver = ver;
-		auto venc = () @trusted { return encodeComponent(ver); } ();
-		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~venc;
+		if (m_authToken.length > 0) return null; // public download URL doesn't work
+		return getRawDownloadURL(ver);
 	}
 
 	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
-		auto url = getDownloadUrl(ver);
+		auto url = getRawDownloadURL(ver);
 		url ~= "&private_token="~m_authToken;
 		downloadCached(url, del);
+	}
+
+	private string getRawDownloadURL(string ver)
+	{
+		import std.uri : encodeComponent;
+		if (ver.startsWith("~")) ver = ver[1 .. $];
+		else ver = ver;
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~venc;
 	}
 
 	private string getAPIURLPrefix()
