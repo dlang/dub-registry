@@ -118,7 +118,7 @@ class DubRegistryWebFrontend {
 		}
 
 		// limit package list to current page
-		size_t package_count = packages.length;
+		size_t pcnt = packages.length;
 		packages = packages[min(skip, $) .. min(skip + limit, $)];
 
 		// collect package infos
@@ -127,7 +127,7 @@ class DubRegistryWebFrontend {
 			infos[p.info["name"].opt!string] = p.info;
 
 		Info info;
-		info.packageCount = package_count;
+		info.packageCount = pcnt;
 		info.packages = packages
 			.map!(p => Info.Package(p.stats, infos.get(p.name, Json.init)))
 			.array;
