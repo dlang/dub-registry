@@ -215,12 +215,18 @@ class DubRegistry {
 
 	/** Gets information about multiple packages at once.
 
-		The order of the returned packages is undefined and some of the package
-		names may not result in a `PackageInfo` to be returned at all, if no
-		package with the given name exists, so that the returned range needs
-		to be manually matched against the list of names.
+		The order and count of packages returned may not correspond to the list
+		of supplied package names. Only those packages that actually reference
+		an existing package will yield a result element.
+
+		The consequence is that the caller must manually match the result to
+		the supplied package names.
 
 		This function requires only a single query to the database.
+
+		Returns:
+			An unordered input range of `PackageInfo` values is returned,
+			corresponding to all or part of the packages of the given names.
 	*/
 	auto getPackageInfos(scope string[] pack_names, bool include_errors = false)
 	{
