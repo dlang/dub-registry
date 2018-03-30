@@ -34,7 +34,7 @@ sleep 60s
 
 # Now kill the registry and start in "full mode" (with the mirrored database)
 kill -9 $PID_REGISTRY || true
-./dub-registry &
+./dub-registry --no-monitoring &
 PID_REGISTRY=$!
 sleep 10s
 
@@ -55,6 +55,22 @@ sleep 60s
 kill -9 $PID_WGET || true
 
 mv "127.0.0.1:8005" out
+
+################################################################################
+# Download all JSON responses from the local registry
+################################################################################
+
+mapfile -t packages < <(jq -r '.[] | .name' mirror.json)
+OUT=out/packages
+mkdir -p "$OUT"
+for package in "${packages[@]}" ; do
+    echo "Downloading JSON for ${package}"
+    curl -fsSL "http://localhost:8005/packages/${package}.json" > "${OUT}/${package}.json" || true
+done
+
+################################################################################
+# Kill the running registry + mongod instance
+################################################################################
 
 kill -9 $PID_MONGO || true
 kill -9 $PID_REGISTRY || true
