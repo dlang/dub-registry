@@ -44,12 +44,14 @@ version (linux) private immutable string certPath;
 
 shared static this()
 {
+	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
 	string hostname = "code.dlang.org";
 
 	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
 	readOption("hostname", &hostname, "Domain name of this instance (default: code.dlang.org)");
+	readOption("no-monitoring", &noMonitoring, "Don't periodically monitor for updates (for local development)");
 
 	// validate provided mirror URL
 	if (s_mirror.length)
@@ -80,7 +82,8 @@ shared static this()
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
-	router.get("*", (req, res) @trusted { if (!s_checkTask.running) startMonitoring(); });
+	if (!noMonitoring)
+		router.get("*", (req, res) @trusted { if (!s_checkTask.running) startMonitoring(); });
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
@@ -104,7 +107,7 @@ shared static this()
 	router.registerDubRegistryAPI(s_registry);
 
 	// start the web server
- 	auto settings = new HTTPServerSettings;
+	auto settings = new HTTPServerSettings;
 	settings.hostName = hostname;
 	settings.bindAddresses = ["127.0.0.1"];
 	settings.port = 8005;
@@ -115,5 +118,6 @@ shared static this()
 	listenHTTP(settings, router);
 
 	// poll github for new project versions
-	startMonitoring();
+	if (!noMonitoring)
+		startMonitoring();
 }
