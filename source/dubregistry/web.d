@@ -40,11 +40,25 @@ DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegis
 
 class DubRegistryWebFrontend {
 	protected {
+		static struct CachedPackageSlot {
+			static struct Version {
+				string version_;
+				SysTime date;
+			}
+
+			BsonObjectID id;
+			string name;
+			DbPackageStats stats;
+			string[] categories;
+			Version[] versions;
+			@property SysTime dateAdded() { return id.timeStamp; }
+		}
+
 		DubRegistry m_registry;
 		UserManController m_userman;
 		Category[] m_categories;
 		Category[string] m_categoryMap;
-		DbPackage[] m_packages;
+		CachedPackageSlot[] m_packages;
 	}
 
 	this(DubRegistry registry, UserManController userman)
@@ -53,6 +67,7 @@ class DubRegistryWebFrontend {
 		m_userman = userman;
 		updateCategories();
 		updatePackageList();
+		setTimer(30.seconds, &updatePackageList, true);
 	}
 
 	@path("/")
@@ -75,7 +90,7 @@ class DubRegistryWebFrontend {
 		static import std.algorithm.sorting;
 		import std.algorithm.searching : any;
 
-		DbPackage[] packages;
+		CachedPackageSlot[] packages;
 		if (category.length) {
 			packages = m_packages
 				.filter!(p => p.categories.any!(c => c.startsWith(category)))
@@ -85,12 +100,11 @@ class DubRegistryWebFrontend {
 		}
 
 		// sort by date of last version
-		SysTime getDate(in ref DbPackage p) {
+		SysTime getDate(in ref CachedPackageSlot p) {
 			if (p.versions.length == 0) return SysTime(0, UTC());
 			return p.versions[$-1].date;
 		}
-		SysTime getDateAdded(in ref DbPackage p) { return (cast(BsonObjectID*)&p._id).timeStamp; }
-		bool compare(in ref DbPackage a, in ref DbPackage b) {
+		bool compare(in ref CachedPackageSlot a, in ref CachedPackageSlot b) {
 			bool a_has_ver = a.versions.any!(v => !v.version_.startsWith("~"));
 			bool b_has_ver = b.versions.any!(v => !v.version_.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;
@@ -100,13 +114,22 @@ class DubRegistryWebFrontend {
 			default: std.algorithm.sorting.sort!compare(packages); break;
 			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
 			case "score": std.algorithm.sorting.sort!((a, b) => a.stats.score > b.stats.score)(packages); break;
-			case "added": std.algorithm.sorting.sort!((a, b) => getDateAdded(a) > getDateAdded(b))(packages); break;
+			case "added": std.algorithm.sorting.sort!((a, b) => a.dateAdded > b.dateAdded)(packages); break;
 		}
 
+		// limit package list to current page
+		size_t pcnt = packages.length;
+		packages = packages[min(skip, $) .. min(skip + limit, $)];
+
+		// collect package infos
+		Json[string] infos;
+		foreach (p; m_registry.getPackageInfos(packages.map!(p => p.name).array))
+			infos[p.info["name"].opt!string] = p.info;
+
 		Info info;
-		info.packageCount = packages.length;
-		info.packages = packages[min(skip, $) .. min(skip + limit, $)]
-			.map!(p => Info.Package(p.stats, m_registry.getPackageInfo(p, false).info))
+		info.packageCount = pcnt;
+		info.packages = packages
+			.map!(p => Info.Package(p.stats, infos.get(p.name, Json.init)))
 			.array;
 		info.skip = skip;
 		info.limit = limit;
@@ -363,8 +386,28 @@ class DubRegistryWebFrontend {
 
 	private void updatePackageList()
 	{
-		setTimer(30.seconds, &updatePackageList);
-		m_packages = m_registry.getPackageDump().array;
+		import std.algorithm.iteration : map;
+		import core.memory : GC;
+		() @trusted { GC.collect(); } ();
+
+
+		// NOTE: all string/array data is reallocated to avoid pinning the
+		//       underlying buffer that holds the MongoDB reply
+		PackedStringAllocator strings;
+		auto newpacks = appender!(CachedPackageSlot[]);
+		newpacks.reserve(m_packages.length);
+		foreach (p; m_registry.db.getPackageDump()) {
+			CachedPackageSlot cp;
+			cp.id = p._id;
+			cp.name = strings.alloc(p.name);
+			cp.stats = p.stats;
+			cp.categories = p.categories.map!(c => strings.alloc(c)).array;
+			cp.versions = p.versions
+				.map!(v => CachedPackageSlot.Version(strings.alloc(v.version_), v.date))
+				.array;
+			newpacks ~= cp;
+		}
+		m_packages = newpacks.data;
 	}
 }
 
