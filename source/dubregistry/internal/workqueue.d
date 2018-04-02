@@ -53,19 +53,7 @@ final class PackageWorkQueue {
 	void putFront(string pack_name)
 	{
 		synchronized (m_mutex) {
-			static if (is(typeof({ m_queue.putFront(pack_name); })))
-				m_queue.putFront(pack_name);
-			else {
-				// cannot use find and swap, https://github.com/vibe-d/vibe.d/pull/2092
-				auto idx = m_queue[].countUntil(pack_name);
-				if (idx >= 0)
-					swap(m_queue[idx], m_queue.front);
-				else
-				{
-					m_queue.put(pack_name);
-					swap(m_queue.front, m_queue.back);
-				}
-			}
+			m_queue.putFront(pack_name);
 		}
 
 		nudgeWorker;
