@@ -308,7 +308,7 @@ class DubRegistry {
 		return ret;
 	}
 
-	PackageInfo[string] getPackageInfos(string[] packnames, PackageInfoFlags flags)
+	PackageInfo[string] getPackageInfosRecursive(string[] packnames, PackageInfoFlags flags)
 	{
 		import dub.recipe.packagerecipe : getBasePackageName;
 
@@ -316,14 +316,14 @@ class DubRegistry {
 		void[0][string] visited;
 		foreach (packname; packnames)
 		{
-			logDebug("getPackageInfos: %s", packname);
-			getPackageInfos(packname, flags, infos, visited);
+			logDebug("getPackageInfosRecursive: %s", packname);
+			getPackageInfosRecursive(packname, flags, infos, visited);
 		}
-		logDebug("getPackageInfos for %s returned %s", packnames, infos.keys);
+		logDebug("getPackageInfosRecursive for %s returned %s", packnames, infos.byKey);
 		return infos;
 	}
 
-	private void getPackageInfos(string packname, PackageInfoFlags flags, ref PackageInfo[string] infos, ref void[0][string] visited)
+	private void getPackageInfosRecursive(string packname, PackageInfoFlags flags, ref PackageInfo[string] infos, ref void[0][string] visited)
 	{
 		import dub.recipe.packagerecipe : getBasePackageName, getSubPackageName;
 		import std.range : dropOne;
@@ -344,10 +344,10 @@ class DubRegistry {
 		void addDeps(Json info)
 		{
 			foreach (dep, _; info["dependencies"].opt!(Json[string]))
-				getPackageInfos(dep, flags, infos, visited);
+				getPackageInfosRecursive(dep, flags, infos, visited);
 			foreach (cfg; info["configurations"].opt!(Json[]))
 				foreach (dep, _; cfg["dependencies"].opt!(Json[string]))
-					getPackageInfos(dep, flags, infos, visited);
+					getPackageInfosRecursive(dep, flags, infos, visited);
 		}
 
 	Louter: foreach (v; p.versions)

@@ -171,7 +171,7 @@ override {
 		auto flags = minimize ? PackageInfoFlags.minimize : PackageInfoFlags.none;
 		if (include_dependencies)
 			flags |= PackageInfoFlags.includeDependencies;
-		return m_registry.getPackageInfos(packages, flags)
+		return m_registry.getPackageInfosRecursive(packages, flags)
 			.check!(r => r !is null)(HTTPStatus.notFound, "None of the packages were found")
 			.byKeyValue.map!(p => tuple(p.key, p.value.info)).assocArray;
 	}
