@@ -4,18 +4,18 @@
 		"backtrace-d": "~master",
 		"botan": "1.12.9",
 		"botan-math": "1.0.3",
-		"diet-ng": "1.4.4",
+		"diet-ng": "1.4.5",
 		"dub": "1.7.2",
-		"eventcore": "0.8.28",
+		"eventcore": "0.8.34",
 		"libasync": "0.8.3",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
 		"memutils": "0.4.10",
 		"openssl": "1.1.6+1.0.1g",
-		"stdx-allocator": "2.77.0",
-		"taggedalgebraic": "0.10.9",
+		"stdx-allocator": "2.77.1",
+		"taggedalgebraic": "0.10.11",
 		"userman": "0.3.8",
-		"vibe-core": "1.4.0-rc.1",
-		"vibe-d": "0.8.3-beta.1"
+		"vibe-core": "1.4.0",
+		"vibe-d": "0.8.4-alpha.1"
 	}
 }
