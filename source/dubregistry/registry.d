@@ -257,7 +257,7 @@ class DubRegistry {
 			nfo["owner"] = pack.owner.toString();
 			nfo["repository"] = serializeToJson(pack.repository);
 			nfo["categories"] = serializeToJson(pack.categories);
-			nfo["documentationURL"] = pack.doc
+			nfo["documentationURL"] = pack.documentationURL;
 		}
 		if (flags & PackageInfoFlags.includeErrors)
 			nfo["errors"] = serializeToJson(pack.errors);
