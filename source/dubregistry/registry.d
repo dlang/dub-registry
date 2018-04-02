@@ -21,7 +21,9 @@ import std.digest.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;
+import std.path : extension;
 import std.string : format, toLower, representation;
+import std.uni : sicmp;
 import std.typecons;
 import std.uni : asUpperCase;
 import userman.db.controller;
@@ -425,9 +427,9 @@ class DubRegistry {
 			if (readme != -1) {
 				rep.readFile(reference.sha, files[readme].path, (scope input) {
 					dbver.readme = input.readAllUTF8();
-					string ext = files[readme].path.head.name;
+					string ext = files[readme].path.head.name.extension;
 					// endsWith doesn't like to work with asLowerCase
-					dbver.readmeMarkdown = ext.endsWith(".md") || ext.endsWith(".MD") || ext.endsWith(".Md") || ext.endsWith(".mD");
+					dbver.readmeMarkdown = ext.sicmp(".md") == 0;
 				});
 			} else logDiagnostic("No README.md found for %s %s", dbpack.name, ver);
 
