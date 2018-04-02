@@ -259,7 +259,7 @@ class DubRegistry {
 			nfo["categories"] = serializeToJson(pack.categories);
 			nfo["documentationURL"] = pack.doc
 		}
-		if (flags & PackageInfoFlags.include_errors)
+		if (flags & PackageInfoFlags.includeErrors)
 			nfo["errors"] = serializeToJson(pack.errors);
 
 		ret.info = nfo;
@@ -338,7 +338,7 @@ class DubRegistry {
 		if (p is null)
 			p = &(infos[basepkg] = getPackageInfo(basepkg, flags));
 
-		if (!(flags & PackageInfoFlags.include_dependencies))
+		if (!(flags & PackageInfoFlags.includeDependencies))
 			return;
 
 		void addDeps(Json info)
@@ -739,8 +739,8 @@ struct PackageInfo {
 enum PackageInfoFlags
 {
 	none,
-	include_dependencies = 1 << 0, /// include package info of dependencies
-	include_errors = 1 << 1, /// include package errors
+	includeDependencies = 1 << 0, /// include package info of dependencies
+	includeErrors = 1 << 1, /// include package errors
 	minimize = 1 << 2, /// return only minimal information (for dependency resolver)
 }
 

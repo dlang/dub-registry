@@ -8,7 +8,7 @@ block body
 	- import dubregistry.registry : PackageInfoFlags;
 	- import dubregistry.web : Category;
 
-	- auto pack = registry.getPackageInfo(packageName, PackageInfoFlags.include_errors).info;
+	- auto pack = registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors).info;
 
 	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);

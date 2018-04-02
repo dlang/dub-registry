@@ -649,7 +649,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.include_errors);
+		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors);
 		if (nfo.info.type == Json.Type.null_) return;
 		auto categories = m_categories;
 		auto registry = m_registry;
