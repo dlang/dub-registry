@@ -3,6 +3,7 @@ extends layout
 block title
 	- import std.algorithm;
 	- import std.array : join, split;
+	- import std.range;
 	- import vibe.data.json;
 	- import vibe.inet.url;
 	- import vibe.textfilter.urlencode;
@@ -16,12 +17,14 @@ block title
 
 	- string logoURL = "/packages/" ~ normalizedPackageName ~ "/logo?s=" ~ packinfo.logo.toString;
 
+	- string description = versionInfo["description"].opt!string;
+
 	// facebook & co.
 	meta(property="og:url", content="")
 	meta(property="og:type", content="article")
 	meta(property="og:title", content="Package #{normalizedPackageName} on DUB")
 	meta(property="og:image", content=logoURL)
-	meta(property="og:description", content=versionInfo["description"].opt!string)
+	meta(property="og:description", content=description)
 	meta(property="og:site_name", content="DUB Package Registry")
 	meta(property="og:locale", content="en_US")
 	meta(property="article:author", content=user.fullName.length ? user.fullName : user.name)
@@ -32,8 +35,12 @@ block title
 	meta(name="twitter:site", content="@D_Programming")
 	meta(name="twitter:url", content=normalizedPackageURL)
 	meta(name="twitter:title", content="Package #{normalizedPackageName} on DUB")
-	meta(name="twitter:description", content=versionInfo["description"].opt!string)
+	meta(name="twitter:description", content=description)
 	meta(name="twitter:image", content=logoURL)
+
+	meta(name="theme-color", content="#B03931")
+	meta(name="format-detection", content="telephone=no")
+	meta(name="description", content=description)
 
 block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
@@ -43,14 +50,13 @@ block css
 block body
 	.main
 		- import vibe.data.bson;
-		- if (req.session && user.id == User.ID.fromString(req.session.get!string("userID")))
-			a(href="#{req.rootDir}my_packages/#{normalizedPackageName}") Manage this package
+		- bool isMine = req.session && user.id == User.ID.fromString(req.session.get!string("userID"));
 
 		- if (packinfo.logo != BsonObjectID.init)
 			img.packageLogo(src=logoURL, alt="#{normalizedPackageName} logo")
 
 		- if(packageName.canFind(":"))
-			- string url = req.rootDir ~ "packages/" ~ urlEncode(packageInfo["name"].get!string);
+			- string url = req.rootDir ~ "packages/" ~ urlEncode(normalizedPackageName);
 			h1.
 				#[a.blind(href="#{url}")=packageInfo["name"].get!string]#{find(packageName, ":")} #[strong.badge #{versionInfo["version"].get!string}]
 		- else
@@ -88,20 +94,40 @@ block body
 							|= depname
 						|= "- " ~ sp["description"].opt!string
 
-		hr
-		- if (readmeContents.length)
-			.repositoryReadme.markdown-body
-				- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
-				- scope msettings = new MarkdownSettings;
-				- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
-				- msettings.headingBaseLevel = 2;
-				- msettings.urlFilter = &urlFilter;
-				!= filterMarkdown(readmeContents, msettings)
+		.subtabsHeader
+			- if (readmeContents.length)
+				a.tab(class=activeTab == "info" ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=info") Info
+			- foreach (i, sample; sampleURLs)
+				a.tab(class=activeTab == "sample_"~i.to!string ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=sample_#{i}")= sample
+			a.tab.external(href="http://#{normalizedPackageName}.dpldocs.info/") Documentation
+		- bool renderedTabContent;
+		- if (activeTab == "info")
+			- if (readmeContents.length)
+				.repositoryReadme.markdown-body
+					- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
+					- scope msettings = new MarkdownSettings;
+					- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
+					- msettings.headingBaseLevel = 2;
+					- msettings.urlFilter = &urlFilter;
+					!= filterMarkdown(readmeContents, msettings)
+			- else
+				.repositoryReadme
+			- renderedTabContent = true;
+		- else
+			- foreach (i, sample; sampleURLs)
+				- if (activeTab == "sample_"~i.to!string)
+					- renderedTabContent = true;
+					include view_package.sample
+
+		- if (!renderedTabContent)
+			h3 Not Found
 
 	.packageInfo
 		ul.unmarkedList
 			- if (user.id != User.ID.init)
 				li#registredBy Registered by #[strong= user.fullName.length ? user.fullName : user.name]
+			- if (packageInfo["versions"].get!(Json[]).length)
+				li#latestVersion #[strong= versionInfo["version"].get!string] released #{formatFuzzyDate(versionInfo["date"])}
 			- if (auto pr = "repository" in packageInfo)
 				- string repo_kind = (*pr)["kind"].get!string;
 				- string repo_path, repo_prefix;
@@ -125,10 +151,21 @@ block body
 			- if( auto pl = "copyright" in versionInfo )
 				li#copyright= pl.get!string
 
+		- if (isMine)
+			//- TODO: make .actions not conditional on isMine, instead have actions which are always there here too (either as a: button.large for actions or p.detail for descriptions)
+			.actions
+				- if (isMine) /* check for the future when the upper isMine is removed */
+					a(href="#{req.rootDir}my_packages/#{normalizedPackageName}")
+						button.primary.large Manage this Package
+					p.detail Change logo, categories and more.
+
 		dl
 			- if( auto pa = "authors" in versionInfo )
 				dt Authors:
-				dd.wrap= join(map!(a => a.get!string)(pa.get!(Json[])), ", ")
+				dd.wrap
+					ul.authors.unmarkedList
+						- foreach (author; pa.get!(Json[]))
+							li= author.get!string
 
 			- if (versionInfo["subPackages"].opt!(Json[]).length)
 				dt Sub packages:

@@ -90,6 +90,31 @@ class GithubRepository : Repository {
 		return ret;
 	}
 
+	RepositoryFile[] listFiles(string commit_sha, InetPath path)
+	{
+		assert(path.absolute, "Passed relative path to listFiles.");
+		auto url = getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/contents"~path.toString()~"?ref="~commit_sha;
+		auto ls = readJson(url).get!(Json[]);
+		RepositoryFile[] ret;
+		ret.reserve(ls.length);
+		foreach (entry; ls) {
+			string type = entry["type"].get!string;
+			RepositoryFile file;
+			if (type == "dir") {
+				file.type = RepositoryFile.Type.directory;
+			}
+			else if (type == "file") {
+				file.type = RepositoryFile.Type.file;
+				file.size = entry["size"].get!size_t;
+			}
+			else continue;
+			file.commitSha = commit_sha;
+			file.path = InetPath("/" ~ entry["path"].get!string);
+			ret ~= file;
+		}
+		return ret;
+	}
+
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
@@ -115,12 +140,13 @@ class GithubRepository : Repository {
 
 	private string getAPIURLPrefix()
 	{
+		import std.uri : encodeComponent;
 		if (m_authUser.length) return "https://"~m_authUser~":"~m_authPassword~"@api.github.com";
 		else return "https://api.github.com";
 	}
 
 	private string getContentURLPrefix()
 	{
-		return "https://raw.github.com";
+		return "https://raw.githubusercontent.com";
 	}
 }

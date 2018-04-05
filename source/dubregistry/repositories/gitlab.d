@@ -92,6 +92,32 @@ class GitLabRepository : Repository {
 		return ret;
 	}
 
+	RepositoryFile[] listFiles(string commit_sha, InetPath path)
+	{
+		import std.uri : encodeComponent;
+		assert(path.absolute, "Passed relative path to listFiles.");
+		auto penc = () @trusted { return encodeComponent(path.toString()[1..$]); } ();
+		auto url = getAPIURLPrefix()~"/repository/tree?path="~penc~"&ref="~commit_sha;
+		auto ls = readJson(url)["values"].get!(Json[]);
+		RepositoryFile[] ret;
+		ret.reserve(ls.length);
+		foreach (entry; ls) {
+			string type = entry["type"].get!string;
+			RepositoryFile file;
+			if (type == "tree") {
+				file.type = RepositoryFile.Type.directory;
+			}
+			else if (type == "blob") {
+				file.type = RepositoryFile.Type.file;
+			}
+			else continue;
+			file.commitSha = commit_sha;
+			file.path = InetPath("/" ~ entry["path"].get!string);
+			ret ~= file;
+		}
+		return ret;
+	}
+
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");

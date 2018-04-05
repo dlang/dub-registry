@@ -13,7 +13,7 @@ import dubregistry.repositories.repository;
 
 import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : canFind, countUntil, filter, map, sort, swap;
+import std.algorithm : canFind, countUntil, filter, map, sort, swap, equal, startsWith, endsWith;
 import std.array;
 import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;
@@ -21,8 +21,11 @@ import std.digest.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;
-import std.string : format, startsWith, toLower;
+import std.path : extension;
+import std.string : format, toLower, representation;
+import std.uni : sicmp;
 import std.typecons;
+import std.uni : asUpperCase;
 import userman.db.controller;
 import vibe.core.core;
 import vibe.core.log;
@@ -429,8 +432,31 @@ class DubRegistry {
 		dbver.info = info.info;
 
 		try {
-			rep.readFile(reference.sha, InetPath("/README.md"), (scope input) { dbver.readme = input.readAllUTF8(); });
-		} catch (Exception e) { logDiagnostic("No README.md found for %s %s", dbpack.name, ver); }
+			auto files = rep.listFiles(reference.sha, InetPath("/"));
+			// check exactly for readme.me
+			ptrdiff_t readme;
+			readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README.MD"));
+			if (readme == -1) {
+				// check exactly for readme
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README"));
+			}
+			if (readme == -1) {
+				// check for all other readmes such as README.txt, README.jp.md, etc.
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.startsWith("README"));
+			}
+
+			if (readme != -1) {
+				rep.readFile(reference.sha, files[readme].path, (scope input) {
+					dbver.readme = input.readAllUTF8();
+					string ext = files[readme].path.head.name.extension;
+					// endsWith doesn't like to work with asLowerCase
+					dbver.readmeMarkdown = ext.sicmp(".md") == 0;
+				});
+			} else logDiagnostic("No README.md found for %s %s", dbpack.name, ver);
+
+			// TODO: load in example(s), sample(s), test(s) and docs for the view package page here.
+			// possibly also parsing the README.md file for a documentation link
+		} catch (Exception e) { logDiagnostic("Failed to read README.md for %s %s: %s", dbpack.name, ver, e.msg); }
 
 		if (m_db.hasVersion(dbpack.name, ver)) {
 			logDebug("Updating existing version info.");
