@@ -52,8 +52,11 @@ final class PackageWorkQueue {
 
 	void putFront(string pack_name)
 	{
+		import std.algorithm.comparison : min;
 		synchronized (m_mutex) {
-			m_queue.putFront(pack_name);
+			// naive protection against spamming the queue
+			if (!m_queue[0 .. min(10, $)].canFind(pack_name))
+				m_queue.putFront(pack_name);
 		}
 
 		nudgeWorker;
