@@ -6,6 +6,7 @@
 module dubregistry.internal.workqueue;
 
 import std.algorithm.searching : canFind, countUntil;
+import std.algorithm.mutation : swap;
 import std.datetime : Clock, SysTime, UTC, msecs, hours;
 import std.encoding : sanitize;
 import vibe.core.core;
@@ -49,6 +50,18 @@ final class PackageWorkQueue {
 		}
 	}
 
+	void putFront(string pack_name)
+	{
+		import std.algorithm.comparison : min;
+		synchronized (m_mutex) {
+			// naive protection against spamming the queue
+			if (!m_queue[0 .. min(10, $)].canFind(pack_name))
+				m_queue.putFront(pack_name);
+		}
+
+		nudgeWorker;
+	}
+
 	void put(string pack_name)
 	{
 		synchronized (m_mutex) {
@@ -56,6 +69,11 @@ final class PackageWorkQueue {
 				m_queue.put(pack_name);
 		}
 
+		nudgeWorker;
+	}
+
+	private void nudgeWorker()
+	{
 		// watchdog for update task
 		if (m_task.running && Clock.currTime(UTC()) - m_lastSignOfLifeOfUpdateTask > 2.hours) {
 			logError("Update task has hung. Trying to interrupt.");

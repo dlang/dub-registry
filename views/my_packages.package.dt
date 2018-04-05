@@ -53,18 +53,18 @@ block body
 		| #[strong= stats.total.to!string] downloads total
 
 	h2 Update
-	p Packages are automatically updated, so there is no need to trigger an update manually. Please, be patient.
+	p Packages are automatically updated, so there is no need to trigger an update manually.
 	- auto update_check_index = registry.getUpdateQueuePosition(packageName);
 	- if (update_check_index == 0)
 		p Package is currently being updated.
 	- else if (update_check_index == 1)
-		p Package is scheduled for an update check. Still have to wait for one more package.
+		p Package is scheduled for an automatic update check. Still have to wait for one more package.
 	- else if (update_check_index > 1)
-		p Package is scheduled for an update check. Still have to wait for #{update_check_index} other packages to complete.
+		p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
 	.inputForm
 		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
 			p
-				button(type="submit", disabled=(update_check_index >= 0)) Trigger manual update
+				button(type="submit") Trigger manual update
 
 	h2 Categories
 
