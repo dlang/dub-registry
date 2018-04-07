@@ -495,7 +495,7 @@ struct DbRepository {
 		auto path = url.path.bySegment;
 		if (path.empty)
 			throw new Exception("Invalid Repository URL (no path)");
-		assert(path.front.name.empty, "got non-empty first segment in URL (before root)");
+		enforce(path.front.name.empty, "Invalid repository path (must be absolute)");
 		path.popFront;
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing owner)");
