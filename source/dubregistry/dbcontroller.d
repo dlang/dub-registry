@@ -492,11 +492,9 @@ struct DbRepository {
 		} else {
 			throw new Exception("Please input a valid project URL to a GitHub, GitLab or BitBucket project.");
 		}
-		auto path = url.path.bySegment;
+		auto path = url.path.relativeTo(InetPath("/")).bySegment;
 		if (path.empty)
 			throw new Exception("Invalid Repository URL (no path)");
-		assert(path.front.name.empty, "got non-empty first segment in URL (before root)");
-		path.popFront;
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing owner)");
 		owner = path.front.name;
