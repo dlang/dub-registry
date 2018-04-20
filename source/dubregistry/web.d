@@ -302,6 +302,8 @@ class DubRegistryWebFrontend {
 		import std.algorithm : map;
 		auto ppath = pack_name.urlDecode().split(":");
 
+		if (!ppath.length || !ppath[0].length) return false;
+
 		pkg_info = m_registry.getPackageInfo(ppath[0]);
 		if (pkg_info.info.type == Json.Type.null_) return false;
 
