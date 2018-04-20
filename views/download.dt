@@ -48,7 +48,7 @@ block body
 	:markdown
 		If your platform is not supported, building is as easy as checking out the [git repository](https://github.com/rejectedsoftware/dub) and running `./build.sh`. You need to have the development version of libcurl with SSL support installed. The resulting binary can then optionally be made available in `PATH`.
 
-		For Arch Linux, AUR packages exist for the latest release ([dub](https://aur.archlinux.org/packages/dub/)), GIT master ([dub-git](https://aur.archlinux.org/packages/dub-git)), and for ARM ([dub-arm](https://aur.archlinux.org/packages/dub-arm/)).
+		For Arch Linux, there is the official [dub package](https://www.archlinux.org/packages/community/x86_64/dub/), as well as AUR packages for GIT master ([dub-git](https://aur.archlinux.org/packages/dub-git)) and for ARM ([dub-arm](https://aur.archlinux.org/packages/dub-arm/)).
 
 		Debian packages are available as part of Jordi Sayol's [D APT repository](http://d-apt.sourceforge.net/). Use `apt-get install dub`.
 
