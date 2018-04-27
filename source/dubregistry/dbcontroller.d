@@ -479,16 +479,17 @@ struct DbRepository {
 	string owner;
 	string project;
 
-	void parseURL(URL url) {
+	void parseURL(URL url)
+	{
 		string host = url.host;
 		if (!url.schema.among!("http", "https"))
 			throw new Exception("Invalid Repository Schema (only supports http and https)");
 		if (host.endsWith(".github.com") || host == "github.com" || host == "github") {
 			kind = "github";
 		} else if (host.endsWith(".gitlab.com") || host == "gitlab.com" || host == "gitlab") {
-			kind = "bitbucket";
-		} else if (host.endsWith(".bitbucket.org") || host == "bitbucket.org" || host == "bitbucket") {
 			kind = "gitlab";
+		} else if (host.endsWith(".bitbucket.org") || host == "bitbucket.org" || host == "bitbucket") {
+			kind = "bitbucket";
 		} else {
 			throw new Exception("Please input a valid project URL to a GitHub, GitLab or BitBucket project.");
 		}
@@ -505,6 +506,21 @@ struct DbRepository {
 		path.popFront;
 		if (!path.empty)
 			throw new Exception("Invalid Repository URL (got more than owner and project)");
+	}
+
+	unittest {
+		DbRepository r;
+		r.parseURL(URL("https://github.com/foo/bar"));
+		assert(r == DbRepository("github", "foo", "bar"));
+		r.parseURL(URL("http://bitbucket.org/bar/baz/"));
+		assert(r == DbRepository("bitbucket", "bar", "baz"));
+		r.parseURL(URL("https://gitlab.com/foo/bar"));
+		assert(r == DbRepository("gitlab", "foo", "bar"));
+		assertThrown(r.parseURL(URL("ftp://github.com/foo/bar")));
+		assertThrown(r.parseURL(URL("ftp://github.com/foo/bar")));
+		assertThrown(r.parseURL(URL("http://github.com/foo/")));
+		assertThrown(r.parseURL(URL("http://github.com/")));
+		assertThrown(r.parseURL(URL("http://github.com/foo/bar/baz")));
 	}
 }
 
