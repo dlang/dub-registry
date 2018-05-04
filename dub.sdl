@@ -4,7 +4,7 @@ homepage "http://code.dlang.org/"
 authors "Sönke Ludwig" "Martin Nowak" "Anton Fediushin aka ohdatboi" \
 	"Jan Jurzitza aka WebFreak001" "Sebastian Wilzbach" "Colden Cullen" \
 	"see GitHub for more"
-license "GPL-3.0"
+license "BSL-1.0"
 
 dependency "vibe-d" version="~>0.8.4-alpha.1"
 dependency "dub" version="~>1.7.0"
