@@ -70,22 +70,10 @@ class DubRegistryWebFrontend {
 		setTimer(30.seconds, &updatePackageList, true);
 	}
 
-	@path("/")
-	void getHome(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
+	private auto searchForPackages(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
 	{
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
-
-		static struct Info {
-			// TODO: No need to use untyped Json
-			static struct Package { DbPackageStats stats; Json _; alias _ this; }
-			Package[] packages;
-			size_t packageCount;
-			ulong skip;
-			ulong limit;
-			Category[] categories;
-			Category[string] categoryMap;
-		}
 
 		static import std.algorithm.sorting;
 		import std.algorithm.searching : any;
@@ -111,14 +99,16 @@ class DubRegistryWebFrontend {
 			return getDate(a) > getDate(b);
 		}
 		switch (sort) {
-			default: std.algorithm.sorting.sort!compare(packages); break;
 			case "name": std.algorithm.sorting.sort!((a, b) => a.name < b.name)(packages); break;
 			case "score": std.algorithm.sorting.sort!((a, b) => a.stats.score > b.stats.score)(packages); break;
 			case "added": std.algorithm.sorting.sort!((a, b) => a.dateAdded > b.dateAdded)(packages); break;
+			case "updated":
+			default: std.algorithm.sorting.sort!compare(packages); break;
 		}
+		// TODO: No need to use untyped Json
+		static struct Package { DbPackageStats stats; Json _; alias _ this; }
 
 		// limit package list to current page
-		size_t pcnt = packages.length;
 		packages = packages[min(skip, $) .. min(skip + limit, $)];
 
 		// collect package infos
@@ -126,17 +116,58 @@ class DubRegistryWebFrontend {
 		foreach (p; m_registry.getPackageInfos(packages.map!(p => p.name).array))
 			infos[p.info["name"].opt!string] = p.info;
 
-		Info info;
-		info.packageCount = pcnt;
-		info.packages = packages
-			.map!(p => Info.Package(p.stats, infos.get(p.name, Json.init)))
-			.array;
-		info.skip = skip;
-		info.limit = limit;
-		info.categories = m_categories;
-		info.categoryMap = m_categoryMap;
+		return packages.map!(p => Package(p.stats, infos.get(p.name, Json.init))).array;
+
+	}
+
+	void search(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
+	{
+		auto packages = searchForPackages(sort, category, skip, limit);
+
+		static struct Info {
+			typeof(searchForPackages()) packages;
+			size_t packageCount;
+			ulong skip;
+			ulong limit;
+			Category[] categories;
+			Category[string] categoryMap;
+		}
+
+		Info info = {
+			packageCount: packages.length,
+			packages: packages,
+			skip: skip,
+			limit: limit,
+			categories: m_categories,
+			categoryMap: m_categoryMap,
+		};
 
 		render!("home.dt", info);
+	}
+
+
+	@path("/")
+	void getHome(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
+	{
+		if (request.requestURI != "/")
+			return search(sort, category, skip, limit);
+
+		limit = 5;
+		auto topScored = searchForPackages("score", null, 0, limit);
+		auto topAdded = searchForPackages("added", null, 0, limit);
+		auto topUpdated = searchForPackages("updated", null, 0, limit);
+
+		static struct Info {
+			size_t packageCount;
+			Category[] categories;
+			Category[string] categoryMap;
+		}
+		Info info = {
+			packageCount: m_packages.length,
+			categories: m_categories,
+			categoryMap: m_categoryMap,
+		};
+		render!("start.dt", topScored, topAdded, topUpdated, info);
 	}
 
 	// compatibility route

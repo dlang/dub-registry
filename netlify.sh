@@ -55,6 +55,9 @@ sleep 60s
 kill -9 $PID_WGET || true
 
 mv "127.0.0.1:8005" out
+# Chrome doesn't like images without an extension
+find out -name "logo" | xargs -I {} mv {} {}.svg
+sed 's/src="\([^"]*\)\/logo"/src="\1\/logo.svg"/'  -i $(find out -name "*.html")
 
 kill -9 $PID_MONGO || true
 kill -9 $PID_REGISTRY || true
