@@ -35,12 +35,15 @@ string black(string url)
  * Returns: the PNG stream of the icon or empty on failure
  * Throws: Exception if input is invalid format, invalid dimension or times out
  */
-bdata_t generateLogo(NativePath file) @safe
+bdata_t generateLogo(NativePath file) @trusted
 {
+	import std.concurrency : send, receiveOnly, Tid;
 	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
 	static assert (isWeaklyIsolated!NativePath);
 	static assert (isWeaklyIsolated!LogoGenerateResponse);
-	auto res = (() @trusted => async(&generateLogoUnsafe, file).getResult())();
+
+	runWorkerTask((NativePath file, Tid par) { par.send(generateLogoUnsafe(file)); }, file, thisTid);
+	auto res = receiveOnly!LogoGenerateResponse();
 	if (res.error.length)
 		throw new Exception("Failed to generate logo: " ~ res.error);
 	return res.data;
@@ -53,7 +56,7 @@ private struct LogoGenerateResponse
 }
 
 // need to return * here because stack returned values get destroyed for some reason...
-private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe nothrow
+private LogoGenerateResponse generateLogoUnsafe(NativePath file) @safe nothrow
 {
 	import std.array : appender;
 
@@ -65,16 +68,16 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe nothrow
 	try {
 		auto sizeInfo = execute(["identify", "-format", "%w %h %m", firstFrame]);
 		if (sizeInfo.status != 0)
-			return new LogoGenerateResponse(null, "Malformed image.");
+			return LogoGenerateResponse(null, "Malformed image.");
 		int width, height;
 		string format;
 		uint filled = formattedRead(sizeInfo.output, "%d %d %s", width, height, format);
 		if (filled < 3)
-			return new LogoGenerateResponse(null, "Malformed metadata.");
+			return LogoGenerateResponse(null, "Malformed metadata.");
 		if (!format.among("PNG", "JPEG", "GIF", "BMP"))
-			return new LogoGenerateResponse(null, "Invalid image format, only supporting png, jpeg, gif and bmp.");
+			return LogoGenerateResponse(null, "Invalid image format, only supporting png, jpeg, gif and bmp.");
 		if (width < 2 || height < 2 || width > 2048 || height > 2048)
-			return new LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
+			return LogoGenerateResponse(null, "Invalid image dimenstions, must be between 2x2 and 2048x2048.");
 
 		auto png = pipeProcess(["timeout", "3", "convert", firstFrame, "-resize", "512x512>", "png:-"]);
 
@@ -89,17 +92,17 @@ private LogoGenerateResponse* generateLogoUnsafe(NativePath file) @safe nothrow
 		if (result != 0)
 		{
 			if (result == 126)
-				return new LogoGenerateResponse(null, "Conversion timed out");
+				return LogoGenerateResponse(null, "Conversion timed out");
 			(() @trusted {
 				foreach (error; png.stderr.byLine)
 					logDiagnostic("convert error: %s", error);
 			})();
-			return new LogoGenerateResponse(null, "An unexpected error occured");
+			return LogoGenerateResponse(null, "An unexpected error occured");
 		}
 
-		return new LogoGenerateResponse(a.data);
+		return LogoGenerateResponse(a.data);
 	} catch (Exception e) {
-		return new LogoGenerateResponse(null, "Failed to invoke the logo conversion process.");
+		return LogoGenerateResponse(null, "Failed to invoke the logo conversion process.");
 	}
 }
 
