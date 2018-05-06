@@ -17,7 +17,7 @@ import std.algorithm : canFind, countUntil, filter, map, sort, swap, equal, star
 import std.array;
 import std.conv;
 import std.datetime : Clock, UTC, hours, SysTime;
-import std.digest.digest : toHexString;
+import std.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
 import std.range : chain, walkLength;

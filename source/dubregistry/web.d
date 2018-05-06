@@ -611,6 +611,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
 	void postRegisterPackage(string url, User _user, bool ignore_fork = false)
 	{
+		import std.algorithm.searching : canFind;
 		DbRepository rep;
 		if (!url.canFind("://"))
 			url = "https://" ~ url;
