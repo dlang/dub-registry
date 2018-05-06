@@ -223,6 +223,11 @@ class DbController {
 		m_packages.update(["name": packname], update);
 	}
 
+	void setDocumentationURL(string packname, string documentationURL)
+	{
+		m_packages.update(["name": packname], ["$set": ["documentationURL": documentationURL]]);
+	}
+
 	bdata_t getPackageLogo(string packname, out bdata_t rev)
 	{
 		auto bpack = m_packages.findOne(["name": packname], ["logo": 1]);
@@ -472,6 +477,7 @@ struct DbPackage {
 	string[] categories;
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
 	@optional BsonObjectID logo; // reference to m_files
+	@optional string documentationURL;
 }
 
 struct DbRepository {

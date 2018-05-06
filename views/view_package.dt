@@ -99,7 +99,9 @@ block body
 				a.tab(class=activeTab == "info" ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=info") Info
 			- foreach (i, sample; sampleURLs)
 				a.tab(class=activeTab == "sample_"~i.to!string ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=sample_#{i}")= sample
-			a.tab.external(href="http://#{normalizedPackageName}.dpldocs.info/") Documentation
+			- auto doc_url = packinfo.info["documentationURL"].get!string;
+			- doc_url = !doc_url.empty ? doc_url : "https://"~normalizedPackageName~".dpldocs.info";
+			a.tab.external(href="#{doc_url}", target="_blank") Documentation
 		- bool renderedTabContent;
 		- if (activeTab == "info")
 			- if (readmeContents.length)

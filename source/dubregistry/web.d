@@ -308,7 +308,17 @@ class DubRegistryWebFrontend {
 			//auto sampleURLs = ["test1", "test2"]; /* TODO: actually make this array exist and embed samples generated from repository */
 			string[] sampleURLs;
 			auto activeTab = req.query.get("tab", "info");
-			render!("view_package.dt", packageName, user, packinfo, versionInfo, readmeContents, sampleURLs, urlFilter, registry, activeTab);
+			render!("view_package.dt",
+					packageName,
+					user,
+					packinfo,
+					versionInfo,
+					readmeContents,
+					sampleURLs,
+					urlFilter,
+					registry,
+					activeTab,
+			);
 		}
 	}
 
@@ -729,6 +739,16 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceUserPackage(_user, _packname);
 		m_registry.unsetPackageLogo(_packname);
 
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/set_documentation_url") @errorDisplay!getMyPackagesPackage
+	void postSetLogo(scope HTTPServerRequest request, string documentation_url, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		auto isValidURL = documentation_url.empty || documentation_url.startsWith("http://", "https://");
+		enforceBadRequest(isValidURL, "URL is neither null nor starts with http:// or https://");
+		m_registry.setDocumentationURL(_packname, documentation_url);
 		redirect("/my_packages/"~_packname);
 	}
 
