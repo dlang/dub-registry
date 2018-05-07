@@ -661,7 +661,7 @@ private float computeScore(DownDist, RepoDist)(in ref DbPackageStats stats, Down
 
 	/// Using monthly downloads to penalize stale packages, logarithm to
 	/// offset exponential distribution, and tanh as smooth limiter to [0..1].
-	immutable downloadScore = tanh(log1p(stats.downloads.monthly / downDist.monthly.mean));
+	immutable downloadScore = tanh(log1p(stats.downloads.monthly / (downDist.monthly.mean + double.min_normal)));
 	logDebug("downloadScore %s %s %s", downloadScore, stats.downloads.monthly, downDist.monthly.mean);
 
 	// Compute score for repo
