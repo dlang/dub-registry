@@ -253,6 +253,7 @@ class DubRegistry {
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
 		nfo["repository"] = serializeToJson(pack.repository);
 		nfo["categories"] = serializeToJson(pack.categories);
+		nfo["documentationURL"] = pack.documentationURL;
 		if(include_errors) nfo["errors"] = serializeToJson(pack.errors);
 
 		ret.info = nfo;
@@ -330,6 +331,11 @@ class DubRegistry {
 	void unsetPackageLogo(string pack_name)
 	{
 		m_db.setPackageLogo(pack_name, null);
+	}
+
+	void setDocumentationURL(string pack_name, string documentationURL)
+	{
+		m_db.setDocumentationURL(pack_name, documentationURL);
 	}
 
 	bdata_t getPackageLogo(string pack_name, out bdata_t rev)

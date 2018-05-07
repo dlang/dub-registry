@@ -41,6 +41,11 @@ block body
 		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
 			button.danger(type="submit") Delete
 
+		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url")
+			h3 Documentation URL
+			input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+")
+			button.danger(type="submit") Change documentation URL
+
 	h2 Downloads
 	p
 		- auto stats = registry.getPackageStats(packageName).downloads;
