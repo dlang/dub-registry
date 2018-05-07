@@ -5,3 +5,4 @@
 /dub-registry-test-library
 *.exe
 log.txt
+settings.json
