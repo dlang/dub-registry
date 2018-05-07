@@ -743,7 +743,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	}
 
 	@auth @path("/my_packages/:packname/set_documentation_url") @errorDisplay!getMyPackagesPackage
-	void postSetLogo(scope HTTPServerRequest request, string documentation_url, string _packname, User _user)
+	void postSetDocumentationURL(scope HTTPServerRequest request, string documentation_url, string _packname, User _user)
 	{
 		enforceUserPackage(_user, _packname);
 		auto isValidURL = documentation_url.empty || documentation_url.startsWith("http://", "https://");
