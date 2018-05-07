@@ -32,7 +32,7 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 ```json
 {
 	"github-user": "<your-fancy-user-name>",
-	"github-password": "<your-fancy-password>"
+	"github-password": "<your-fancy-password>",
 	"gitlab-user": "<your-fancy-user-name>",
 	"gitlab-password": "<your-fancy-password>"
 }
