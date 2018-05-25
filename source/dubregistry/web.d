@@ -86,6 +86,7 @@ class DubRegistryWebFrontend {
 		} else {
 			packages = m_packages.dup;
 		}
+		auto pcount = packages.length;
 
 		// sort by date of last version
 		SysTime getDate(in ref CachedPackageSlot p) {
@@ -116,7 +117,7 @@ class DubRegistryWebFrontend {
 		foreach (p; m_registry.getPackageInfos(packages.map!(p => p.name).array))
 			infos[p.info["name"].opt!string] = p.info;
 
-		return packages.map!(p => Package(p.stats, infos.get(p.name, Json.init))).array;
+		return tuple(packages.map!(p => Package(p.stats, infos.get(p.name, Json.init))).array, pcount);
 
 	}
 
@@ -125,7 +126,7 @@ class DubRegistryWebFrontend {
 		auto packages = searchForPackages(sort, category, skip, limit);
 
 		static struct Info {
-			typeof(searchForPackages()) packages;
+			typeof(searchForPackages()[0]) packages;
 			size_t packageCount;
 			ulong skip;
 			ulong limit;
@@ -134,8 +135,8 @@ class DubRegistryWebFrontend {
 		}
 
 		Info info = {
-			packageCount: packages.length,
-			packages: packages,
+			packageCount: packages[1],
+			packages: packages[0],
 			skip: skip,
 			limit: limit,
 			categories: m_categories,
@@ -153,9 +154,9 @@ class DubRegistryWebFrontend {
 			return search(sort, category, skip, limit);
 
 		limit = 5;
-		auto topScored = searchForPackages("score", null, 0, limit);
-		auto topAdded = searchForPackages("added", null, 0, limit);
-		auto topUpdated = searchForPackages("updated", null, 0, limit);
+		auto topScored = searchForPackages("score", null, 0, limit)[0];
+		auto topAdded = searchForPackages("added", null, 0, limit)[0];
+		auto topUpdated = searchForPackages("updated", null, 0, limit)[0];
 
 		static struct Info {
 			size_t packageCount;
