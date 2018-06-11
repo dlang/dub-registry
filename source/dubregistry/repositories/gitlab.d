@@ -97,8 +97,8 @@ class GitLabRepository : Repository {
 		import std.uri : encodeComponent;
 		assert(path.absolute, "Passed relative path to listFiles.");
 		auto penc = () @trusted { return encodeComponent(path.toString()[1..$]); } ();
-		auto url = getAPIURLPrefix()~"/repository/tree?path="~penc~"&ref="~commit_sha;
-		auto ls = readJson(url)["values"].get!(Json[]);
+		auto url = getAPIURLPrefix()~"repository/tree?path="~penc~"&ref="~commit_sha;
+		auto ls = readJson(url).get!(Json[]);
 		RepositoryFile[] ret;
 		ret.reserve(ls.length);
 		foreach (entry; ls) {
