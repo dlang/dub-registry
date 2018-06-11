@@ -56,8 +56,9 @@ class GitLabRepository : Repository {
 		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag["name"].get!string;
-				Json commit = readJson(getAPIURLPrefix()~"repository/commits/"~tag["commit"]["id"].get!string~"?private_token="~m_authToken, true, true);
-				ret ~= RefInfo(tagname, tag["commit"]["id"].get!string, SysTime.fromISOExtString(commit["committed_date"].get!string));
+				auto commit = tag["commit"]["id"].get!string;
+				auto date = SysTime.fromISOExtString(tag["commit"]["committed_date"].get!string);
+				ret ~= RefInfo(tagname, commit, date);
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
@@ -74,8 +75,9 @@ class GitLabRepository : Repository {
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch["name"].get!string;
-			Json commit = readJson(getAPIURLPrefix()~"repository/commits/"~branch["commit"]["id"].get!string~"?private_token="~m_authToken, true, true);
-			ret ~= RefInfo(branchname, branch["commit"]["id"].get!string, SysTime.fromISOExtString(commit["committed_date"].get!string));
+			auto commit = branch["commit"]["id"].get!string;
+			auto date = SysTime.fromISOExtString(branch["commit"]["committed_date"].get!string);
+			ret ~= RefInfo(branchname, commit, date);
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
 		return ret;
