@@ -151,6 +151,6 @@ class GitLabRepository : Repository {
 
 	private string getAPIURLPrefix()
 	{
-		return m_baseURL.toString() ~ "api/v3/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
+		return m_baseURL.toString() ~ "api/v4/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
 	}
 }
