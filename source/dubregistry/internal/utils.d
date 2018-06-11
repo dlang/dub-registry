@@ -10,17 +10,41 @@ import vibe.inet.url;
 import vibe.inet.path;
 
 import core.time;
-import std.algorithm : any, among;
+import std.algorithm : any, among, splitter;
 import std.file : tempDir;
 import std.format;
 import std.path;
 import std.process;
+import std.string : indexOf, startsWith;
 import std.typecons;
 
 URL black(URL url)
 @safe {
 	if (url.username.length > 0) url.username = "***";
 	if (url.password.length > 0) url.password = "***";
+	if (url.queryString.length > 0) {
+		size_t i;
+		char[] replace;
+		foreach (part; url.queryString.splitter('&')) {
+			if (part.startsWith("secret", "private")) {
+				if (!replace)
+					replace = url.queryString.dup;
+				auto eq = replace.indexOf('=', i) + 1;
+				if (eq < i + part.length) { // only replace value if possible (key=value)
+					replace = replace[0 .. eq] ~ "***" ~ replace[i + part.length .. $];
+					i = eq + 3;
+				} else { // otherwise replace the whole pair
+					replace = replace[0 .. i] ~ "***" ~ replace[i + part.length .. $];
+					i += 3;
+				}
+			} else {
+				i += part.length;
+			}
+			i++; // '&'
+		}
+		if (replace)
+			url.queryString = (() @trusted => cast(string) replace)();
+	}
 	return url;
 }
 
