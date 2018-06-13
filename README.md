@@ -33,8 +33,8 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 {
 	"github-user": "<your-fancy-user-name>",
 	"github-password": "<your-fancy-password>",
-	"gitlab-user": "<your-fancy-user-name>",
-	"gitlab-password": "<your-fancy-password>"
+	"gitlab-url": "https://gitlab.com/",
+	"gitlab-auth": "<gitlab-api-token from https://gitlab.com/profile/personal_access_tokens>"
 }
 ```
 
