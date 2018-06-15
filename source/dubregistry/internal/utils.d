@@ -29,10 +29,11 @@ URL black(URL url)
 			if (part.startsWith("secret", "private")) {
 				if (!replace)
 					replace = url.queryString.dup;
-				auto eq = replace.indexOf('=', i) + 1;
-				if (eq < i + part.length) { // only replace value if possible (key=value)
-					replace = replace[0 .. eq] ~ "***" ~ replace[i + part.length .. $];
-					i = eq + 3;
+				auto eq = replace.indexOf('=', i);
+				if (eq != -1 && eq + 1 < i + part.length) { // only replace value if possible (key=value)
+					// +1 to pass the '=' character
+					replace = replace[0 .. (eq + 1)] ~ "***" ~ replace[i + part.length .. $];
+					i = eq + 4;
 				} else { // otherwise replace the whole pair
 					replace = replace[0 .. i] ~ "***" ~ replace[i + part.length .. $];
 					i += 3;
@@ -51,6 +52,16 @@ URL black(URL url)
 string black(string url)
 @safe {
 	return black(URL(url)).toString();
+}
+
+@safe unittest
+{
+	assert(black("https://root:root@google.com/") == "https://***:***@google.com/");
+	assert(black("https://root:root@google.com/?secret=12345") == "https://***:***@google.com/?secret=***");
+	assert(black("https://root:root@google.com/?secret_12345") == "https://***:***@google.com/?***");
+	assert(black("https://root:root@google.com/?secret_12345&private=2") == "https://***:***@google.com/?***&private=***");
+	assert(black("https://root:root@google.com/?secret_12345&private=2&") == "https://***:***@google.com/?***&private=***&");
+	assert(black("https://root:root@google.com/?secret_12345&private=2&a=b") == "https://***:***@google.com/?***&private=***&a=b");
 }
 
 /**
