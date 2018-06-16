@@ -40,6 +40,10 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 
 It's recommended to create a separate account for the DUB registry GitHub authentication. Equally, if no GitLab packages are used in your local repository, no GitLab authentication is needed.
 
+### SECURITY NOTICE
+
+Development versions prior to 2.3.0 were leaking the GitLab private token in error messages shown to the user. Please make sure to use the latest version along with a freshly generated token.
+
 Running without the cron job
 ----------------------------
 
