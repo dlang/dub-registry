@@ -74,6 +74,25 @@ And you should notice that it now contains all packages which are listed on code
 
 Note that `--mirror=mirror.json` and `--mirror=https://code.dlang.org` are very similar and the `mirror.json` is only preferred for local development because it allows to easily nuke the entire mongo database and re-initialize it without needing any connection to the internet.
 
+Deploy your private dub-registry with Docker
+--------------------------------------------
+
+The [dlangcommunity/dub-registry](https://hub.docker.com/r/dlangcommunity/dub-registry/) Docker image is available for an easy setup:
+
+```
+docker run --rm -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlang-community/dub-registry
+```
+
+This will run both `mongodb` and `dub-registry` while persisting the database in the `$DUB_REGISTRY_HOME` location. The registry is accessible at http://127.0.0.1:9095
+
+To run it as a daemon and make it auto-restart use:
+
+```
+docker run -d --restart=always -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlang-community/dub-registry
+```
+
+The registry can be configured by adding the `settings.json` file in `$DUB_REGISTRY_HOME` folder.
+
 FAQ: I'm getting an "undefined reference to 'SSLv23_client_method'"
 -------------------------------------------------------------------
 
