@@ -5,6 +5,8 @@ DUB registry
 
 [![Build Status](https://travis-ci.org/dlang/dub-registry.svg)](https://travis-ci.org/dlang/dub-registry)
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 How to build & run locally
 --------------------------
 

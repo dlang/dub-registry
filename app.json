@@ -1,0 +1,24 @@
+{
+  "name": "DUB registry",
+  "description": "Online registry for dub packages",
+  "repository": "https://github.com/dub/dub-registry",
+  "website": "https://github.com/dub/dub-registry",
+  "logo": "https://dlang.org/images/dlogo_opengraph.png",
+  "keywords": ["d", "dlang", "dub", "registry"],
+  "buildpacks": [
+    {
+      "url": "http://github.com/MartinNowak/heroku-buildpack-d.git"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "mongolab:sandbox",
+      "as": "MONGO"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  }
+}

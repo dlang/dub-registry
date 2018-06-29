@@ -5,6 +5,7 @@ block title
 
 block body
 	- import vibe.textfilter.urlencode;
+	- import std.algorithm.searching : startsWith;
 
 	p The following errors have been detected for the recently added/updated version <strong>#{branch_or_version}</strong> of package <strong>#{package_name}</strong>:
 
