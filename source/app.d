@@ -75,9 +75,11 @@ shared static this()
 	auto ghpassword = regsettingsjson["github-password"].opt!string;
 	auto glurl = regsettingsjson["gitlab-url"].opt!string;
 	auto glauth = regsettingsjson["gitlab-auth"].opt!string;
+	auto bbuser = regsettingsjson["bitbucket-user"].opt!string;
+	auto bbpassword = regsettingsjson["bitbucket-password"].opt!string;
 
 	GithubRepository.register(ghuser, ghpassword);
-	BitbucketRepository.register();
+	BitbucketRepository.register(bbuser, bbpassword);
 	if (glurl.length) GitLabRepository.register(glauth, glurl);
 
 	auto router = new URLRouter;
