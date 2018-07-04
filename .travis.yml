@@ -42,8 +42,8 @@ jobs:
         - echo "Deploying to DockerHub..."
         - dub build --build=release
         - docker build -t dlangcommunity/dub-registry:latest .
-        - if [ "$TRAVIS_PULL_REQUEST" == "false" ] ; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" ; fi
-        - if [ "$TRAVIS_PULL_REQUEST" == "false" ] ; then docker push dlangcommunity/dub-registry:latest ; fi
+        - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] ; then docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" ; fi
+        - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] ; then docker push dlangcommunity/dub-registry:latest ; fi
 stages:
   - name: dockerhub-stable
     if: branch = master AND tag IS present
