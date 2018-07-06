@@ -16,7 +16,6 @@ versions "VibeJsonFieldNames"
 configuration "application" {
 	targetType "executable"
 	mainSourceFile "source/app.d"
-	versions "VibeDefaultMain"
 }
 
 configuration "library" {

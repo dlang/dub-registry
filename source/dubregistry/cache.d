@@ -34,7 +34,8 @@ class URLCache {
 
 	this()
 	{
-		m_db = connectMongoDB("127.0.0.1");
+		import dubregistry.mongodb : getMongoClient;
+		m_db = getMongoClient();
 		m_entries = m_db.getCollection("urlcache.entries");
 		m_entries.ensureIndex([tuple("url", 1)]);
 	}

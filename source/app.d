@@ -15,6 +15,7 @@ import dubregistry.web;
 import dubregistry.api;
 
 import std.algorithm : sort;
+import std.process : environment;
 import std.file;
 import std.path;
 import userman.web;
@@ -26,14 +27,19 @@ DubRegistry s_registry;
 DubRegistryWebFrontend s_web;
 string s_mirror;
 
+void checkForNewVersions()
+{
+	if (s_mirror.length) s_registry.mirrorRegistry(s_mirror);
+	else s_registry.updatePackages();
+}
+
 void startMonitoring()
 {
 	void monitorPackages()
 	{
 		sleep(1.seconds()); // give the cache a chance to warm up first
 		while(true){
-			if (s_mirror.length) s_registry.mirrorRegistry(s_mirror);
-			else s_registry.updatePackages();
+			checkForNewVersions;
 			sleep(30.minutes());
 		}
 	}
@@ -43,6 +49,13 @@ void startMonitoring()
 version (linux) private immutable string certPath;
 
 shared static this()
+{
+	enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
+	enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
+	immutable certPath = redhatCA.exists ? redhatCA : debianCA;
+}
+
+void main()
 {
 	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
@@ -59,10 +72,6 @@ shared static this()
 
 	version (linux) {
 		logInfo("Enforcing certificate trust.");
-		enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
-		enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
-		certPath = redhatCA.exists ? redhatCA : debianCA;
-
 		HTTPClient.setTLSSetupCallback((ctx) {
 			ctx.useTrustedCertificateFile(certPath);
 			ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
@@ -87,8 +96,13 @@ shared static this()
 	if (!noMonitoring)
 		router.get("*", (req, res) @trusted { if (!s_checkTask.running) startMonitoring(); });
 
+	// init mongo
+	import dubregistry.mongodb : databaseName, mongoSettings;
+	mongoSettings();
+
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
+	regsettings.databaseName = databaseName;
 	s_registry = new DubRegistry(regsettings);
 
 	UserManController userdb;
@@ -99,7 +113,7 @@ shared static this()
 		udbsettings.serviceName = "DUB - The D package registry";
 		udbsettings.serviceURL = URL("http://code.dlang.org/");
 		udbsettings.serviceEmail = "noreply@vibed.org";
-		udbsettings.databaseURL = "mongodb://127.0.0.1:27017/vpmreg";
+		udbsettings.databaseURL = environment.get("MONGODB_URI", "mongodb://127.0.0.1:27017/vpmreg");
 		udbsettings.requireActivation = false;
 		userdb = createUserManController(udbsettings);
 	}
@@ -122,4 +136,5 @@ shared static this()
 	// poll github for new project versions
 	if (!noMonitoring)
 		startMonitoring();
+	runApplication();
 }

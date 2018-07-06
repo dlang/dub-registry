@@ -1,13 +1,13 @@
 language: d
+d:
+  - dmd
+  - ldc
 sudo: false
 addons:
   apt:
     packages:
     - libevent-dev
     - libssl-dev
-d:
-  - dmd
-  - ldc
 
 env:
  - VIBED_SSL=openssl
