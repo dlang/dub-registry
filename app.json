@@ -7,7 +7,7 @@
   "keywords": ["d", "dlang", "dub", "registry"],
   "buildpacks": [
     {
-      "url": "http://github.com/MartinNowak/heroku-buildpack-d.git"
+      "url": "http://github.com/wilzbach/heroku-buildpack-d.git"
     }
   ],
   "addons": [
