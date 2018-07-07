@@ -74,6 +74,7 @@ class DubRegistryWebFrontend {
 	{
 		import std.algorithm.comparison : min;
 		import std.algorithm.iteration : filter, map;
+		import std.typecons : tuple;
 
 		static import std.algorithm.sorting;
 		import std.algorithm.searching : any;
