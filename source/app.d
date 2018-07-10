@@ -72,10 +72,10 @@ void main()
 
 	version (linux) {
 		logInfo("Enforcing certificate trust.");
-		//HTTPClient.setTLSSetupCallback((ctx) {
-			//ctx.useTrustedCertificateFile(certPath);
-			//ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
-		//});
+		HTTPClient.setTLSSetupCallback((ctx) {
+			ctx.useTrustedCertificateFile(certPath);
+			ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
+		});
 	}
 
 	import dub.internal.utils : jsonFromFile;
