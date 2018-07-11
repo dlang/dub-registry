@@ -657,6 +657,9 @@ block body
 		tr
 			td unittest-cov
 			td <code>"unittests" "coverage" "debugMode" "debugInfo"</code>
+		tr
+			td syntax
+			td <code>"syntaxOnly"</code>
 
 	p The existing build types can be customized and new build types can be added using the global <code>buildType</code> directive. Any of the low level <a href="#build-settings">build settings</a> (excluding "dependencies", "targetType", "targetName", "targetPath", "workingDirectory", "subConfigurations") can be used inside those. The build settings specified here will later be modified/augmented by the package/configuration specific settings.
 
