@@ -11,6 +11,7 @@ import dubregistry.registry;
 import std.algorithm.iteration : map;
 import std.array : array;
 import std.exception : enforce;
+import std.typecons : Flag, Yes, No;
 import vibe.data.json : Json;
 import vibe.http.router;
 import vibe.inet.url;
@@ -71,6 +72,7 @@ interface DubRegistryAPI {
 
 struct SearchResult { string name, description, version_; }
 struct DownloadStats { DbDownloadStats downloads; }
+alias Version = string;
 
 interface IPackages {
 @safe:
@@ -88,10 +90,12 @@ interface IPackages {
 	DownloadStats getStats(string _name, string _version);
 
 	@path(":name/info")
-	Json getInfo(string _name);
+	Json getInfo(string _name, bool minimize = false);
 
 	@path(":name/:version/info")
-	Json getInfo(string _name, string _version);
+	Json getInfo(string _name, string _version, bool minimize = false);
+
+	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false);
 }
 
 class LocalDubRegistryAPI : DubRegistryAPI {
@@ -147,15 +151,29 @@ override {
 		}
 	}
 
-	Json getInfo(string name) {
-		return m_registry.getPackageInfo(rootOf(name))
-			.check!(r => r.info.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found")
+	Json getInfo(string name, bool minimize = false) {
+		immutable flags = minimize ? PackageInfoFlags.minimize : PackageInfoFlags.none;
+		return m_registry.getPackageInfo(rootOf(name), flags)
+			.check!(r => r.info.type != Json.Type.undefined)(HTTPStatus.notFound, "Package/Version not found")
 			.info;
 	}
 
-	Json getInfo(string name, string ver) {
-		return m_registry.getPackageVersionInfo(rootOf(name), ver)
+	Json getInfo(string name, string ver, bool minimize = false) {
+		immutable flags = minimize ? PackageInfoFlags.minimize : PackageInfoFlags.none;
+		return m_registry.getPackageVersionInfo(rootOf(name), ver, flags)
 			.check!(r => r.type != Json.Type.null_)(HTTPStatus.notFound, "Package/Version not found");
+	}
+
+	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false)
+	{
+		import std.array : assocArray;
+
+		auto flags = minimize ? PackageInfoFlags.minimize : PackageInfoFlags.none;
+		if (include_dependencies)
+			flags |= PackageInfoFlags.includeDependencies;
+		return m_registry.getPackageInfosRecursive(packages, flags)
+			.check!(r => r !is null)(HTTPStatus.notFound, "None of the packages were found")
+			.byKeyValue.map!(p => tuple(p.key, p.value.info)).assocArray;
 	}
 }
 

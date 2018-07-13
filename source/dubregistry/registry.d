@@ -195,11 +195,13 @@ class DubRegistry {
 		return m_db.aggregateDownloadStats(packid, ver);
 	}
 
-	Json getPackageVersionInfo(string packname, string ver)
+	Json getPackageVersionInfo(string packname, string ver, PackageInfoFlags flags)
 	{
 		if (ver == "latest") ver = getLatestVersion(packname);
 		if (!m_db.hasVersion(packname, ver)) return Json(null);
-		return m_db.getVersionInfo(packname, ver).serializeToJson();
+		auto ret = m_db.getVersionInfo(packname, ver).serializeToJson();
+		if (flags & PackageInfoFlags.minimize) ret.remove("readme");
+		return ret;
 	}
 
 	string getLatestVersion(string packname)
@@ -207,13 +209,13 @@ class DubRegistry {
 		return m_db.getLatestVersion(packname);
 	}
 
-	PackageInfo getPackageInfo(string packname, bool include_errors = false)
+	PackageInfo getPackageInfo(string packname, PackageInfoFlags flags = PackageInfoFlags.none)
 	{
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
 		catch(Exception) return PackageInfo.init;
 
-		return getPackageInfo(pack, include_errors);
+		return getPackageInfo(pack, flags);
 	}
 
 	/** Gets information about multiple packages at once.
@@ -231,44 +233,71 @@ class DubRegistry {
 			An unordered input range of `PackageInfo` values is returned,
 			corresponding to all or part of the packages of the given names.
 	*/
-	auto getPackageInfos(scope string[] pack_names, bool include_errors = false)
+	auto getPackageInfos(scope string[] pack_names, PackageInfoFlags flags = PackageInfoFlags.none)
 	{
 		return m_db.getPackages(pack_names)
-			.map!(pack => getPackageInfo(pack, include_errors));
+			.map!(pack => getPackageInfo(pack, flags));
 	}
 
-	PackageInfo getPackageInfo(DbPackage pack, bool include_errors)
+	auto getPackageInfo(DbPackage pack, PackageInfoFlags flags = PackageInfoFlags.none)
 	{
 		auto rep = getRepository(pack.repository);
 
 		PackageInfo ret;
-		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep)).array;
+		ret.versions = pack.versions.map!(v => getPackageVersionInfo(v, rep, flags)).array;
 		ret.logo = pack.logo;
 
 		Json nfo = Json.emptyObject;
-		nfo["id"] = pack._id.toString();
-		nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
-		nfo["owner"] = pack.owner.toString();
-		nfo["name"] = pack.name;
 		nfo["versions"] = Json(ret.versions.map!(v => v.info).array);
-		nfo["repository"] = serializeToJson(pack.repository);
-		nfo["categories"] = serializeToJson(pack.categories);
-		nfo["documentationURL"] = pack.documentationURL;
-		if(include_errors) nfo["errors"] = serializeToJson(pack.errors);
+		if (!(flags & PackageInfoFlags.minimize))
+		{
+			nfo["name"] = pack.name;
+			nfo["id"] = pack._id.toString();
+			nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
+			nfo["owner"] = pack.owner.toString();
+			nfo["repository"] = serializeToJson(pack.repository);
+			nfo["categories"] = serializeToJson(pack.categories);
+			nfo["documentationURL"] = pack.documentationURL;
+		}
+		if (flags & PackageInfoFlags.includeErrors)
+			nfo["errors"] = serializeToJson(pack.errors);
 
 		ret.info = nfo;
 
 		return ret;
 	}
 
-	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep)
+	private PackageVersionInfo getPackageVersionInfo(DbPackageVersion v, Repository rep, PackageInfoFlags flags)
 	{
 		// JSON package version info as reported to the client
-		auto nfo = v.info.get!(Json[string]).dup;
+		Json[string] nfo;
+		if (flags & PackageInfoFlags.minimize)
+		{
+			// only keep information relevant for dependency resolution
+			static Json[string] keepDeps(in Json info)
+			{
+				Json[string] ret;
+				ret["name"] = info["name"];
+				ret["dependencies"] = info["dependencies"];
+				auto cfgs = info["configurations"].opt!(Json[])
+					.map!(cfg => Json(["name": cfg["name"], "dependencies": cfg["dependencies"]]));
+				if (!cfgs.empty)
+					ret["configurations"] = cfgs.array.Json;
+				return ret;
+			}
+			nfo = keepDeps(v.info);
+			auto subpkgs = v.info["subPackages"].opt!(Json[]).map!(subpkg => Json(keepDeps(subpkg)));
+			if (!subpkgs.empty)
+				nfo["subPackages"] = subpkgs.array.Json;
+		}
+		else
+		{
+			nfo = v.info.get!(Json[string]).dup;
+			nfo["date"] = v.date.toISOExtString();
+			nfo["readme"] = v.readme;
+			nfo["commitID"] = v.commitID;
+		}
 		nfo["version"] = v.version_;
-		nfo["date"] = v.date.toISOExtString();
-		nfo["readme"] = v.readme;
-		nfo["commitID"] = v.commitID;
 
 		PackageVersionInfo ret;
 		ret.info = Json(nfo);
@@ -277,6 +306,62 @@ class DubRegistry {
 		ret.version_ = v.version_;
 		ret.downloadURL = rep.getDownloadUrl(v.version_.startsWith("~") ? v.version_ : "v"~v.version_);
 		return ret;
+	}
+
+	PackageInfo[string] getPackageInfosRecursive(string[] packnames, PackageInfoFlags flags)
+	{
+		import dub.recipe.packagerecipe : getBasePackageName;
+
+		PackageInfo[string] infos;
+		void[0][string] visited;
+		foreach (packname; packnames)
+		{
+			logDebug("getPackageInfosRecursive: %s", packname);
+			getPackageInfosRecursive(packname, flags, infos, visited);
+		}
+		logDebug("getPackageInfosRecursive for %s returned %s", packnames, infos.byKey);
+		return infos;
+	}
+
+	private void getPackageInfosRecursive(string packname, PackageInfoFlags flags, ref PackageInfo[string] infos, ref void[0][string] visited)
+	{
+		import dub.recipe.packagerecipe : getBasePackageName, getSubPackageName;
+		import std.range : dropOne;
+		import std.algorithm.searching : find;
+
+		if (packname in visited)
+			return;
+		visited[packname] = typeof(visited[packname]).init;
+
+		auto basepkg = getBasePackageName(packname);
+		auto p = basepkg in infos;
+		if (p is null)
+			p = &(infos[basepkg] = getPackageInfo(basepkg, flags));
+
+		if (!(flags & PackageInfoFlags.includeDependencies))
+			return;
+
+		void addDeps(Json info)
+		{
+			foreach (dep, _; info["dependencies"].opt!(Json[string]))
+				getPackageInfosRecursive(dep, flags, infos, visited);
+			foreach (cfg; info["configurations"].opt!(Json[]))
+				foreach (dep, _; cfg["dependencies"].opt!(Json[string]))
+					getPackageInfosRecursive(dep, flags, infos, visited);
+		}
+
+	Louter: foreach (v; p.versions)
+		{
+			auto info = v.info;
+			foreach (subpkg; packname.splitter(":").dropOne)
+			{
+				auto sp = info["subPackages"].opt!(Json[]).find!(sp => sp["name"] == subpkg);
+				if (sp.empty)
+					continue Louter;
+				info = sp.front;
+			}
+			addDeps(info);
+		}
 	}
 
 	string getReadme(Json version_info, DbRepository repository)
@@ -648,6 +733,15 @@ struct PackageInfo {
 	PackageVersionInfo[] versions;
 	BsonObjectID logo;
 	Json info; /// JSON package information, as reported to the client
+}
+
+/// flags to customize getPackageInfo* methods
+enum PackageInfoFlags
+{
+	none,
+	includeDependencies = 1 << 0, /// include package info of dependencies
+	includeErrors = 1 << 1, /// include package errors
+	minimize = 1 << 2, /// return only minimal information (for dependency resolver)
 }
 
 /// Computes a package score from given package stats and global distributions of those stats.
