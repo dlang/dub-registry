@@ -13,6 +13,24 @@ table
 		td: code $&lt;name&gt;_PACKAGE_DIR
 		td Path a specific package that is part of the package's dependency graph
 
+p Inside of build setting values, the following variables are also supported:
+table
+	tr
+		th Variable
+		th Content
+	tr
+		td: code $ARCH
+		td CPU architecture: <code>"x86", "x86_64"</code>
+	tr
+		td: code $PLATFORM
+		td Running platform: <code>"linux", "windows", ...</code>
+	tr
+		td: code $PLATFORM_POSIX
+		td Running platform: <code>"posix", "windows", ...</code>
+	tr
+		td: code $BUILD_TYPE
+		td Type of build: <code>"debug", "release", ...</code>
+
 p Inside of custom commands directives a number of additional variables is available:
 
 table
@@ -45,10 +63,10 @@ table
 		td Contents of the "stringImportPaths" field as defined by the package recipe
 	tr
 		td: code $DC
-		td Compiler binary name (e.g. "../dmd" or "ldc2") 
+		td Compiler binary name (e.g. "../dmd" or "ldc2")
 	tr
 		td: code $DC_BASE
-		td Canonical name of the compiler (e.g. "dmd" or "ldc") 
+		td Canonical name of the compiler (e.g. "dmd" or "ldc")
 	tr
 		td: code $D_FRONTEND_VER
 		td The compiler frontend version represented as a single integer, for example "2072" for DMD 2.072.2
@@ -87,7 +105,7 @@ table
 		td "TRUE" if the #[code --combined] flag was used, empty otherwise
 	tr
 		td: code $DUB_RUN
-		td "TRUE" if the "run" command was invoked, empty otherwise 
+		td "TRUE" if the "run" command was invoked, empty otherwise
 	tr
 		td: code $DUB_FORCE
 		td "TRUE" if the #[code --force] flag was used, empty otherwise
