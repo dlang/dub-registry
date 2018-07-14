@@ -477,21 +477,21 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		render!("search_results.dt", queryString, results);
 	}
 
-	void getGettingStarted() { render!("getting_started.dt"); }
-	void getAbout() { redirect("/getting_started"); }
-	void getUsage() { redirect("/getting_started"); }
-	void getAdvancedUsage() { render!("advanced_usage.dt"); }
+	void getGettingStarted() { redirect("https://dub.pm/getting_started"); }
+	void getAbout() { getGettingStarted(); }
+	void getUsage() { getGettingStarted(); }
+	void getAdvancedUsage() { redirect("https://dub.pm/getting_started"); }
 
-	void getPublish() { render!("publish.dt"); }
-	void getDevelop() { render!("develop.dt"); }
+	void getPublish() { redirect("https://dub.pm/commandline"); }
+	void getDevelop() { redirect("https://dub.pm/commandline"); }
 
 	@path("/package-format")
 	void getPackageFormat(string lang = null)
 	{
 		switch (lang) {
-			default: redirect("package-format?lang=json"); break;
-			case "json": render!("package_format_json.dt"); break;
-			case "sdl": render!("package_format_sdl.dt"); break;
+			default: redirect("https://dub.pm/package-format-json"); break;
+			case "json": redirect("https://dub.pm/package-format-json"); break;
+			case "sdl": redirect("https://dub.pm/package-format-sdl"); break;
 		}
 	}
 
@@ -758,9 +758,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@path("/docs/commandline")
 	void getCommandLineDocs()
 	{
-		import dub.commandline;
-		auto commands = getCommands();
-		render!("docs.commandline.dt", commands);
+		redirect("https://dub.pm/commandline");
 	}
 
 	private void enforceUserPackage(User user, string package_name)
