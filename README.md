@@ -84,7 +84,8 @@ Deploy your private dub-registry with Docker
 The [dlangcommunity/dub-registry](https://hub.docker.com/r/dlangcommunity/dub-registry/) Docker image is available for an easy setup:
 
 ```
-docker run --rm -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlang-community/dub-registry
+export DUB_REGISTRY_HOME="$PWD"
+docker run --rm -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlangcommunity/dub-registry
 ```
 
 This will run both `mongodb` and `dub-registry` while persisting the database in the `$DUB_REGISTRY_HOME` location. The registry is accessible at http://127.0.0.1:9095
@@ -92,7 +93,7 @@ This will run both `mongodb` and `dub-registry` while persisting the database in
 To run it as a daemon and make it auto-restart use:
 
 ```
-docker run -d --restart=always -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlang-community/dub-registry
+docker run -d --restart=always -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlangcommunity/dub-registry
 ```
 
 The registry can be configured by adding the `settings.json` file in `$DUB_REGISTRY_HOME` folder.
