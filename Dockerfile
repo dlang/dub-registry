@@ -1,4 +1,4 @@
-FROM bitnami/mongodb:3.7
+FROM bitnami/mongodb:3.6-debian-8
 
 # Based on https://github.com/rracariu/docker
 
@@ -6,7 +6,7 @@ MAINTAINER "DLang Community <community@dlang.io>"
 
 EXPOSE 9095
 
-RUN apt-get update && apt-get install -y netcat unzip imagemagick
+RUN apt-get update && apt-get install -y netcat unzip imagemagick libssl-dev
 
 COPY dub-registry /opt/dub-registry/dub-registry
 COPY public /opt/dub-registry/public
