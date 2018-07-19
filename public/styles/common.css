@@ -339,6 +339,12 @@ button.primary:hover, button.primary:focus {
 
 .clipboard-pkg-row input {
 	width: 280px;
+	background: #fff;
+	color: #000;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	padding: 4px;
+	margin: 2px;
 }
 
 /********************/
