@@ -20,5 +20,11 @@
     "web": {
       "quantity": 1
     }
+  },
+  "env": {
+    "GENERATE_DEFAULT_DATA": {
+      "description": "Whether the database should be pre-filled. Use '0' for no.",
+      "required": false
+    }
   }
 }

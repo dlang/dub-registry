@@ -55,6 +55,21 @@ shared static this()
 	immutable certPath = redhatCA.exists ? redhatCA : debianCA;
 }
 
+// generate dummy data for e.g. Heroku's preview apps
+void defaultInit(UserManController userMan, DubRegistry registry)
+{
+	if (environment.get("GENERATE_DEFAULT_DATA", "0") == "1" &&
+		registry.getPackageDump().empty)
+	{
+		logInfo("'GENERATE_DEFAULT_DATA' is set and an empty database has been detected. Inserting dummy data.");
+		auto userId = userMan.registerUser("dummy@dummy.org", "dummyUser",
+			"Dummy User", "test1234");
+		DbRepository repo;
+		repo.parseURL(URL("https://github.com/libmir/mir-optim"));
+		registry.addPackage(repo, userId);
+	}
+}
+
 void main()
 {
 	bool noMonitoring;
@@ -121,6 +136,9 @@ void main()
 	// web front end
 	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb);
 	router.registerDubRegistryAPI(s_registry);
+
+	// check whether dummy data should be loaded
+	defaultInit(userdb, s_registry);
 
 	// start the web server
 	auto settings = new HTTPServerSettings;
