@@ -102,6 +102,16 @@ void main()
 	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
+    version (linux)
+    {
+    	// register memory error handler on heroku
+    	if ("DYNO" in environment)
+    	{
+			import etc.linux.memoryerror : registerMemoryErrorHandler;
+        	registerMemoryErrorHandler();
+        }
+    }
+
 	string hostname = "code.dlang.org";
 
 	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
