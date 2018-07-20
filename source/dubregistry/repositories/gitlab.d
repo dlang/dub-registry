@@ -24,7 +24,7 @@ class GitLabRepository : Repository {
 
 	private {
 		string m_owner;
-		string m_project;
+		string m_projectPath;
 		URL m_baseURL;
 		string m_authToken;
 	}
@@ -37,10 +37,10 @@ class GitLabRepository : Repository {
 		addRepositoryFactory("gitlab", &factory);
 	}
 
-	this(string owner, string project, string auth_token, URL base_url)
+	this(string owner, string projectPath, string auth_token, URL base_url)
 	{
 		m_owner = owner;
-		m_project = project;
+		m_projectPath = projectPath;
 		m_authToken = auth_token;
 		m_baseURL = base_url;
 	}
@@ -59,7 +59,7 @@ class GitLabRepository : Repository {
 				auto commit = tag["commit"]["id"].get!string;
 				auto date = SysTime.fromISOExtString(tag["commit"]["committed_date"].get!string);
 				ret ~= RefInfo(tagname, commit, date);
-				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
+				logDebug("Found tag for %s/%s: %s", m_owner, m_projectPath, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
 			}
@@ -78,7 +78,7 @@ class GitLabRepository : Repository {
 			auto commit = branch["commit"]["id"].get!string;
 			auto date = SysTime.fromISOExtString(branch["commit"]["committed_date"].get!string);
 			ret ~= RefInfo(branchname, commit, date);
-			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
+			logDebug("Found branch for %s/%s: %s", m_owner, m_projectPath, branchname);
 		}
 		return ret;
 	}
@@ -123,7 +123,7 @@ class GitLabRepository : Repository {
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
-		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_project ~ "/raw/" ~ commit_sha) ~ path.toString() ~ "?private_token="~m_authToken;
+		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_projectPath ~ "/raw/" ~ commit_sha) ~ path.toString() ~ "?private_token="~m_authToken;
 		downloadCached(url, (scope input) {
 			reader(input);
 		}, true);
@@ -148,11 +148,11 @@ class GitLabRepository : Repository {
 		if (ver.startsWith("~")) ver = ver[1 .. $];
 		else ver = ver;
 		auto venc = () @trusted { return encodeComponent(ver); } ();
-		return m_baseURL.toString()~m_owner~"/"~m_project~"/repository/archive.zip?ref="~venc;
+		return m_baseURL.toString()~m_owner~"/"~m_projectPath~"/repository/archive.zip?ref="~venc;
 	}
 
 	private string getAPIURLPrefix()
 	{
-		return m_baseURL.toString() ~ "api/v4/projects/" ~ (m_owner ~ "/" ~ m_project).urlEncode ~ "/";
+		return m_baseURL.toString() ~ "api/v4/projects/" ~ (m_owner ~ "/" ~ m_projectPath).urlEncode ~ "/";
 	}
 }

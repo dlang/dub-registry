@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- auto title = "Add new package";
-	
+
 block body
 
 	- if(error.length)
@@ -15,13 +15,13 @@ block body
 	.inputForm
 		h1 Add new package
 			p.light
-				a.blind(href="#{req.rootDir}publish") Learn more 
+				a.blind(href="#{req.rootDir}publish") Learn more
 				| about publishing.
 
 		form(method="POST", action="#{req.rootDir}register_package")
 			p
 				label(for="project") Repository URL
-				input(type="text", name="url", value=url, pattern="^(https?://)?(www\.)?(github(\.com)?|gitlab(\.com)?|bitbucket(\.org)?)/[^/]+/[^/]+([?#.].*)?$", placeholder="github.com/user/repository")
+				input(type="text", name="url", value=url, pattern="^(https?:\/\/)?(www\.)?(github(\.com)?|gitlab(\.com)?|bitbucket(\.org)?)(/[^/]+)+/[^/]+([?#.].*)?$", placeholder="github.com/user/repository")
 				span.repoError Please enter a valid project URL or tuple to a GitHub, GitLab or BitBucket project, such as #[code https://gitlab.com/dlang/dub] or #[code bitbucket/dlang/dub].
 			p
 				button(type="submit") Register package
