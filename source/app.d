@@ -59,7 +59,7 @@ shared static this()
 void defaultInit(UserManController userMan, DubRegistry registry)
 {
 	if (environment.get("GENERATE_DEFAULT_DATA", "0") == "1" &&
-		registry.getPackageDump().empty)
+		registry.getPackageDump().empty && userMan.getUserCount() == 0)
 	{
 		logInfo("'GENERATE_DEFAULT_DATA' is set and an empty database has been detected. Inserting dummy data.");
 		auto userId = userMan.registerUser("dummy@dummy.org", "dummyUser",
