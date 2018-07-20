@@ -70,6 +70,33 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 	}
 }
 
+struct AppConfig
+{
+	string ghuser, ghpassword,
+		   glurl, glauth,
+		   bbuser, bbpassword;
+	void init()
+	{
+		import dub.internal.utils : jsonFromFile;
+		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
+		static immutable variables = [
+			["ghuser", "github-user"],
+			["ghpassword", "github-password"],
+			["glurl", "gitlab-url"],
+			["glauth", "gitlab-auth"],
+			["bbuser", "bitbucket-user"],
+			["bbpassword", "bitbucket-password"],
+		];
+		static foreach (var; variables)
+		{
+			// fallback to environment variables
+			mixin(var[0] ~ ` = regsettingsjson["`~var[1]~`"].opt!string(
+				environment.get("`~var[1]~`".replace("-", "_").toUpper)
+			);`);
+		}
+	}
+}
+
 void main()
 {
 	bool noMonitoring;
@@ -93,18 +120,12 @@ void main()
 		//});
 	}
 
-	import dub.internal.utils : jsonFromFile;
-	auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
-	auto ghuser = regsettingsjson["github-user"].opt!string;
-	auto ghpassword = regsettingsjson["github-password"].opt!string;
-	auto glurl = regsettingsjson["gitlab-url"].opt!string;
-	auto glauth = regsettingsjson["gitlab-auth"].opt!string;
-	auto bbuser = regsettingsjson["bitbucket-user"].opt!string;
-	auto bbpassword = regsettingsjson["bitbucket-password"].opt!string;
+	AppConfig appConfig;
+	appConfig.init();
 
-	GithubRepository.register(ghuser, ghpassword);
-	BitbucketRepository.register(bbuser, bbpassword);
-	if (glurl.length) GitLabRepository.register(glauth, glurl);
+	GithubRepository.register(appConfig.ghuser, appConfig.ghpassword);
+	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
+	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });

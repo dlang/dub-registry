@@ -25,6 +25,30 @@
     "GENERATE_DEFAULT_DATA": {
       "description": "Whether the database should be pre-filled. Use '0' for no.",
       "required": false
+    },
+    "GITHUB_USER": {
+      "description": "GitHub user for authenticated access",
+      "required": false
+    },
+    "GITHUB_PASSWORD": {
+      "description": "GitHub password for authenticated access",
+      "required": false
+    },
+    "GITLAB_URL": {
+      "description": "GitLab URL for authenticated access",
+      "required": false
+    },
+    "GITLAB_AUTH": {
+      "description": "GitLab authentication for authenticated access",
+      "required": false
+    },
+    "BITBUCKET_USER": {
+      "description": "BitBucket user for authenticated access",
+      "required": false
+    },
+    "BITBUCKET_PASSWORD": {
+      "description": "BitBucket password for authenticated access",
+      "required": false
     }
   }
 }
