@@ -352,6 +352,7 @@ class DubRegistry {
 
 	Louter: foreach (v; p.versions)
 		{
+			import std.algorithm.iteration : splitter;
 			auto info = v.info;
 			foreach (subpkg; packname.splitter(":").dropOne)
 			{
