@@ -509,9 +509,13 @@ struct DbRepository {
 		path.popFront;
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing project)");
-		project = path.front.name;
+
+		if(kind == "gitlab")  // Allow any number of segments, as GitLab's subgroups can be nested
+			project = path.map!"a.name".join("/");
+		else
+			project = path.front.name;
 		path.popFront;
-		if (!path.empty)
+		if (!path.empty && kind != "gitlab")
 			throw new Exception("Invalid Repository URL (got more than owner and project)");
 	}
 
@@ -523,6 +527,8 @@ struct DbRepository {
 		assert(r == DbRepository("bitbucket", "bar", "baz"));
 		r.parseURL(URL("https://gitlab.com/foo/bar"));
 		assert(r == DbRepository("gitlab", "foo", "bar"));
+		r.parseURL(URL("https://gitlab.com/group/subgroup/subsubgroup/project"));
+		assert(r == DbRepository("gitlab", "group", "subgroup/subsubgroup/project"));
 		assertThrown(r.parseURL(URL("ftp://github.com/foo/bar")));
 		assertThrown(r.parseURL(URL("ftp://github.com/foo/bar")));
 		assertThrown(r.parseURL(URL("http://github.com/foo/")));
