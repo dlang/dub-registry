@@ -97,10 +97,15 @@ class DubRegistry {
 		return m_updateQueue.getPosition(pack_name);
 	}
 
-	auto searchPackages(string query)
+	size_t matchingPackageCount(string query)
+	{
+		return m_db.matchingPackageCount(query);
+	}
+
+	auto searchPackages(string query, ulong skip = 0, ulong limit = 20)
 	{
 		static struct Info { string name; DbPackageStats stats; DbPackageVersion _base; alias _base this; }
-		return m_db.searchPackages(query).filter!(p => p.versions.length > 0).map!(p =>
+		return m_db.searchPackages(query, skip, limit).filter!(p => p.versions.length > 0).map!(p =>
 			Info(p.name, p.stats, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
 	}
 

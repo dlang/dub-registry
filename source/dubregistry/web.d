@@ -469,11 +469,27 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		m_usermanauth = new UserManWebAuthenticator(userman);
 	}
 
-	void querySearch(string q = "")
+	void querySearch(string q = "", ulong skip = 0, ulong limit = 20)
 	{
-		auto results = m_registry.searchPackages(q);
-		auto queryString = q;
-		render!("search_results.dt", queryString, results);
+		auto res = m_registry.searchPackages(q, skip, limit);
+
+		static struct Info {
+			typeof(res) results;
+			size_t found;
+			ulong skip;
+			ulong limit;
+			string query;
+		}
+
+		Info info = {
+			results: res,
+			found: q.strip.length ? m_registry.matchingPackageCount(q) : m_packages.length,
+			skip: skip,
+			limit: limit,
+			query: q,
+		};
+
+		render!("search_results.dt", info);
 	}
 
 	void getGettingStarted() { render!("getting_started.dt"); }

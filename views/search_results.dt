@@ -2,10 +2,12 @@ extends layout
 
 block title
 	- import dubregistry.viewutils;
-	- auto title = "Search results for \"" ~ queryString ~ "\"";
+	- import std.algorithm.comparison : min;
+
+	- auto title = "Search results for \"" ~ info.query ~ "\"";
 
 block body
-	p Search results for: <em>#{queryString}</em>
+	p Search results for: <em>#{info.query}</em>
 
 	- size_t count = 0;
 
@@ -16,7 +18,7 @@ block body
 			th Date
 			th Score
 			th Description
-		- foreach (p; results)
+		- foreach (p; info.results)
 			- auto desc = p.info["description"].opt!string;
 			- auto ver = p.version_;
 			- count++;
@@ -35,4 +37,18 @@ block body
 				- else
 					td #{desc[0 .. 98]}&hellip;
 
-	p Found #{count} packages.
+	ul.pageNav
+		- foreach (i; 0 .. (info.found + info.limit - 1) / info.limit)
+			- if (i * info.limit == info.skip)
+				li.selected= i+1
+			- else
+				li: a(href="?q=#{info.query}&skip=#{i*info.limit}&limit=#{info.limit}")= i+1
+	ul.pageNav.perPage
+		- static immutable limit_enum = [10, 20, 50, 100];
+		- foreach (limit; limit_enum)
+			- if (info.limit == limit)
+				li.selected= limit
+			- else
+				li: a(href="?q=#{info.query}&?skip=#{info.skip}&limit=#{limit}")= limit
+
+	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.found)} of #{info.found} packages found.
