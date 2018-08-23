@@ -97,16 +97,16 @@ class DubRegistry {
 		return m_updateQueue.getPosition(pack_name);
 	}
 
-	size_t matchingPackageCount(string query)
-	{
-		return m_db.matchingPackageCount(query);
-	}
-
-	auto searchPackages(string query, ulong skip = 0, ulong limit = 20)
+	auto searchPackages(string query, int skip = 0, int limit = 20)
 	{
 		static struct Info { string name; DbPackageStats stats; DbPackageVersion _base; alias _base this; }
-		return m_db.searchPackages(query, skip, limit).filter!(p => p.versions.length > 0).map!(p =>
-			Info(p.name, p.stats, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
+		auto r = m_db.searchPackages(query, skip, limit);
+		
+		return tuple!("packages", "count")(
+			r.packages
+				.filter!(p => p.versions.length > 0)
+				.map!(p => Info(p.name, p.stats, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_))),
+			r.count);
 	}
 
 	RepositoryInfo getRepositoryInfo(DbRepository repository)

@@ -312,38 +312,36 @@ class DbController {
 		return deserializeBson!(DbPackageVersion)(pack["versions"][0]);
 	}
 
-	DbPackage[] searchPackages(string query, ulong skip = 0, ulong limit = 20)
+	auto searchPackages(string query, int skip = 0, int limit = 20)
 	{
 		import std.math : round;
 
-		enforce(skip < int.max && limit < int.max);
+		enforce(skip >= 0 && limit >= 0);
 
 		if (!query.strip.length) {
-			return m_packages.find()
+			auto packages = m_packages.find()
 				.sort(["stats.score": 1])
-				.skip(cast(int) skip)
-				.limit(cast(int) limit)
-				.map!(deserializeBson!DbPackage)
-				.array;
+				.skip(skip)
+				.limit(limit);
+
+			return tuple!("packages", "count")(
+				packages.map!(deserializeBson!DbPackage).array,
+				packages.count());
 		}
 
-		return m_packages
+		auto packages = m_packages
 			.find(["$text": ["$search": query]], ["score": bson(["$meta": "textScore"])])
 			.sort(["score": bson(["$meta": "textScore"])])
-			.skip(cast(int) skip)
-			.limit(cast(int) limit)
-			.map!(deserializeBson!DbPackage)
-			.array
-			// sort by bucketized score preserving FTS score order
-			.sort!((a, b) => a.stats.score.round > b.stats.score.round, SwapStrategy.stable)
-			.release;
-	}
+			.skip(skip)
+			.limit(limit);
 
-	size_t matchingPackageCount(string query)
-	{
-		return m_packages
-			.find(["$text": ["$search": Bson(query)], "versions": ["$ne": Bson.emptyArray]])
-			.count();
+		return tuple!("packages", "count")(
+			packages.map!(deserializeBson!DbPackage)
+				.array
+				// sort by bucketized score preserving FTS score order
+				.sort!((a, b) => a.stats.score.round > b.stats.score.round, SwapStrategy.stable)
+				.release,
+			packages.count());
 	}
 
 	BsonObjectID addDownload(BsonObjectID pack, string ver, string user_agent)

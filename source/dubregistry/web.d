@@ -469,12 +469,12 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		m_usermanauth = new UserManWebAuthenticator(userman);
 	}
 
-	void querySearch(string q = "", ulong skip = 0, ulong limit = 20)
+	void querySearch(string q = "", int skip = 0, int limit = 20)
 	{
 		auto res = m_registry.searchPackages(q, skip, limit);
 
 		static struct Info {
-			typeof(res) results;
+			typeof(res.packages) results;
 			size_t found;
 			ulong skip;
 			ulong limit;
@@ -482,8 +482,8 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		}
 
 		Info info = {
-			results: res,
-			found: q.strip.length ? m_registry.matchingPackageCount(q) : m_packages.length,
+			results: res.packages,
+			found: q.strip.length ? res.count : m_packages.length,
 			skip: skip,
 			limit: limit,
 			query: q,
