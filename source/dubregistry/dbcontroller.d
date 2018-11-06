@@ -86,12 +86,10 @@ class DbController {
 		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
 
 		// add current text index
-		Bson[string] doc;
-		doc["v"] = 1;
-		doc["key"] = ["_fts": Bson("text"), "_ftsx": Bson(1)];
-		doc["ns"] = db.name ~ "." ~ m_packages.name;
-		doc["name"] = "packages_full_text_search_index_v2";
-		doc["weights"] = [
+		Bson[string] fts;
+		fts["key"] = ["$**": Bson("text")];
+		fts["name"] = "packages_full_text_search_index_v2";
+		fts["weights"] = [
 			"name": Bson(4),
 			"categories": Bson(3),
 			"versions.info.description" : Bson(3),
@@ -99,8 +97,12 @@ class DbController {
 			"versions.info.author" : Bson(1),
 			"versions.readme" : Bson(2),
 		];
-		doc["background"] = true;
-		db["system.indexes"].insert(doc);
+		fts["background"] = true;
+		auto cmd = Bson.emptyObject;
+		cmd["createIndexes"] = Bson("packages");
+		cmd["indexes"] = [Bson(fts)];
+		auto res = db.runCommand(cmd);
+		enforce(res["ok"].opt!double == 1.0, "Failed to create search index.\n"~res.toString);
 
 		version (DubRegistry_RepairVersionOrder) {
 			// sort package versions newest to oldest
