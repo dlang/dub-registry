@@ -219,7 +219,7 @@ block body
 					a.blind(href="#{req.rootDir}packages/#{urlEncode(packageName)}/versions")
 						| Show all #{packageInfo["versions"].length} versions
 
-			- auto stats = registry.getPackageStats(packageName);
+			- auto stats = registry.getPackageStats(normalizedPackageName);
 
 			dt Download Stats:
 			dd#stats
