@@ -48,6 +48,7 @@
 			{"name": "database", "description": "Database clients or implementations"},
 			{"name": "filesystem", "description": "File system libraries"},
 			{"name": "gamedev", "description": "Libraries aimed at game development"},
+			{"name": "geospatial", "description": "Geospatial and geographic libraries"},
 			{"name": "graphics", "description": "2D/3D graphics"},
 			{"name": "gui", "description": "Graphical user interfaces"},
 			{"name": "tui", "description": "Text user interfaces"},
