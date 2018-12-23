@@ -328,6 +328,7 @@ class DbController {
 		return m_packages
 			.find(["$text": ["$search": query]], ["score": bson(["$meta": "textScore"])])
 			.sort(["score": bson(["$meta": "textScore"])])
+			.limit(50) // fix #341 - avoid hitting mem-limit of MongoDB's sort
 			.map!(deserializeBson!DbPackage)
 			.array
 			// sort by bucketized score preserving FTS score order
