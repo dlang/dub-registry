@@ -148,6 +148,10 @@ struct AppConfig
 void main()
 {
 	bool noMonitoring, noServe;
+
+	import std.random : rndGen, unpredictableSeed;
+	rndGen.seed(unpredictableSeed);
+
 	setLogFile("log.txt", LogLevel.diagnostic);
 
 	version (linux) version (DMD)
