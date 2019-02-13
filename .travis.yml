@@ -16,8 +16,7 @@ env:
 # Data definition directives inside inline asm are not supported yet.
 matrix:
   allow_failures:
-      - d: ldc
-        env: VIBED_SSL=botan
+      - env: VIBED_SSL=botan
 
 script: dub test --override-config="vibe-d:tls/${VIBED_SSL}"
 
