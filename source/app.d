@@ -135,7 +135,7 @@ void main()
 
 	GithubRepository.register(appConfig.ghuser, appConfig.ghpassword);
 	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
-	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
+	if (appConfig.glurl.length || s_mirror.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
