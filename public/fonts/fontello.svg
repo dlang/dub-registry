@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg">
-<metadata>Copyright (C) 2018 by original authors @ fontello.com</metadata>
+<metadata>Copyright (C) 2019 by original authors @ fontello.com</metadata>
 <defs>
 <font id="fontello" horiz-adv-x="1000" >
 <font-face font-family="fontello" font-weight="400" font-stretch="normal" units-per-em="1000" ascent="850" descent="-150" />
@@ -47,6 +47,8 @@
 <glyph glyph-name="category-mobile" unicode="&#xe813;" d="M480 840q42 0 71-29t29-71l0-780q0-40-29-70t-71-30l-380 0q-40 0-70 30t-30 70l0 780q0 42 30 71t70 29l380 0z m-190-940q30 0 50 15t20 35q0 22-20 36t-50 14q-28 0-49-15t-21-35 21-35 49-15z m210 150l0 660-420 0 0-660 420 0z" horiz-adv-x="580" />
 
 <glyph glyph-name="category-communication" unicode="&#xe814;" d="M290 240l350 0q2 0 6 2l4 0 0-92q0-40-29-70t-71-30l-250 0-150-150 0 150-50 0q-40 0-70 30t-30 70l0 300q0 42 30 71t70 29l190 0 0-310z m610 560q42 0 71-29t29-71l0-300q0-40-29-70t-71-30l-50 0 0-150-150 150-350 0 0 400q0 42 30 71t70 29l450 0z" horiz-adv-x="1000" />
+
+<glyph glyph-name="cancel" unicode="&#xe815;" d="M799 116l-156-157-234 235-235-235-156 157 234 234-234 234 156 157 235-235 234 235 156-157-234-234z" horiz-adv-x="817" />
 
 <glyph glyph-name="category-crypto" unicode="&#xe82b;" d="M200 800c-25 0-50-25-50-50l0-50 350 0 0 50c0 25-25 50-50 50l-250 0z m-50-150l0-25c0-97 78-175 175-175s175 78 175 175l0 25-350 0z m-50-250c-75 0-100-125-100-200l0-300 134 0 341 500-375 0z m450 0l-341-500 441 0 0 300c0 75-25 200-100 200z" horiz-adv-x="650" />
 
