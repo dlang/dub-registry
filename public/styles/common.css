@@ -702,6 +702,11 @@ section.pkgconfig#tab-general img.packageLogo {
 
 section.pkgconfig h3 {
 	margin: 1em 0 0.5em 0;
+	font-style: normal;
+}
+
+section.pkgconfig.js h2:first-child + h3, section.pkgconfig section > h3:first-child, section.pkgconfig section > :first-child > h3:first-child {
+	margin-top: 0;
 }
 
 @media (max-width: 600px) {

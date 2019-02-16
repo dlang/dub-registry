@@ -110,6 +110,7 @@ function upgradeSubtabPage(subtab, page, show) {
 		header.style.display = "none";
 
 	subtab.style.display = show ? "" : "none";
+	subtab.classList.add("js");
 }
 
 /**

@@ -48,10 +48,12 @@ block body
 							| Select new Logo (max. 1 MiB, optimal size 512x512)
 							input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
 						button#logo-upload-button(type="submit") Upload
-					form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
-						button.danger(type="submit") Delete
+					form.deleteLogo(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo",
+							onsubmit="return confirm('Do you really want to reset the package logo back to the default one? You cannot undo this action.')")
+						button.danger.icon-cancel(type="submit", aria-lable="Delete", title="Delete")
 
 			section.contents
+				h3 Statistics
 				p
 					- auto stats = registry.getPackageStats(packageName).downloads;
 					| #[strong= stats.daily.to!string] downloads today
@@ -108,8 +110,9 @@ block body
 
 	section.pkgconfig#tab-repository
 		a#repository(name="repository")
-		h2#repository Repository
+		h2 Repository
 
+		h3 Transfer Repository
 		.inputForm
 			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
 				p
@@ -134,7 +137,8 @@ block body
 
 	section.pkgconfig#tab-danger
 		a#danger(name="danger")
-		h2 Remove
+		h2 Advanced
+		h3 Delete Package
 		p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
 		p
 			| If you want to #[strong rename] the project, create a new repository and keep the old one.
