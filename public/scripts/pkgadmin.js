@@ -30,22 +30,16 @@ function updateLogoPreview(input) {
 
 /**
  * @param {HTMLElement} subtabs
+ * @param {string} [openPage] the page to open by default or undefined to resolve from hash. If not found, the first page will be shown instead.
  */
-function upgradeSubtabs(subtabs, openpage) {
-	if (openpage === undefined)
-		openpage = window.location.hash.substr(1);
+function upgradeSubtabs(subtabs, openPage) {
+	if (openPage === undefined)
+		openPage = window.location.hash.substr(1);
 
 	var links = subtabs.querySelectorAll("a.tab");
 
-	if (openpage)
-	{
-		var hasPage = false;
-		for (var i = 0; i < links.length; i++)
-			if (links[i].getAttribute("data-tab") == openpage)
-				hasPage = true;
-		if (!hasPage)
-			return;
-	}
+	if (openPage && !subtabsHasPage(subtabs, openPage))
+		return;
 
 	var first;
 	var gotActive = false;
@@ -59,8 +53,8 @@ function upgradeSubtabs(subtabs, openpage) {
 		if (!page)
 			continue;
 
-		if (!openpage)
-			openpage = page;
+		if (!openPage)
+			openPage = page;
 		if (!first)
 			first = link;
 
@@ -68,7 +62,7 @@ function upgradeSubtabs(subtabs, openpage) {
 		if (!subtab)
 			continue;
 
-		var show = page == openpage;
+		var show = page == openPage;
 		upgradeSubtabPage(subtab, page, show);
 
 		if (show) {
@@ -87,7 +81,22 @@ function upgradeSubtabs(subtabs, openpage) {
 }
 
 /**
+ * @param {HTMLElement} subtabs the subtabs header containing links
+ * @param {string} page
+ */
+function subtabsHasPage(subtabs, page)
+{
+	var links = subtabs.querySelectorAll("a.tab");
+	for (var i = 0; i < links.length; i++)
+		if (links[i].getAttribute("data-tab") == page)
+			return true;
+	return false;
+}
+
+/**
  * @param {HTMLElement} subtab
+ * @param {string} page
+ * @param {boolean} show
  */
 function upgradeSubtabPage(subtab, page, show) {
 	var header = subtab.firstElementChild;
@@ -103,14 +112,20 @@ function upgradeSubtabPage(subtab, page, show) {
 	subtab.style.display = show ? "" : "none";
 }
 
-function upgradeAllSubtabs(openpage) {
+/**
+ * @param {string} [openPage]
+ */
+function upgradeAllSubtabs(openPage) {
 	var subtabs = document.querySelectorAll(".subtabsHeader");
 	for (var i = 0; i < subtabs.length; i++)
-		upgradeSubtabs(subtabs[i], openpage);
+		upgradeSubtabs(subtabs[i], openPage);
 }
 
-upgradeAllSubtabs("");
 if (window.location.hash.length)
 	upgradeAllSubtabs(window.location.hash.substr(1));
+else
+	upgradeAllSubtabs("");
 
-window.onhashchange = function() { upgradeAllSubtabs(); };
+window.addEventListener("hashchange", function () {
+	upgradeAllSubtabs();
+});
