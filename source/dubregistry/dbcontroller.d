@@ -84,19 +84,24 @@ class DbController {
 
 		// drop old text index versions
 		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
+		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index_v2"]);
 
 		// add current text index
-		Bson[string] fts;
-		fts["key"] = ["$**": Bson("text")];
-		fts["name"] = "packages_full_text_search_index_v2";
-		fts["weights"] = [
-			"name": Bson(4),
-			"categories": Bson(3),
-			"versions.info.description" : Bson(3),
-			"versions.info.homepage" : Bson(1),
-			"versions.info.author" : Bson(1),
-			"versions.readme" : Bson(2),
+		immutable keyWeights = [
+			"name": 8,
+			"categories": 4,
+			"versions.info.description": 2,
+			"versions.info.authors": 1
 		];
+		Bson[string] fts;
+		fts["key"] = Bson.emptyObject;
+		fts["weights"] = Bson.emptyObject;
+		foreach (k, w; keyWeights)
+		{
+			fts["key"][k] = Bson("text");
+			fts["weights"][k] = Bson(w);
+		}
+		fts["name"] = "packages_full_text_search_index_v3";
 		fts["background"] = true;
 		auto cmd = Bson.emptyObject;
 		cmd["createIndexes"] = Bson("packages");
@@ -325,14 +330,22 @@ class DbController {
 				.array;
 		}
 
-		return m_packages
-			.find(["$text": ["$search": query]], ["score": bson(["$meta": "textScore"])])
-			.sort(["score": bson(["$meta": "textScore"])])
-			.limit(50) // fix #341 - avoid hitting mem-limit of MongoDB's sort
+		auto pkgs = m_packages
+			.find(["$text": ["$search": query]], ["textScore": bson(["$meta": "textScore"])])
+			.sort(["textScore": bson(["$meta": "textScore"])]) // sort to only keep most relevant results
+			.limit(50) // limit irrelevant sort results (fixes #341)
 			.map!(deserializeBson!DbPackage)
-			.array
-			// sort by bucketized score preserving FTS score order
-			.sort!((a, b) => a.stats.score.round > b.stats.score.round, SwapStrategy.stable)
+			.array;
+
+		// normalize textScore to same scale as package score
+		immutable minMaxTS = pkgs.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
+		immutable scale = (DbPackageStats.maxScore - DbPackageStats.minScore) / (minMaxTS[1] - minMaxTS[0]);
+		foreach (ref pkg; pkgs)
+			pkg.textScore = (pkg.textScore - minMaxTS[0]) * scale + DbPackageStats.minScore;
+
+		// sort found packages by weighted textScore and package score
+		return pkgs
+			.sort!((a, b) => a.stats.score + 2 * a.textScore > b.stats.score + 2 * b.textScore)
 			.release;
 	}
 
@@ -482,6 +495,7 @@ struct DbPackage {
 	long updateCounter = 0; // used to implement lockless read-modify-write cycles
 	@optional BsonObjectID logo; // reference to m_files
 	@optional string documentationURL;
+	@optional float textScore = 0; // for FTS textScore in searchPackages
 }
 
 struct DbRepository {
