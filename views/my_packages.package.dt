@@ -64,10 +64,14 @@ block body
 						br
 					| #[strong= stats.total.to!string] downloads total
 
+				hr
+
 				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url")
 					h3 Documentation URL
 					input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+")
 					button.danger(type="submit") Change documentation URL
+
+				hr
 
 				h3 Update
 				p Packages are automatically updated, so there is no need to trigger an update manually.
