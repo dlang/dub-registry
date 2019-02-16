@@ -76,7 +76,7 @@ function upgradeSubtabs(subtabs, openPage) {
 	if (!gotActive && first) {
 		first.classList.add("active");
 		var page = first.getAttribute("data-tab");
-		upgradeSubtabPage(document.getElementById("tab-" + page), page, show);
+		upgradeSubtabPage(document.getElementById("tab-" + page), page, true);
 	}
 }
 
