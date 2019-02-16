@@ -702,7 +702,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		}
 		m_registry.setPackageCategories(_packname, uniquecategories);
 
-		redirect("/my_packages/"~_packname);
+		redirect("/my_packages/"~_packname~"#categories");
 	}
 
 	@auth @path("/my_packages/:packname/set_repository") @errorDisplay!getMyPackagesPackage
@@ -716,7 +716,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		rep.project = project;
 		m_registry.setPackageRepository(_packname, rep);
 
-		redirect("/my_packages/"~_packname);
+		redirect("/my_packages/"~_packname~"#repository");
 	}
 
 	@auth @path("/my_packages/:packname/set_logo") @errorDisplay!getMyPackagesPackage
