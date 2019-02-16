@@ -1,0 +1,41 @@
+!!! 5
+html
+	head
+		block css
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top.css")
+		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top_p.css")
+
+		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
+		meta(name="viewport",content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0")
+		block title
+		title= title ~ " - DUB - The D package registry"
+	body#Home.doc
+		script document.body.className += ' have-javascript'
+		#light
+			.search-container
+				#search-box
+					form(method="GET", action="#{req.rootDir}search")
+						span#search-query
+							input#q(name="q", placeholder="Search for a package")
+						span#search-submit
+							button(type="submit")
+								i.fa.fa-search
+
+		#content
+			block body
+
+		#footer
+			ul
+				- import std.algorithm.searching : startsWith;
+				- import std.range : empty;
+				- import std.string : split;
+				- import std.typecons : tuple;
+				- auto listitems = [tuple("Documentation", "help-circled", "https://dub.pm"), tuple("Download", "download", "download"), tuple("GitHub (DUB)", "github-circled", "https://github.com/dlang/dub"),tuple("GitHub (DUB registry)", "github", "https://github.com/dlang/dub-registry")];
+					- foreach(items; listitems)
+						li
+							i(class="fa icon-#{items[1]}")
+							a(href="#{items[2]}")
+								span=items[0]
+
+	script(type="application/javascript", src="/scripts/menu.js")

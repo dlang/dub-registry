@@ -71,41 +71,74 @@ h2 {
 
 /* Fontello icons */
 
-.icon-category-desktop:before { content: '\e800'; }
-.icon-category-editor:before { content: '\e801'; }
-.icon-category-web:before { content: '\e802'; }
-.icon-category-audio:before { content: '\e803'; }
-.icon-category-network:before { content: '\e804'; }
-.icon-category-photo:before { content: '\e805'; }
-.icon-category-productivity:before { content: '\e806'; }
-.icon-category-unknown:before { content: '\e807'; }
-.icon-category-video:before { content: '\e808'; }
-.icon-category-i18n:before { content: '\e809'; }
-.icon-category-library:before { content: '\e80a'; }
-.icon-category-graphics:before { content: '\e80b'; }
-.icon-category-generic:before { content: '\e80c'; }
-.icon-category-auth:before { content: '\e80d'; }
-.icon-category-cpu:before { content: '\e80e'; }
-.icon-category-gc:before { content: '\e80f'; }
-.icon-category-mem:before { content: '\e810'; }
-.icon-category-data:before { content: '\e811'; }
-.icon-category-std:before { content: '\e812'; }
-.icon-category-mobile:before { content: '\e813'; }
-.icon-category-communication:before { content: '\e814'; }
-.icon-category-crypto:before { content: '\e82b'; }
-.icon-search:before { content: '\f002'; }
-.icon-category-scientific:before { content: '\f016'; }
-.icon-link-ext:before { content: '\f08e'; }
-.icon-category-binding:before { content: '\f097'; }
-.icon-github-circled:before { content: '\f09b'; }
-.icon-menu:before { content: '\f0c9'; }
-.icon-down-dir:before { content: '\f0d7'; }
-.icon-up-dir:before { content: '\f0d8'; }
-.icon-category-game:before { content: '\f11b'; }
-.icon-code:before { content: '\f121'; }
-.icon-bitbucket:before { content: '\f171'; }
-.icon-category-3d:before { content: '\f1b2'; }
-.icon-category-database:before { content: '\f1c0'; }
-.icon-category-server:before { content: '\f233'; }
-.icon-category-development:before { content: '\f275'; }
-.icon-gitlab:before { content: '\f296'; }
+.icon-category-desktop:before { content: '\e800'; } /* '' */
+.icon-category-editor:before { content: '\e801'; } /* '' */
+.icon-category-web:before { content: '\e802'; } /* '' */
+.icon-category-audio:before { content: '\e803'; } /* '' */
+.icon-category-network:before { content: '\e804'; } /* '' */
+.icon-category-photo:before { content: '\e805'; } /* '' */
+.icon-category-productivity:before { content: '\e806'; } /* '' */
+.icon-category-unknown:before { content: '\e807'; } /* '' */
+.icon-category-video:before { content: '\e808'; } /* '' */
+.icon-category-i18n:before { content: '\e809'; } /* '' */
+.icon-category-library:before { content: '\e80a'; } /* '' */
+.icon-category-graphics:before { content: '\e80b'; } /* '' */
+.icon-category-generic:before { content: '\e80c'; } /* '' */
+.icon-category-auth:before { content: '\e80d'; } /* '' */
+.icon-category-cpu:before { content: '\e80e'; } /* '' */
+.icon-category-gc:before { content: '\e80f'; } /* '' */
+.icon-category-mem:before { content: '\e810'; } /* '' */
+.icon-category-data:before { content: '\e811'; } /* '' */
+.icon-category-std:before { content: '\e812'; } /* '' */
+.icon-category-mobile:before { content: '\e813'; } /* '' */
+.icon-category-communication:before { content: '\e814'; } /* '' */
+.icon-download:before { content: '\e815'; } /* '' */
+.icon-help-circled:before { content: '\e816'; } /* '' */
+.icon-category-crypto:before { content: '\e82b'; } /* '' */
+.icon-search:before { content: '\f002'; } /* '' */
+.icon-category-scientific:before { content: '\f016'; } /* '' */
+.icon-link-ext:before { content: '\f08e'; } /* '' */
+.icon-category-binding:before { content: '\f097'; } /* '' */
+.icon-github-circled:before { content: '\f09b'; } /* '' */
+.icon-menu:before { content: '\f0c9'; } /* '' */
+.icon-down-dir:before { content: '\f0d7'; } /* '' */
+.icon-up-dir:before { content: '\f0d8'; } /* '' */
+.icon-github:before { content: '\f113'; } /* '' */
+.icon-category-game:before { content: '\f11b'; } /* '' */
+.icon-code:before { content: '\f121'; } /* '' */
+.icon-bitbucket:before { content: '\f171'; } /* '' */
+.icon-category-3d:before { content: '\f1b2'; } /* '' */
+.icon-category-database:before { content: '\f1c0'; } /* '' */
+.icon-category-server:before { content: '\f233'; } /* '' */
+.icon-category-development:before { content: '\f275'; } /* '' */
+.icon-gitlab:before { content: '\f296'; } /* '' */
+
+
+/* search box */
+
+#light .search-container
+{
+	font-size: 3em;
+}
+
+#light #search-box
+{
+    display: block;
+    padding-left: 0em;
+	text-align: center;
+}
+
+#light span#search-query {
+	width: 100%;
+	height: 3em;
+}
+
+#light span#search-submit button {
+	height: 1.5em;
+	background: #969696;
+	padding: 0 0.1em;
+}
+
+#light span#search-query input, #light span#search-submit button {
+	font-size: 2em;
+}

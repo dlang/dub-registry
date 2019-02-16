@@ -765,3 +765,19 @@ Individual DUB package CSS definitions
 #front-view-all-btn {
 	text-align: right;
 }
+
+/*Footer*/
+
+#footer {
+	padding-top: 2em;
+	margin: 0 auto;
+	width: 740px;
+}
+
+#footer ul {
+	list-style-type: none;
+}
+#footer li {
+	float: left;
+	padding: 16px;
+}

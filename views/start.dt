@@ -1,4 +1,4 @@
-extends layout
+extends layout-light
 
 block title
 	- import dubregistry.viewutils;
