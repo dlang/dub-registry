@@ -33,8 +33,8 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 
 ```json
 {
-	"github-user": "<your-fancy-user-name>",
-	"github-password": "<your-fancy-password>",
+	"github-user": "<github-user-name>",
+	"github-password": "<github-personal-access-token from https://github.com/settings/tokens>",
 	"gitlab-url": "https://gitlab.com/",
 	"gitlab-auth": "<gitlab-api-token from https://gitlab.com/profile/personal_access_tokens>",
 	"bitbucket-user": "<your-fancy-user-name>",
@@ -43,6 +43,10 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 ```
 
 It's recommended to create a separate account for the DUB registry GitHub authentication. Equally, if no GitLab packages are used in your local repository, no GitLab authentication is needed.
+
+It's absolutely recommended to create a personal access token without any extra permissions for your GitHub account instead of entering your password plain text into the settings file. You can generate an access token at https://github.com/settings/tokens (Settings -> Developer Settings -> Personal access tokens)
+
+Note that previous versions of this README stated to write down the password in plain text. This should be considered insecure as special characters in your password such as '@' could expose following parts of the password to the users.
 
 ### SECURITY NOTICE
 
