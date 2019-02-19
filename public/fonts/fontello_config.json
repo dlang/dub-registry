@@ -181,12 +181,6 @@
       "src": "entypo"
     },
     {
-      "uid": "2626e3a1bbcd90e45849af3b58a1d594",
-      "css": "category-gc",
-      "code": 59407,
-      "src": "entypo"
-    },
-    {
       "uid": "054519608bca087aa306252471dda9c4",
       "css": "category-mem",
       "code": 59408,
@@ -233,6 +227,18 @@
       "css": "link-ext",
       "code": 61582,
       "src": "fontawesome"
+    },
+    {
+      "uid": "2626e3a1bbcd90e45849af3b58a1d594",
+      "css": "category-gc",
+      "code": 59407,
+      "src": "entypo"
+    },
+    {
+      "uid": "11e664deed5b2587456a4f9c01d720b6",
+      "css": "cancel",
+      "code": 59413,
+      "src": "iconic"
     }
   ]
 }
