@@ -46,8 +46,6 @@ It's recommended to create a separate account for the DUB registry GitHub authen
 
 It's absolutely recommended to create a personal access token without any extra permissions for your GitHub account instead of entering your password plain text into the settings file. You can generate an access token at https://github.com/settings/tokens (Settings -> Developer Settings -> Personal access tokens)
 
-Note that previous versions of this README stated to write down the password in plain text. This should be considered insecure as special characters in your password such as '@' could expose following parts of the password to the users.
-
 ### SECURITY NOTICE
 
 Development versions prior to 2.3.0 were leaking the GitLab private token in error messages shown to the user. Please make sure to use the latest version along with a freshly generated token.
