@@ -331,12 +331,6 @@ button.primary:hover, button.primary:focus {
 	padding-top: 5px;
 }
 
-.clipboard-pkg-title {
-	font-weight: bold;
-	display: inline-block;
-	width: 60px;
-}
-
 .clipboard-pkg-row input {
 	width: 280px;
 	background: #fff;

@@ -64,20 +64,13 @@ block body
 
 		p= versionInfo["description"].opt!string
 		br
-		p To use this package, put the following dependency into your project's dependencies section:
+		p To use this package, run the following command in your project's root directory:
 		.clipboard-pkg
 			- string expr = versionInfo["version"].get!string;
 			- if( !expr.startsWith("~") ) expr = "~>" ~ expr;
 			.clipboard-pkg-row
-				.clipboard-pkg-title dub.json
-				input(id="package-clipboard-json",value='"#{packageName}": "#{expr}"')
-				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-json")
-					img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
-
-			.clipboard-pkg-row
-				.clipboard-pkg-title dub.sdl
-				input(id="package-clipboard-sdl",value='dependency "#{packageName}" version="#{expr}"')
-				button(class="btn-clipboard",data-clipboard-target="#package-clipboard-sdl")
+				input(id="package-clipboard",value='dub add #{packageName}')
+				button(class="btn-clipboard",data-clipboard-target="#package-clipboard")
 					img(src="/images/clippy.svg", width=13, alt="Copy to clipboard")
 
 		- if (versionInfo["subPackages"].opt!(Json[]).length)
