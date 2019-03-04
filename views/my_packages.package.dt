@@ -15,151 +15,144 @@ block body
 		- if (latest.type == Json.Type.Object)
 			|  #[strong.badge= latest["version"].opt!string]
 
-	- if (error.length)
-		- import std.string : splitLines;
-		p.redAlert
-			- foreach (ln; error.splitLines)
-				|= ln
-				br
+	.subtabsHeader
+		a.tab(data-tab="general", href="#general") General
+		a.tab(data-tab="categories", href="#categories") Categories
+		a.tab(data-tab="repository", href="#repository") Repository
+		a.tab(data-tab="danger", href="#danger") Advanced
+	section.pkgconfig#tab-general
+		a#general(name="general")
+		h2 General
 
-	- if (pack["errors"].length)
-		p.redAlert
-			- foreach_reverse(e; pack["errors"])
-				|= e.get!string
-				br
+		- if (error.length)
+			- import std.string : splitLines;
+			p.redAlert
+				- foreach (ln; error.splitLines)
+					|= ln
+					br
 
-	h2 General
+		- if (pack["errors"].length)
+			p.redAlert
+				- foreach_reverse(e; pack["errors"])
+					|= e.get!string
+					br
 
-	.inputForm
-		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
-			h3 Logo
-			- string logoPath = "/packages/" ~ packageName ~ "/logo";
-			img.packageLogo(src=logoPath)
-			p.logoError.error
-			label
-				| Select new Logo (max. 1 MiB, optimal size 512x512)
-				input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
-			button#logo-upload-button(type="submit") Upload
-		form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo")
-			button.danger(type="submit") Delete
+		.sideways
+			aside
+				.inputForm
+					form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
+						- string logoPath = "/packages/" ~ packageName ~ "/logo";
+						img.packageLogo(src=logoPath)
+						p.logoError.error
+						label
+							| Select new Logo (max. 1 MiB, optimal size 512x512)
+							input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
+						button#logo-upload-button(type="submit") Upload
+					form.deleteLogo(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo",
+							onsubmit="return confirm('Do you really want to reset the package logo back to the default one? You cannot undo this action.')")
+						button.danger.icon-cancel(type="submit", aria-lable="Delete", title="Delete")
 
-		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url")
-			h3 Documentation URL
-			input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+")
-			button.danger(type="submit") Change documentation URL
-
-	h2 Downloads
-	p
-		- auto stats = registry.getPackageStats(packageName).downloads;
-		| #[strong= stats.daily.to!string] downloads today
-			br
-		| #[strong= stats.weekly.to!string] downloads this week
-			br
-		| #[strong= stats.monthly.to!string] downloads this month
-			br
-		| #[strong= stats.total.to!string] downloads total
-
-	h2 Update
-	p Packages are automatically updated, so there is no need to trigger an update manually.
-	- auto update_check_index = registry.getUpdateQueuePosition(packageName);
-	- if (update_check_index == 0)
-		p Package is currently being updated.
-	- else if (update_check_index == 1)
-		p Package is scheduled for an automatic update check. Still have to wait for one more package.
-	- else if (update_check_index > 1)
-		p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
-	.inputForm
-		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
-			p
-				button(type="submit") Trigger manual update
-
-	h2 Categories
-
-	p You can choose up to four categories for this package here. Please select only the categories that match most closely. If you feel like there is a category missing, please edit the <a href="https://github.com/rejectedsoftware/dub-registry/blob/master/categories.json">category file</a> and submit a pull request.
-
-	.inputForm
-		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
-			- foreach (i; 0 .. 4)
+			section.contents
+				h3 Statistics
 				p
-					label(for="categories_#{i}") Category #{i+1}:
-					- string selected;
-					- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
-					select(name="categories_#{i}", id="category#{i}", size="1")
-						- void outputCat(Category cat)
-							- if (!cat)
-								option(value="")
-							- else
-								option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
-							- if (!cat || cat.subCategories.length)
-								- foreach (c; cat ? cat.subCategories : categories)
-									- outputCat(c);
-						- outputCat(null);
-			p
-				button(type="submit") Apply
+					- auto stats = registry.getPackageStats(packageName).downloads;
+					| #[strong= stats.daily.to!string] downloads today
+						br
+					| #[strong= stats.weekly.to!string] downloads this week
+						br
+					| #[strong= stats.monthly.to!string] downloads this month
+						br
+					| #[strong= stats.total.to!string] downloads total
 
-	h2#repository Repository
+				hr
 
-	.inputForm
-		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
-			p
-				label(for="kind") Repository type
-				select(name="kind", size="1")
-					- import dubregistry.repositories.repository;
-					- auto rkind = pack["repository"]["kind"].get!string;
-					- if (supportsRepositoryKind("github"))
-						option(value="github", selected=rkind == "github") GitHub
-					- if (supportsRepositoryKind("bitbucket"))
-						option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket
-					- if (supportsRepositoryKind("gitlab"))
-						option(value="gitlab", selected=rkind == "gitlab") GitLab
-			p
-				label(for="owner") Repository owner:
-				input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
-			p
-				label(for="project") Repository name:
-				input(type="text", name="project", value=pack["repository"]["project"].get!string)
-			p
-				button(type="submit") Apply
+				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url")
+					h3 Documentation URL
+					input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+")
+					button.danger(type="submit") Change documentation URL
 
+				hr
 
-	h2 Remove
-	p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
-	p
-		| If you want to #[strong rename] the project, create a new repository and keep the old one.
-			br
-		| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") form] above.
-			br
-		| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
+				h3 Update
+				p Packages are automatically updated, so there is no need to trigger an update manually.
+				- auto update_check_index = registry.getUpdateQueuePosition(packageName);
+				- if (update_check_index == 0)
+					p Package is currently being updated.
+				- else if (update_check_index == 1)
+					p Package is scheduled for an automatic update check. Still have to wait for one more package.
+				- else if (update_check_index > 1)
+					p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
+				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
+					p
+						button(type="submit") Trigger manual update
 
-	.inputForm
-		form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
-			button.danger(type="submit") Remove this package
+	section.pkgconfig#tab-categories
+		a#categories(name="categories")
+		h2 Categories
 
-	:javascript
-		var logoUploadButton = document.getElementById("logo-upload-button");
-		logoUploadButton.disabled = true;
-		function updateLogoPreview(input) {
-			var f = input.files[0];
-			if (!f) return;
-			logoUploadButton.disabled = true;
-			var error = false;
-			document.querySelector(".logoError").textContent = "";
-			if (f.type != "image/png" && f.type != "image/gif" && f.type != "image/jpeg" && f.type != "image/bmp")
-				document.querySelector(".logoError").textContent += "Warning: Invalid image type. ";
-			else if (f.size > 1024 * 1024) {
-				document.querySelector(".logoError").textContent += "Error: Image file size too large! ";
-				error = true;
-			}
-			var img = document.querySelector("img.packageLogo");
-			img.src = window.URL.createObjectURL(f);
-			img.onload = function () {
-				if (img.naturalWidth && img.naturalHeight) {
-					if (img.naturalWidth < 2 || img.naturalHeight < 2 || img.naturalWidth > 2048 || img.naturalHeight > 2048) {
-						document.querySelector(".logoError").textContent += "Invalid image dimenstions, must be between 2x2 and 2048x2048. ";
-						error = true;
-					}
-					if (!error)
-						logoUploadButton.disabled = false;
-				}
-			};
-		}
+		p You can choose up to four categories for this package here. Please select only the categories that match most closely. If you feel like there is a category missing, please edit the <a href="https://github.com/rejectedsoftware/dub-registry/blob/master/categories.json">category file</a> and submit a pull request.
+
+		.inputForm
+			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
+				- foreach (i; 0 .. 4)
+					p
+						label(for="categories_#{i}") Category #{i+1}:
+						- string selected;
+						- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
+						select(name="categories_#{i}", id="category#{i}", size="1")
+							- void outputCat(Category cat)
+								- if (!cat)
+									option(value="")
+								- else
+									option(value=cat.name, selected=cat.name==selected)= cat.indentedDescription
+								- if (!cat || cat.subCategories.length)
+									- foreach (c; cat ? cat.subCategories : categories)
+										- outputCat(c);
+							- outputCat(null);
+				p
+					button(type="submit") Apply
+
+	section.pkgconfig#tab-repository
+		a#repository(name="repository")
+		h2 Repository
+
+		h3 Transfer Repository
+		.inputForm
+			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
+				p
+					label(for="kind") Repository type
+					select(name="kind", size="1")
+						- import dubregistry.repositories.repository;
+						- auto rkind = pack["repository"]["kind"].get!string;
+						- if (supportsRepositoryKind("github"))
+							option(value="github", selected=rkind == "github") GitHub
+						- if (supportsRepositoryKind("bitbucket"))
+							option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket
+						- if (supportsRepositoryKind("gitlab"))
+							option(value="gitlab", selected=rkind == "gitlab") GitLab
+				p
+					label(for="owner") Repository owner:
+					input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
+				p
+					label(for="project") Repository name:
+					input(type="text", name="project", value=pack["repository"]["project"].get!string)
+				p
+					button(type="submit") Apply
+
+	section.pkgconfig#tab-danger
+		a#danger(name="danger")
+		h2 Advanced
+		h3 Delete Package
+		p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
+		p
+			| If you want to #[strong rename] the project, create a new repository and keep the old one.
+				br
+			| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") repository tab].
+				br
+			| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
+
+		.inputForm
+			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
+				button.danger(type="submit") Remove this package
+
+	script(src="#{req.rootDir}scripts/pkgadmin.js")

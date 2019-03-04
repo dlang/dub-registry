@@ -109,3 +109,4 @@ h2 {
 .icon-category-server:before { content: '\f233'; }
 .icon-category-development:before { content: '\f275'; }
 .icon-gitlab:before { content: '\f296'; }
+.icon-cancel:before { content: '\e815'; }
