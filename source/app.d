@@ -62,11 +62,21 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 		registry.getPackageDump().empty && userMan.getUserCount() == 0)
 	{
 		logInfo("'GENERATE_DEFAULT_DATA' is set and an empty database has been detected. Inserting dummy data.");
-		auto userId = userMan.registerUser("dummy@dummy.org", "dummyUser",
+		auto userId = userMan.registerUser("dummy@dummy.org", "dummyuser",
 			"Dummy User", "test1234");
-		DbRepository repo;
-		repo.parseURL(URL("https://github.com/libmir/mir-optim"));
-		registry.addPackage(repo, userId);
+		auto packages = [
+			"https://github.com/libmir/mir-algorithm",
+			"https://github.com/libmir/mir-runtime",
+			"https://github.com/libmir/mir-random",
+			"https://github.com/libmir/mir-core",
+			"https://gitlab.com/WebFreak001/bancho-irc",
+		];
+		foreach (url; packages)
+		{
+			DbRepository repo;
+			repo.parseURL(URL(url));
+			registry.addPackage(repo, userId);
+		}
 	}
 }
 
