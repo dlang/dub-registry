@@ -95,6 +95,7 @@ interface IPackages {
 	@path(":name/:version/info")
 	Json getInfo(string _name, string _version, bool minimize = false);
 
+	@path(":name/:version/infos")
 	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false);
 }
 
