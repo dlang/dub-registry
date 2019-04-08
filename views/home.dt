@@ -92,7 +92,7 @@ block body
 						- else
 							| #{ver[0 .. 18]}&hellip;
 						span.dull.nobreak(title=formatDateTime(p["date"]))<> , #{formatFuzzyDate(p["date"])}
-					td.nobreak(title="#{formatPackageStats(pl.stats)}", style="color: #B03931;")!= formatScore(req.rootDir, pl.stats.score)
+					td.nobreak(title="#{formatPackageStats(pl.stats)}", style="color: #B03931;")!= formatScore(pl.stats.score)
 					td.nobreak(title=formatDateTime(pl["dateAdded"]))= formatDate(pl["dateAdded"])
 					- if (desc.length <= 100)
 						td= desc
