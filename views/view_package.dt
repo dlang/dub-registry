@@ -235,7 +235,7 @@ block body
 							|  downloads total
 
 			dt Score:
-			dd#score(title="#{formatPackageStats(stats)}")!= formatScore(req.rootDir, stats.score)
+			dd#score(title="#{formatPackageStats(stats)}")!= formatScore(stats.score)
 
 			dt Short URL:
 				dd
