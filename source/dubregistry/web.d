@@ -636,7 +636,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		if (!ignore_fork) {
 			auto info = m_registry.getRepositoryInfo(rep);
 			if (info.isFork) {
-				render!("my_packages.register.warn_fork.dt", kind, owner, project);
+				render!("my_packages.register.warn_fork.dt", url);
 				return;
 			}
 		}
