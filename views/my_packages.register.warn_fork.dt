@@ -9,15 +9,11 @@ block body
 
 	p
 		form(method="POST", action='#{req.rootDir}register_package')
-			input(type="hidden", name="kind", value=kind)
-			input(type="hidden", name="owner", value=owner)
-			input(type="hidden", name="project", value=project)
+			input(type="hidden", name="url", value=url)
 			input(type="hidden", name="ignore_fork", value=true)
 			button(type="submit") Yes, I'm using a unique name, let me register now!
 
 	p
 		form(method="GET", action="#{req.rootDir}register_package")
-			input(type="hidden", name="kind", value=kind)
-			input(type="hidden", name="owner", value=owner)
-			input(type="hidden", name="project", value=project)
+			input(type="hidden", name="url", value=url)
 			button(type="submit") No, take me back, I still have to sort this out.
