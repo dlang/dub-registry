@@ -113,7 +113,7 @@ block body
 			- else
 				li: a(href=makeHomeURL(sort_mode, category, info.skip, limit))= limit
 
-	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit+1, info.packageCount)} of #{info.packageCount} packages found.
+	p Displaying results #{info.skip+1} to #{min(info.skip+info.limit, info.packageCount)} of #{info.packageCount} packages found.
 
 	- if (!mirror.length)
 		- if (req.session)
