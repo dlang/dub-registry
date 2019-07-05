@@ -167,6 +167,7 @@ override {
 	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false)
 	{
 		import std.array : assocArray;
+		import std.typecons : tuple;
 
 		auto flags = minimize ? PackageInfoFlags.minimize : PackageInfoFlags.none;
 		if (include_dependencies)
