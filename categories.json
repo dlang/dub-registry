@@ -52,6 +52,7 @@
 			{"name": "graphics", "description": "2D/3D graphics"},
 			{"name": "gui", "description": "Graphical user interfaces"},
 			{"name": "tui", "description": "Text user interfaces"},
+			{"name": "testing", "description": "Automated testing helper libraries"},
 			{"name": "memory", "description": "Memory allocation, managment and other related routines"},
 			{"name": "network", "description": "Networking libraries", "categories": [
 				{"name": "messaging", "description": "Network messaging library"}
