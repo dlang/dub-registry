@@ -590,8 +590,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 
 	void getDownload()
 	{
-		auto info = downloadInfo();
-		render!("download.dt", info);
+		redirect("https://github.com/dlang/dub/releases");
 	}
 
 	@path("/download/LATEST")
