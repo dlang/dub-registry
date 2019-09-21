@@ -16,7 +16,7 @@ block body
 		h1 Add new package
 			p.light
 				a.blind(href="#{req.rootDir}publish") Learn more
-				| about publishing.
+				|  about publishing.
 
 		form(method="POST", action="#{req.rootDir}register_package")
 			p
