@@ -96,6 +96,18 @@ interface IPackages {
 	Json getInfo(string _name, string _version, bool minimize = false);
 
 	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false);
+
+	@path(":name/update")
+	string postUpdate(string _name, string secret = "");
+
+	@path(":name/update/github")
+	@headerParam("event", "X-GitHub-Event")
+	@queryParam("secret", "secret")
+	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init);
+
+	@path(":name/update/gitlab")
+	@headerParam("secret", "X-Gitlab-Token")
+	string postUpdateGitlab(string _name, string secret, string object_kind = "");
 }
 
 class LocalDubRegistryAPI : DubRegistryAPI {
@@ -176,6 +188,52 @@ override {
 			.check!(r => r !is null)(HTTPStatus.notFound, "None of the packages were found")
 			.byKeyValue.map!(p => tuple(p.key, p.value.info)).assocArray;
 	}
+
+	@before!updateSecretReader("secret")
+	string postUpdate(string _name, string secret = "")
+	{
+		if (!secret.length)
+			return "No secret sent";
+
+		string expected = m_registry.getPackageSecret(_name);
+		if (!expected.length || secret != expected)
+			return "Secret doesn't match";
+
+		m_registry.triggerPackageUpdate(_name);
+		return "Queued package update";
+	}
+
+	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init)
+	{
+		if (event == "create") {
+			return postUpdate(_name, secret);
+		} else if (event == "ping") {
+			enforceBadRequest(hook.type == Json.Type.object, "hook is not of type json");
+			auto eventsObj = *enforceBadRequest("events" in hook, "no events object sent in hook object");
+			enforceBadRequest(eventsObj.type == Json.Type.array, "Hook events must be of type array");
+			auto events = eventsObj.get!(Json[]);
+
+			foreach (ev; events)
+				if (ev.type == Json.Type.string && ev.get!string == "create")
+					return "valid";
+
+			string expected = m_registry.getPackageSecret(_name);
+			if (expected.length && secret.length && secret == expected)
+				m_registry.addPackageError(_name,
+					"GitHub hook configuration is invalid. Hook is missing 'create' event. (Tags or branches)");
+
+			return "invalid hook - create event missing";
+		} else
+			return "ignored event " ~ event;
+	}
+
+	string postUpdateGitlab(string _name, string secret, string object_kind)
+	{
+		if (object_kind != "tag_push")
+			return "ignored event " ~ object_kind;
+
+		return postUpdate(_name, secret);
+	}
 }
 
 private:
@@ -187,6 +245,18 @@ private:
 	}
 }
 
+private string updateSecretReader(scope HTTPServerRequest req, scope HTTPServerResponse res)
+{
+	string header = req.query.get("header", "");
+	if (header.length)
+		return req.headers.get(header);
+
+	string ret = req.contentType == "application/json" ? req.json["secret"].get!string : req.form.get("secret", "");
+	if (ret.length)
+		return ret;
+
+	return req.query.get("secret", "");
+}
 
 private	auto ref T check(alias cond, T)(auto ref T t, HTTPStatus status, string msg)
 {

@@ -196,6 +196,16 @@ class DbController {
 		m_packages.update(["name": packname], ["$set": ["errors": error]]);
 	}
 
+	void addPackageError(string packname, string error)
+	{
+		m_packages.update(["name": packname], ["$push": ["errors": error]]);
+	}
+
+	void clearPackageErrors(string packname)
+	{
+		m_packages.update(["name": packname], ["$set": ["errors": Bson.emptyArray]]);
+	}
+
 	void setPackageCategories(string packname, string[] categories...)
 	{
 		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
@@ -249,6 +259,21 @@ class DbController {
 
 		rev = (cast(ubyte[])id.get.get!BsonObjectID).idup;
 		return data.get.data.rawData;
+	}
+
+	string getPackageSecret(string packname)
+	{
+		auto ret = m_packages.findOne(["name": packname]).tryIndex("secret");
+		if (ret.isNull) return null;
+		else return ret.get.get!string;
+	}
+
+	void setPackageSecret(string packname, string secret)
+	{
+		if (secret.length)
+			m_packages.update(["name": packname], ["$set": ["secret": secret]]);
+		else
+			m_packages.update(["name": packname], ["$unset": ["secret": 0]]);
 	}
 
 	void addVersion(string packname, DbPackageVersion ver)
@@ -496,6 +521,8 @@ struct DbPackage {
 	@optional BsonObjectID logo; // reference to m_files
 	@optional string documentationURL;
 	@optional float textScore = 0; // for FTS textScore in searchPackages
+	/// Random secret string used for package management API (webhooks)
+	@optional string secret;
 }
 
 struct DbRepository {

@@ -8,8 +8,7 @@ block body
 	- import dubregistry.registry : PackageInfoFlags;
 	- import dubregistry.web : Category;
 
-	- auto pack = registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors).info;
-
+	- auto pack = nfo.info;
 	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 		- if (latest.type == Json.Type.Object)
@@ -82,9 +81,10 @@ block body
 					p Package is scheduled for an automatic update check. Still have to wait for one more package.
 				- else if (update_check_index > 1)
 					p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
-				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
-					p
+				.updates
+					form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
 						button(type="submit") Trigger manual update
+					a(href="#repository"): button Setup update hook
 
 	section.pkgconfig#tab-categories
 		a#categories(name="categories")
@@ -115,6 +115,36 @@ block body
 	section.pkgconfig#tab-repository
 		a#repository(name="repository")
 		h2 Repository
+
+		h3 Update Hooks
+		p You can POST to a special endpoint on the dub registry to trigger a manual package update.
+		p Setup these hooks in GitHub, GitLab or some other service you use to trigger when you push a new tag to make them available on the registry as quickly as possible.
+		- auto secret = nfo.secret;
+		.inputForm
+			- if (secret.length)
+				- auto apiUrl = req.fullURL;
+				- apiUrl.path = typeof(apiUrl.path).init;
+				p
+					label(for="generic") Generic update webhook: (POST)
+					input#generic(type="text", readonly, value="#{apiUrl}/api/packages/#{packageName}/update")
+				p
+					label(for="generic") GitHub webhook:
+					input#generic(type="text", readonly, value="#{apiUrl}/api/packages/#{packageName}/update/github?secret=#{secret}")
+				p
+					label(for="generic") GitLab webhook:
+					input#generic(type="text", readonly, value="#{apiUrl}/api/packages/#{packageName}/update/gitlab")
+				hr
+				p
+					label(for="generic") Secret:
+					input#generic(type="text", readonly, value=secret)
+				hr
+				form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/unset_secret", onsubmit="confirm('Are you sure you want to revoke the secret and disable webhook support? Existing webhooks will not work anymore.')")
+					button(type="submit") Revoke Webhooks
+				form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/regen_secret", onsubmit="confirm('Are you sure you want to regenerate the secret? Existing webhooks will not work anymore.')")
+					button(type="submit") Invalidate Secret
+			- else
+				form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/regen_secret")
+					button(type="submit") Enable Webhooks
 
 		h3 Transfer Repository
 		.inputForm

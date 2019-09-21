@@ -239,7 +239,7 @@ class DubRegistry {
 			.map!(pack => getPackageInfo(pack, flags));
 	}
 
-	auto getPackageInfo(DbPackage pack, PackageInfoFlags flags = PackageInfoFlags.none)
+	PackageInfo getPackageInfo(DbPackage pack, PackageInfoFlags flags = PackageInfoFlags.none)
 	{
 		auto rep = getRepository(pack.repository);
 
@@ -261,6 +261,8 @@ class DubRegistry {
 		}
 		if (flags & PackageInfoFlags.includeErrors)
 			nfo["errors"] = serializeToJson(pack.errors);
+		if (flags & PackageInfoFlags.includeAdmin)
+			ret.secret = pack.secret;
 
 		ret.info = nfo;
 
@@ -427,6 +429,38 @@ class DubRegistry {
 	bdata_t getPackageLogo(string pack_name, out bdata_t rev)
 	{
 		return m_db.getPackageLogo(pack_name, rev);
+	}
+
+	void addPackageError(string pack_name, string error)
+	{
+		m_db.addPackageError(pack_name, error);
+	}
+
+	void clearPackageErrors(string pack_name)
+	{
+		m_db.clearPackageErrors(pack_name);
+	}
+
+	void unsetPackageSecret(string pack_name)
+	{
+		m_db.setPackageSecret(pack_name, null);
+	}
+
+	string getPackageSecret(string pack_name)
+	{
+		return m_db.getPackageSecret(pack_name);
+	}
+
+	void regenPackageSecret(string pack_name)
+	{
+		import std.ascii : lowerHexDigits;
+		import std.random : uniform;
+
+		char[24] token;
+		foreach (ref c; token)
+			c = lowerHexDigits[uniform(0, $)];
+
+		m_db.setPackageSecret(pack_name, token[].idup);
 	}
 
 	void updatePackages()
@@ -733,6 +767,7 @@ struct PackageVersionInfo {
 struct PackageInfo {
 	PackageVersionInfo[] versions;
 	BsonObjectID logo;
+	string secret;
 	Json info; /// JSON package information, as reported to the client
 }
 
@@ -743,6 +778,7 @@ enum PackageInfoFlags
 	includeDependencies = 1 << 0, /// include package info of dependencies
 	includeErrors = 1 << 1, /// include package errors
 	minimize = 1 << 2, /// return only minimal information (for dependency resolver)
+	includeAdmin = 1 << 3, /// include package admin information such as secrets
 }
 
 /// Computes a package score from given package stats and global distributions of those stats.

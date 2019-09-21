@@ -649,13 +649,13 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		enforceUserPackage(_user, _packname);
 		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors);
+		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors | PackageInfoFlags.includeAdmin);
 		if (nfo.info.type == Json.Type.null_) return;
 		auto categories = m_categories;
 		auto registry = m_registry;
 		auto user = _user;
 		auto error = _error;
-		render!("my_packages.package.dt", packageName, categories, user, registry, error);
+		render!("my_packages.package.dt", packageName, categories, user, registry, error, nfo);
 	}
 
 	@auth @path("/my_packages/:packname/update")
@@ -752,6 +752,24 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		enforceBadRequest(isValidURL, "URL is neither null nor starts with http:// or https://");
 		m_registry.setDocumentationURL(_packname, documentation_url);
 		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/regen_secret")
+	void postPackageRegenSecret(string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.regenPackageSecret(_packname);
+
+		redirect("/my_packages/"~_packname~"#repository");
+	}
+
+	@auth @path("/my_packages/:packname/unset_secret")
+	void postPackageUnsetSecret(string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname);
+		m_registry.unsetPackageSecret(_packname);
+
+		redirect("/my_packages/"~_packname~"#repository");
 	}
 
 	@path("/docs/commandline")
