@@ -148,7 +148,8 @@ class GitLabRepository : Repository {
 		if (ver.startsWith("~")) ver = ver[1 .. $];
 		else ver = ver;
 		auto venc = () @trusted { return encodeComponent(ver); } ();
-		return m_baseURL.toString()~m_owner~"/"~m_projectPath~"/repository/archive.zip?ref="~venc;
+		// The "sha" parameter in GitLab's API v4 accepts the tag, branch or the  the commit sha (see https://docs.gitlab.com/ee/api/repositories.html#get-file-archive)
+		return getAPIURLPrefix() ~ "repository/archive.zip?sha="~venc;
 	}
 
 	private string getAPIURLPrefix()
