@@ -136,7 +136,7 @@ class DbController {
 	{
 		auto pack = m_packages.findOne!DbPackage(["name": packname]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
-		return pack;
+		return pack.get;
 	}
 
 	auto getPackages(scope string[] packnames...)
@@ -156,7 +156,7 @@ class DbController {
 	{
 		auto pack = m_packages.findOne!DbPackage(["_id": id]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package ID.");
-		return pack;
+		return pack.get;
 	}
 
 	auto getAllPackages()
