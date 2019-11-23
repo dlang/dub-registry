@@ -8,6 +8,7 @@ module dubregistry.repositories.bitbucket;
 import dubregistry.cache;
 import dubregistry.dbcontroller : DbRepository;
 import dubregistry.repositories.repository;
+import std.datetime: SysTime;
 import std.string : format, startsWith;
 import std.typecons;
 import vibe.core.log;
@@ -42,45 +43,74 @@ class BitbucketRepository : Repository {
 		m_authPassword = auth_password;
 	}
 
-	RefInfo[] getTags()
-	{
-		Json tags;
-		try tags = readJson(getAPIURLPrefix ~ "/1.0/repositories/"~m_owner~"/"~m_project~"/tags");
-		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
+	package Json readPaginatedJson(string url, bool sanitize = false, bool cache_priority = false) @safe {
+		Json merged = Json.emptyArray;
+		string nextUrl = url;
+
+		while(true) {
+			Json page = readJson(nextUrl, sanitize, cache_priority);
+			
+			// foreach(Json value; page["values"] ) {
+			//     merged ~= value;
+			// }
+			merged ~= page["values"];
+
+			if("next" in page) {
+				nextUrl = page["next"].get!string();
+			} else {
+				break;
+			}
+		}
+
+		return merged;
+	}
+
+	package uint readPaginatedLength(string url, bool sanitize = false, bool cache_priority = false) @safe {
+		Json page = readJson(url, sanitize, cache_priority);
+		const uint length = page["size"].get!uint();
+		return length;
+	}
+	
+	RefInfo[] extractRefInfo(Json refListJson) {
 		RefInfo[] ret;
-		foreach (string tagname, tag; tags.byKeyValue) {
+		foreach(Json refJson; refListJson.byValue()) {
+			string refname = refJson["name"].get!string();
 			try {
-				auto commit_hash = tag["raw_node"].get!string();
-				auto commit_date = bbToIsoDate(tag["utctimestamp"].get!string());
-				ret ~= RefInfo(tagname, commit_hash, commit_date);
-				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
+				Json target = refJson["target"];
+				string commit_hash = target["hash"].get!string();
+				auto commit_date = SysTime.fromISOString(target["date"].get!string());
+				ret ~= RefInfo(refname, commit_hash, commit_date);
+				logDebug("Found ref for %s/%s: %s", m_owner, m_project, refname);
 			} catch( Exception e ){
-				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
+				throw new Exception("Failed to process ref "~refname~": "~e.msg);
 			}
 		}
 		return ret;
 	}
 
+	RefInfo[] getTags()
+	{
+		Json tags;
+		try tags = readPaginatedJson(getAPIURLPrefix ~ "/2.0/repositories/"~m_owner~"/"~m_project~"/refs/tags");
+		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
+		RefInfo[] ret = extractRefInfo(tags);
+		return ret;
+	}
+
 	RefInfo[] getBranches()
 	{
-		Json branches = readJson(getAPIURLPrefix ~ "/1.0/repositories/"~m_owner~"/"~m_project~"/branches");
-		RefInfo[] ret;
-		foreach (string branchname, branch; branches.byKeyValue) {
-			auto commit_hash = branch["raw_node"].get!string();
-			auto commit_date = bbToIsoDate(branch["utctimestamp"].get!string());
-			ret ~= RefInfo(branchname, commit_hash, commit_date);
-			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
-		}
+		Json branches = readPaginatedJson(getAPIURLPrefix ~ "/2.0/repositories/"~m_owner~"/"~m_project~"/refs/branches");
+		RefInfo[] ret = extractRefInfo(branches);
 		return ret;
 	}
 
 	RepositoryInfo getInfo()
 	{
-		auto nfo = readJson(getAPIURLPrefix ~ "/1.0/repositories/"~m_owner~"/"~m_project);
+		Json nfo = readJson(getAPIURLPrefix ~ "/2.0/repositories/"~m_owner~"/"~m_project);
 		RepositoryInfo ret;
 		ret.isFork = nfo["is_fork"].opt!bool;
-		ret.stats.watchers = nfo["followers_count"].opt!uint;
-		ret.stats.forks = nfo["forks_count"].opt!uint;
+		ret.stats.watchers = readPaginatedLength(getAPIURLPrefix ~ "2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/watchers");
+		ret.stats.forks = readPaginatedLength(getAPIURLPrefix ~ "2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/forks");
 		return ret;
 	}
 
@@ -112,7 +142,7 @@ class BitbucketRepository : Repository {
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
-		auto url = getAPIURLPrefix ~ "/1.0/repositories/"~m_owner~"/"~m_project~"/raw/"~commit_sha~path.toString();
+		auto url = getAPIURLPrefix ~ "/2.0/repositories/"~m_owner~"/"~m_project~"/src/"~commit_sha~path.toString();
 		downloadCached(url, (scope input) @safe {
 			reader(input);
 		}, true);
