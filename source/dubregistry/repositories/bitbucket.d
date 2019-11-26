@@ -49,7 +49,7 @@ class BitbucketRepository : Repository {
 
 		while(true) {
 			Json page = readJson(nextUrl, sanitize, cache_priority);
-			
+
 			// foreach(Json value; page["values"] ) {
 			//     merged ~= value;
 			// }
@@ -70,7 +70,7 @@ class BitbucketRepository : Repository {
 		const uint length = page["size"].get!uint();
 		return length;
 	}
-	
+
 	RefInfo[] extractRefInfo(Json refListJson) {
 		RefInfo[] ret;
 		foreach(Json refJson; refListJson.byValue()) {
@@ -78,7 +78,7 @@ class BitbucketRepository : Repository {
 			try {
 				Json target = refJson["target"];
 				string commit_hash = target["hash"].get!string();
-				auto commit_date = SysTime.fromISOString(target["date"].get!string());
+				auto commit_date = SysTime.fromISOExtString(target["date"].get!string());
 				ret ~= RefInfo(refname, commit_hash, commit_date);
 				logDebug("Found ref for %s/%s: %s", m_owner, m_project, refname);
 			} catch( Exception e ){
@@ -154,7 +154,7 @@ class BitbucketRepository : Repository {
 		if( ver.startsWith("~") ) ver = ver[1 .. $];
 		else ver = ver;
 		auto venc = () @trusted { return encodeComponent(ver); } ();
-		const url = "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~venc~".zip";  
+		const url = "https://bitbucket.org/"~m_owner~"/"~m_project~"/get/"~venc~".zip";
 		if (m_authUser.length) return "https://"~encodeComponent(m_authUser)~":"~encodeComponent(m_authPassword)~"@"~url["https://".length..$];
 		return url;
 	}
@@ -170,16 +170,4 @@ class BitbucketRepository : Repository {
 		if (m_authUser.length) return "https://"~encodeComponent(m_authUser)~":"~encodeComponent(m_authPassword)~"@api.bitbucket.org";
 		else return "https://api.bitbucket.org";
 	}
-}
-
-private auto bbToIsoDate(string bbdate)
-@safe {
-	import std.array, std.datetime : SysTime;
-	auto ttz = bbdate.split("+");
-	if( ttz.length < 2 ) ttz ~= "00:00";
-	auto parts = ttz[0].split("-");
-	parts = parts[0 .. $-1] ~ parts[$-1].split(" ");
-	parts = parts[0 .. $-1] ~ parts[$-1].split(":");
-
-	return SysTime.fromISOString(format("%s%s%sT%s%s%s+%s", parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], ttz[1]));
 }
