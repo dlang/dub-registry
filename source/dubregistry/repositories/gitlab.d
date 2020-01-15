@@ -123,7 +123,7 @@ class GitLabRepository : Repository {
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
-		auto url = m_baseURL.toString() ~ (m_owner ~ "/" ~ m_projectPath ~ "/raw/" ~ commit_sha) ~ path.toString() ~ "?private_token="~m_authToken;
+		auto url = getAPIURLPrefix() ~ "repository/files/" ~ path.toString().urlEncode ~ "/raw?ref=" ~ commit_sha ~ "&private_token="~ m_authToken;
 		downloadCached(url, (scope input) {
 			reader(input);
 		}, true);
