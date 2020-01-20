@@ -109,8 +109,8 @@ class BitbucketRepository : Repository {
 		Json nfo = readJson(getAPIURLPrefix ~ "/2.0/repositories/"~m_owner~"/"~m_project);
 		RepositoryInfo ret;
 		ret.isFork = nfo["is_fork"].opt!bool;
-		ret.stats.watchers = readPaginatedLength(getAPIURLPrefix ~ "2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/watchers");
-		ret.stats.forks = readPaginatedLength(getAPIURLPrefix ~ "2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/forks");
+		ret.stats.watchers = readPaginatedLength(getAPIURLPrefix ~ "/2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/watchers");
+		ret.stats.forks = readPaginatedLength(getAPIURLPrefix ~ "/2.0/repositories/" ~ m_owner ~ "/" ~ m_project ~ "/forks");
 		return ret;
 	}
 
