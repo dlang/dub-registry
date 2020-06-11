@@ -6,9 +6,9 @@ authors "Sönke Ludwig" "Martin Nowak" "Anton Fediushin aka ohdatboi" \
 	"see GitHub for more"
 license "BSL-1.0"
 
-dependency "vibe-d" version="~>0.8.5"
-dependency "dub" version="~>1.13.0"
-dependency "userman" version="~>0.3.2"
+dependency "vibe-d" version="~>0.8.6"
+dependency "dub" version="~>1.21.0"
+dependency "userman" version="~>0.3.8"
 subConfiguration "dub" "library-nonet"
 
 versions "VibeJsonFieldNames"

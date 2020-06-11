@@ -2,21 +2,21 @@
 	"fileVersion": 1,
 	"versions": {
 		"backtrace-d": "~master",
-		"botan": "1.12.10",
+		"botan": "1.12.18",
 		"botan-math": "1.0.3",
-		"diet-ng": "1.5.0",
-		"dub": "1.13.0",
-		"eventcore": "0.8.43",
-		"libasync": "0.8.4",
+		"diet-ng": "1.7.2",
+		"dub": "1.21.0",
+		"eventcore": "0.9.6",
+		"libasync": "0.8.6",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
-		"memutils": "0.4.13",
+		"memutils": "1.0.4",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
 		"stdx-allocator": "2.77.5",
-		"taggedalgebraic": "0.11.4",
+		"taggedalgebraic": "0.11.15",
 		"userman": "0.3.8",
-		"vibe-core": "1.6.2",
-		"vibe-d": "0.8.5"
+		"vibe-core": "1.9.2",
+		"vibe-d": "0.8.6"
 	}
 }
