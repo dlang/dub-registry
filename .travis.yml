@@ -1,8 +1,9 @@
 language: d
+
 d:
-  - dmd
-  - ldc
-sudo: false
+  - dmd-2.090.1
+  - ldc-1.20.0
+
 addons:
   apt:
     packages:
