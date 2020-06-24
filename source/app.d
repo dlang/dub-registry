@@ -91,6 +91,10 @@ struct AppConfig
 
 	bool enforceCertificateTrust = false;
 
+	string serviceName = "DUB - The D package registry";
+	string serviceURL = "https://code.dlang.org/";
+	string serviceEmail = "noreply@rejectedsoftware.com";
+
 	string mailServer;
 	ushort mailServerPort;
 	SMTPConnectionType mailConnectionType;
@@ -112,6 +116,9 @@ struct AppConfig
 			["bbuser", "bitbucket-user"],
 			["bbpassword", "bitbucket-password"],
 			["enforceCertificateTrust", "enforce-certificate-trust"],
+			["serviceName", "service-name"],
+			["serviceURL", "service-url"],
+			["serviceEmail", "service-email"],
 			["mailServer", "mail-server"],
 			["mailServerPort", "mail-server-port"],
 			["mailConnectionType", "mail-connection-type"],
@@ -122,7 +129,7 @@ struct AppConfig
 		static foreach (var; variables) {{
 			alias T = typeof(__traits(getMember, this, var[0]));
 
-			T val;
+			T val = __traits(getMember, this, var[0]);
 
 			if (var[1] in regsettingsjson) {
 				static if (is(T == bool)) val = regsettingsjson[var[1]].get!bool;
@@ -200,9 +207,9 @@ void main()
 	if (!s_mirror.length) {
 		// user management
 		auto udbsettings = new UserManSettings;
-		udbsettings.serviceName = "DUB - The D package registry";
-		udbsettings.serviceURL = URL("http://code.dlang.org/");
-		udbsettings.serviceEmail = "noreply@rejectedsoftware.com";
+		udbsettings.serviceName = appConfig.serviceName;
+		udbsettings.serviceURL = URL(appConfig.serviceURL);
+		udbsettings.serviceEmail = appConfig.serviceEmail;
 		udbsettings.databaseURL = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1:27017/vpmreg"));
 		udbsettings.requireActivation = false;
 
