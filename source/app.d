@@ -18,6 +18,7 @@ import std.algorithm : sort;
 import std.process : environment;
 import std.file;
 import std.path;
+import std.traits : isIntegral;
 import userman.db.controller : UserManController, createUserManController;
 import userman.userman : UserManSettings;
 import userman.web;
@@ -87,10 +88,20 @@ struct AppConfig
 	string ghuser, ghpassword,
 		   glurl, glauth,
 		   bbuser, bbpassword;
+
+	string mailServer;
+	ushort mailServerPort;
+	SMTPConnectionType mailConnectionType;
+	string mailClientName;
+	string mailUser;
+	string mailPassword;
+
+
 	void init()
 	{
 		import dub.internal.utils : jsonFromFile;
 		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
+		// TODO: use UDAs instead
 		static immutable variables = [
 			["ghuser", "github-user"],
 			["ghpassword", "github-password"],
@@ -98,14 +109,29 @@ struct AppConfig
 			["glauth", "gitlab-auth"],
 			["bbuser", "bitbucket-user"],
 			["bbpassword", "bitbucket-password"],
+			["mailServer", "mail-server"],
+			["mailServerPort", "mail-server-port"],
+			["mailConnectionType", "mail-connection-type"],
+			["mailClientName", "mail-client-name"],
+			["mailUser", "mail-user"],
+			["mailPassword", "mail-password"],
 		];
-		static foreach (var; variables)
-		{
-			// fallback to environment variables
-			mixin(var[0] ~ ` = regsettingsjson["`~var[1]~`"].opt!string(
-				environment.get("`~var[1]~`".replace("-", "_").toUpper)
-			);`);
-		}
+		static foreach (var; variables) {{
+			alias T = typeof(__traits(getMember, this, var[0]));
+
+			T val;
+
+			if (var[1] in regsettingsjson) {
+				static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
+				else val = regsettingsjson[var[1]].get!string.to!T;
+			} else {
+				// fallback to environment variables
+				auto ev = environment.get(var[1].replace("-", "_").toUpper);
+				if (ev.length) val = ev.to!T;
+			}
+
+			__traits(getMember, this, var[0]) = val;
+		}}
 	}
 }
 
@@ -173,6 +199,16 @@ void main()
 		udbsettings.serviceEmail = "noreply@vibed.org";
 		udbsettings.databaseURL = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1:27017/vpmreg"));
 		udbsettings.requireActivation = false;
+
+		udbsettings.mailSettings.host = appConfig.mailServer;
+		udbsettings.mailSettings.port = appConfig.mailServerPort;
+		udbsettings.mailSettings.connectionType = appConfig.mailConnectionType;
+		udbsettings.mailSettings.localname = appConfig.mailClientName;
+		udbsettings.mailSettings.username = appConfig.mailUser;
+		udbsettings.mailSettings.password = appConfig.mailPassword;
+		if (appConfig.mailUser.length || appConfig.mailPassword.length)
+			udbsettings.mailSettings.authType = SMTPAuthType.plain;
+
 		userdb = createUserManController(udbsettings);
 	}
 
