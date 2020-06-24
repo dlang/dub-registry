@@ -202,7 +202,7 @@ void main()
 		auto udbsettings = new UserManSettings;
 		udbsettings.serviceName = "DUB - The D package registry";
 		udbsettings.serviceURL = URL("http://code.dlang.org/");
-		udbsettings.serviceEmail = "noreply@vibed.org";
+		udbsettings.serviceEmail = "noreply@rejectedsoftware.com";
 		udbsettings.databaseURL = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1:27017/vpmreg"));
 		udbsettings.requireActivation = false;
 
