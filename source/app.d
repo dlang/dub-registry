@@ -89,6 +89,8 @@ struct AppConfig
 		   glurl, glauth,
 		   bbuser, bbpassword;
 
+	bool enforceCertificateTrust = false;
+
 	string mailServer;
 	ushort mailServerPort;
 	SMTPConnectionType mailConnectionType;
@@ -109,6 +111,7 @@ struct AppConfig
 			["glauth", "gitlab-auth"],
 			["bbuser", "bitbucket-user"],
 			["bbpassword", "bitbucket-password"],
+			["enforceCertificateTrust", "enforce-certificate-trust"],
 			["mailServer", "mail-server"],
 			["mailServerPort", "mail-server-port"],
 			["mailConnectionType", "mail-connection-type"],
@@ -122,7 +125,8 @@ struct AppConfig
 			T val;
 
 			if (var[1] in regsettingsjson) {
-				static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
+				static if (is(T == bool)) val = regsettingsjson[var[1]].get!bool;
+				else static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
 				else val = regsettingsjson[var[1]].get!string.to!T;
 			} else {
 				// fallback to environment variables
@@ -160,16 +164,18 @@ void main()
 	if (s_mirror.length)
 		validateMirrorURL(s_mirror);
 
-	version (linux) {
-		logInfo("Enforcing certificate trust.");
-		//HTTPClient.setTLSSetupCallback((ctx) {
-			//ctx.useTrustedCertificateFile(certPath);
-			//ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
-		//});
-	}
-
 	AppConfig appConfig;
 	appConfig.init();
+
+	version (linux) {
+		if (appConfig.enforceCertificateTrust) {
+			logInfo("Enforcing certificate trust.");
+			HTTPClient.setTLSSetupCallback((ctx) {
+				ctx.useTrustedCertificateFile(certPath);
+				ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
+			});
+		}
+	}
 
 	GithubRepository.register(appConfig.ghuser, appConfig.ghpassword);
 	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
