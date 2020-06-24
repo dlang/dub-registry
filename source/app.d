@@ -214,6 +214,15 @@ void main()
 		udbsettings.mailSettings.password = appConfig.mailPassword;
 		if (appConfig.mailUser.length || appConfig.mailPassword.length)
 			udbsettings.mailSettings.authType = SMTPAuthType.plain;
+		udbsettings.mailSettings.tlsValidationMode = TLSPeerValidationMode.validCert;
+		version (linux) {
+			if (appConfig.enforceCertificateTrust) {
+				udbsettings.mailSettings.tlsValidationMode = TLSPeerValidationMode.trustedCert;
+				udbsettings.mailSettings.tlsContextSetup = (ctx) {
+					ctx.useTrustedCertificateFile(certPath);
+				};
+			}
+		}
 
 		userdb = createUserManController(udbsettings);
 	}
