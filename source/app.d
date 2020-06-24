@@ -140,15 +140,15 @@ void main()
 	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
-    version (linux) version (DMD)
-    {
-    	// register memory error handler on heroku
-    	if ("DYNO" in environment)
-    	{
+	version (linux) version (DMD)
+	{
+		// register memory error handler on heroku
+		if ("DYNO" in environment)
+		{
 			import etc.linux.memoryerror : registerMemoryErrorHandler;
-        	registerMemoryErrorHandler();
-        }
-    }
+			registerMemoryErrorHandler();
+		}
+	}
 
 	string hostname = "code.dlang.org";
 
