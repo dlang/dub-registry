@@ -19,6 +19,7 @@ import std.file;
 import std.path;
 import std.string;
 import userman.web;
+import userman.db.controller : UserManController;
 import vibe.d;
 
 
@@ -273,7 +274,7 @@ class DubRegistryWebFrontend {
 			if (pname.canFind(":")) return;
 			res.writeJsonBody(_version.length ? versionInfo : packageInfo);
 		} else {
-			User user;
+			userman.db.controller.User user;
 			if (m_userman) {
 				try user = m_userman.getUser(User.ID.fromString(packageInfo["owner"].get!string));
 				catch (Exception e) {

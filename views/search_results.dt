@@ -2,7 +2,7 @@ extends layout
 
 block title
 	- import dubregistry.viewutils;
-	- auto title = "Search results for \"" ~ queryString ~ "\"";
+	- title = "Search results for \"" ~ queryString ~ "\"";
 
 block body
 	p Search results for: <em>#{queryString}</em>

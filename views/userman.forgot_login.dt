@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Reset your password";
+	- title = "Reset your password";
 
 block body
 	- if(error.length)

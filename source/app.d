@@ -18,6 +18,9 @@ import std.algorithm : sort;
 import std.process : environment;
 import std.file;
 import std.path;
+import std.traits : isIntegral;
+import userman.db.controller : UserManController, createUserManController;
+import userman.userman : UserManSettings;
 import userman.web;
 import vibe.d;
 
@@ -52,7 +55,7 @@ shared static this()
 {
 	enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
 	enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
-	immutable certPath = redhatCA.exists ? redhatCA : debianCA;
+	certPath = redhatCA.exists ? redhatCA : debianCA;
 }
 
 // generate dummy data for e.g. Heroku's preview apps
@@ -85,10 +88,26 @@ struct AppConfig
 	string ghuser, ghpassword,
 		   glurl, glauth,
 		   bbuser, bbpassword;
+
+	bool enforceCertificateTrust = false;
+
+	string serviceName = "DUB - The D package registry";
+	string serviceURL = "https://code.dlang.org/";
+	string serviceEmail = "noreply@rejectedsoftware.com";
+
+	string mailServer;
+	ushort mailServerPort;
+	SMTPConnectionType mailConnectionType;
+	string mailClientName;
+	string mailUser;
+	string mailPassword;
+
+
 	void init()
 	{
 		import dub.internal.utils : jsonFromFile;
 		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
+		// TODO: use UDAs instead
 		static immutable variables = [
 			["ghuser", "github-user"],
 			["ghpassword", "github-password"],
@@ -96,14 +115,34 @@ struct AppConfig
 			["glauth", "gitlab-auth"],
 			["bbuser", "bitbucket-user"],
 			["bbpassword", "bitbucket-password"],
+			["enforceCertificateTrust", "enforce-certificate-trust"],
+			["serviceName", "service-name"],
+			["serviceURL", "service-url"],
+			["serviceEmail", "service-email"],
+			["mailServer", "mail-server"],
+			["mailServerPort", "mail-server-port"],
+			["mailConnectionType", "mail-connection-type"],
+			["mailClientName", "mail-client-name"],
+			["mailUser", "mail-user"],
+			["mailPassword", "mail-password"],
 		];
-		static foreach (var; variables)
-		{
-			// fallback to environment variables
-			mixin(var[0] ~ ` = regsettingsjson["`~var[1]~`"].opt!string(
-				environment.get("`~var[1]~`".replace("-", "_").toUpper)
-			);`);
-		}
+		static foreach (var; variables) {{
+			alias T = typeof(__traits(getMember, this, var[0]));
+
+			T val = __traits(getMember, this, var[0]);
+
+			if (var[1] in regsettingsjson) {
+				static if (is(T == bool)) val = regsettingsjson[var[1]].get!bool;
+				else static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
+				else val = regsettingsjson[var[1]].get!string.to!T;
+			} else {
+				// fallback to environment variables
+				auto ev = environment.get(var[1].replace("-", "_").toUpper);
+				if (ev.length) val = ev.to!T;
+			}
+
+			__traits(getMember, this, var[0]) = val;
+		}}
 	}
 }
 
@@ -112,15 +151,15 @@ void main()
 	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
-    version (linux)
-    {
-    	// register memory error handler on heroku
-    	if ("DYNO" in environment)
-    	{
+	version (linux) version (DMD)
+	{
+		// register memory error handler on heroku
+		if ("DYNO" in environment)
+		{
 			import etc.linux.memoryerror : registerMemoryErrorHandler;
-        	registerMemoryErrorHandler();
-        }
-    }
+			registerMemoryErrorHandler();
+		}
+	}
 
 	string hostname = "code.dlang.org";
 
@@ -132,16 +171,18 @@ void main()
 	if (s_mirror.length)
 		validateMirrorURL(s_mirror);
 
-	version (linux) {
-		logInfo("Enforcing certificate trust.");
-		//HTTPClient.setTLSSetupCallback((ctx) {
-			//ctx.useTrustedCertificateFile(certPath);
-			//ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
-		//});
-	}
-
 	AppConfig appConfig;
 	appConfig.init();
+
+	version (linux) {
+		if (appConfig.enforceCertificateTrust) {
+			logInfo("Enforcing certificate trust.");
+			HTTPClient.setTLSSetupCallback((ctx) {
+				ctx.useTrustedCertificateFile(certPath);
+				ctx.peerValidationMode = TLSPeerValidationMode.trustedCert;
+			});
+		}
+	}
 
 	GithubRepository.register(appConfig.ghuser, appConfig.ghpassword);
 	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
@@ -166,11 +207,30 @@ void main()
 	if (!s_mirror.length) {
 		// user management
 		auto udbsettings = new UserManSettings;
-		udbsettings.serviceName = "DUB - The D package registry";
-		udbsettings.serviceURL = URL("http://code.dlang.org/");
-		udbsettings.serviceEmail = "noreply@vibed.org";
+		udbsettings.serviceName = appConfig.serviceName;
+		udbsettings.serviceURL = URL(appConfig.serviceURL);
+		udbsettings.serviceEmail = appConfig.serviceEmail;
 		udbsettings.databaseURL = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1:27017/vpmreg"));
 		udbsettings.requireActivation = false;
+
+		udbsettings.mailSettings.host = appConfig.mailServer;
+		udbsettings.mailSettings.port = appConfig.mailServerPort;
+		udbsettings.mailSettings.connectionType = appConfig.mailConnectionType;
+		udbsettings.mailSettings.localname = appConfig.mailClientName;
+		udbsettings.mailSettings.username = appConfig.mailUser;
+		udbsettings.mailSettings.password = appConfig.mailPassword;
+		if (appConfig.mailUser.length || appConfig.mailPassword.length)
+			udbsettings.mailSettings.authType = SMTPAuthType.plain;
+		udbsettings.mailSettings.tlsValidationMode = TLSPeerValidationMode.validCert;
+		version (linux) {
+			if (appConfig.enforceCertificateTrust) {
+				udbsettings.mailSettings.tlsValidationMode = TLSPeerValidationMode.trustedCert;
+				udbsettings.mailSettings.tlsContextSetup = (ctx) {
+					ctx.useTrustedCertificateFile(certPath);
+				};
+			}
+		}
+
 		userdb = createUserManController(udbsettings);
 	}
 

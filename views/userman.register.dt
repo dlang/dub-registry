@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Register new account";
+	- title = "Register new account";
 
 block body
 	- if(error.length)

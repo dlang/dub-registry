@@ -1,8 +1,8 @@
 extends layout
 
 block title
-	- auto title = "Register forked repository?";
-	
+	- title = "Register forked repository?";
+
 block body
 
 	p.warn <strong>Warning:</strong> You are about to register a forked repository. Please make sure to use a name for your package that is unique to your fork, and try to get in touch with the original author first. Not doing so may result in your fork getting removed at a later point.
