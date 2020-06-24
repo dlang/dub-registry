@@ -55,7 +55,7 @@ shared static this()
 {
 	enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
 	enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
-	immutable certPath = redhatCA.exists ? redhatCA : debianCA;
+	certPath = redhatCA.exists ? redhatCA : debianCA;
 }
 
 // generate dummy data for e.g. Heroku's preview apps
