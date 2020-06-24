@@ -1,7 +1,7 @@
 extends userman.mail.layout
 
 block title
-	- auto title = "Weekly deprecation reminder";
+	- title = "Weekly deprecation reminder";
 
 block body
 	- import vibe.textfilter.urlencode;

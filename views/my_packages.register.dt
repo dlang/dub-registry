@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Add new package";
+	- title = "Add new package";
 
 block body
 

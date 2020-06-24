@@ -1,7 +1,7 @@
 extends userman.mail.layout
 
 block title
-	- auto title = "Errors in package "~package_name~", version "~branch_or_version;
+	- title = "Errors in package "~package_name~", version "~branch_or_version;
 
 block body
 	- import vibe.textfilter.urlencode;

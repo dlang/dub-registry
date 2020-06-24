@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "Edit profile";
+	- title = "Edit profile";
 
 block body
 

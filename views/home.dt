@@ -7,7 +7,7 @@ block title
 	- import std.algorithm.comparison : min;
 	- import std.algorithm.iteration : map;
 	- import std.string : replace, split;
-	- auto title = "Find, Use and Share DUB Packages";
+	- title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
 		window.categories = #{serializeToJson(info.categories).toString()};

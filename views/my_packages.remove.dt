@@ -1,8 +1,8 @@
 extends layout
 
 block title
-	- auto title = "Remove package " ~ packageName;
-	
+	- title = "Remove package " ~ packageName;
+
 block body
 
 	p.warn <strong>Warning:</strong> Removing a package will break all projects that depend on it! This will also cause all download statistics about the package to get lost.

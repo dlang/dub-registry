@@ -5,7 +5,7 @@ block title
 	- import dubregistry.web;
 	- import vibe.data.json;
 	- import std.algorithm.iteration : map;
-	- auto title = "Find, Use and Share DUB Packages";
+	- title = "Find, Use and Share DUB Packages";
 	script(type="application/javascript", src="scripts/home.js")
 	script(type="application/javascript").
 		window.categories = #{serializeToJson(info.categories).toString()};

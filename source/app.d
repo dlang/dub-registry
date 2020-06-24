@@ -18,6 +18,8 @@ import std.algorithm : sort;
 import std.process : environment;
 import std.file;
 import std.path;
+import userman.db.controller : UserManController, createUserManController;
+import userman.userman : UserManSettings;
 import userman.web;
 import vibe.d;
 

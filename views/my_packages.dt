@@ -1,7 +1,7 @@
 extends layout
 
 block title
-	- auto title = "My packages";
+	- title = "My packages";
 
 block body
 	- import vibe.data.json;

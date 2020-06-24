@@ -9,7 +9,7 @@ block title
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;
 	- import userman.controller;
-	- auto title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
+	- title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 	- auto packageInfo = packinfo.info;
 
 	- auto normalizedPackageName = packageName.splitter(':').front;

@@ -393,7 +393,7 @@ class DbController {
 		if (ver.length) match["version"] = ver;
 
 		immutable now = Clock.currTime;
-		auto res = m_downloads.aggregate(
+		auto res = () @trusted { return m_downloads.aggregate(
 			["$match": match],
 			["$project": [
 					"_id": Bson(false),
@@ -407,6 +407,7 @@ class DbController {
 					"monthly": Bson(["$sum": Bson("$monthly")]),
 					"weekly": Bson(["$sum": Bson("$weekly")]),
 					"daily": Bson(["$sum": Bson("$daily")])]]);
+			} ();
 		assert(res.length <= 1);
 		return res.length ? deserializeBson!DbDownloadStats(res[0]) : DbDownloadStats.init;
 	}
@@ -430,7 +431,9 @@ class DbController {
 					"std": "$"~mem~"_std"
 				]);
 			}
-			auto res = m_packages.aggregate(["$group": group], ["$project": project]);
+			auto res = () @trusted {
+					return m_packages.aggregate(["$group": group], ["$project": project]);
+				} ();
 
 			static if (groupBy is null)
 			{
