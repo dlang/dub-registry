@@ -114,7 +114,7 @@ void main()
 	bool noMonitoring;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
-    version (linux)
+    version (linux) version (DMD)
     {
     	// register memory error handler on heroku
     	if ("DYNO" in environment)
