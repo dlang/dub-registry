@@ -373,6 +373,23 @@ button.primary:hover, button.primary:focus {
 	width: 280px;
 }
 
+/********************/
+/* MANUAL CLIPBOARD */
+/********************/
+
+.clipboard-manual {
+	margin: 2em 0;
+}
+
+.clipboard-manual .clipboard-pkg-title {
+	display: block;
+	font-weight: bold;
+}
+
+.clipboard-manual .clipboard-pkg-row {
+	margin-bottom: 0.5em;
+}
+
 @media only screen and (min-width: 54em) {
 	div.main {
 		float: left;
