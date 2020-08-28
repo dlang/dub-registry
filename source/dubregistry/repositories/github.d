@@ -47,7 +47,7 @@ class GithubRepository : Repository {
 		import std.datetime : SysTime;
 
 		Json tags;
-		try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags?per_page=100");
+		try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags?per_page=1000");
 		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 		RefInfo[] ret;
 		foreach_reverse (tag; tags) {
