@@ -44,28 +44,35 @@ class GithubRepository : Repository {
 
 	RefInfo[] getTags()
 	{
-		import std.datetime : SysTime;
-
-		Json tags;
-		try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags?per_page=100");
-		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
+		import std.datetime.systime : SysTime;
+		import std.conv: text;
 		RefInfo[] ret;
-		foreach_reverse (tag; tags) {
-			try {
-				auto tagname = tag["name"].get!string;
-				Json commit = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/commits/"~tag["commit"]["sha"].get!string, true, true);
-				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
-				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
-			} catch( Exception e ){
-				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
+		for (size_t page = 1; ; page++)
+		{
+			Json tags;
+			try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags?per_page=100&page=" ~ page.text);
+			catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
+			size_t count;
+			foreach_reverse (tag; tags) {
+				try {
+					count++;
+					auto tagname = tag["name"].get!string;
+					Json commit = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/commits/"~tag["commit"]["sha"].get!string, true, true);
+					ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
+					logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
+				} catch( Exception e ){
+					throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
+				}
 			}
+			if (count < 100)
+				break;
 		}
 		return ret;
 	}
 
 	RefInfo[] getBranches()
 	{
-		import std.datetime : SysTime;
+		import std.datetime.systime : SysTime;
 
 		Json branches = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/branches");
 		RefInfo[] ret;

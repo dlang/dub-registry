@@ -10,7 +10,7 @@ import vibe.data.bson;
 import vibe.http.client;
 import vibe.inet.url;
 import std.array : array;
-import std.datetime : SysTime;
+import std.datetime.systime : SysTime;
 import std.encoding : sanitize;
 import std.format : format;
 

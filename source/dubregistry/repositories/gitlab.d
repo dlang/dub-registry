@@ -47,7 +47,7 @@ class GitLabRepository : Repository {
 
 	RefInfo[] getTags()
 	{
-		import std.datetime : SysTime;
+		import std.datetime.systime : SysTime;
 
 		Json tags;
 		try tags = readJson(getAPIURLPrefix()~"repository/tags?private_token="~m_authToken);
@@ -69,7 +69,7 @@ class GitLabRepository : Repository {
 
 	RefInfo[] getBranches()
 	{
-		import std.datetime : SysTime;
+		import std.datetime.systime : SysTime;
 
 		Json branches = readJson(getAPIURLPrefix()~"repository/branches?private_token="~m_authToken);
 		RefInfo[] ret;
