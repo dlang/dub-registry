@@ -331,7 +331,7 @@ class DbController {
 		}
 
 		auto pkgs = m_packages
-			.find(["$text": ["$search": query]], ["textScore": bson(["$meta": "textScore"])])
+			.find(["$text": ["$search": "/" ~ query ~ "/i"]], ["textScore": bson(["$meta": "textScore"])])
 			.sort(["textScore": bson(["$meta": "textScore"])]) // sort to only keep most relevant results
 			.limit(50) // limit irrelevant sort results (fixes #341)
 			.map!(deserializeBson!DbPackage)
