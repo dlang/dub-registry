@@ -85,7 +85,7 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 
 struct AppConfig
 {
-	string ghuser, ghauth,
+	string ghauth,
 		   glurl, glauth,
 		   bbuser, bbpassword;
 
@@ -109,7 +109,6 @@ struct AppConfig
 		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
 		// TODO: use UDAs instead
 		static immutable variables = [
-			["ghuser", "github-user"],
 			["ghauth", "github-auth"],
 			["glurl", "gitlab-url"],
 			["glauth", "gitlab-auth"],
@@ -184,7 +183,7 @@ void main()
 		}
 	}
 
-	GithubRepository.register(appConfig.ghuser, appConfig.ghauth);
+	GithubRepository.register(appConfig.ghauth);
 	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
 	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
 

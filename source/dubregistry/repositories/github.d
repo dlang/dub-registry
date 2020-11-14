@@ -19,27 +19,24 @@ import vibe.inet.url;
 
 class GithubRepository : Repository {
 @safe:
-
 	private {
 		string m_owner;
 		string m_project;
-		string m_authUser;
 		string m_authToken;
 	}
 
-	static void register(string user, string token)
+	static void register(string token)
 	{
 		Repository factory(DbRepository info) @safe {
-			return new GithubRepository(info.owner, info.project, user, token);
+			return new GithubRepository(info.owner, info.project, token);
 		}
 		addRepositoryFactory("github", &factory);
 	}
 
-	this(string owner, string project, string auth_user, string auth_token)
+	this(string owner, string project, string auth_token)
 	{
 		m_owner = owner;
 		m_project = project;
-		m_authUser = auth_user;
 		m_authToken = auth_token;
 	}
 
