@@ -13,6 +13,7 @@ import std.typecons;
 import vibe.core.log;
 import vibe.core.stream;
 import vibe.data.json;
+import vibe.http.client : HTTPClientRequest;
 import vibe.inet.url;
 
 
@@ -23,23 +24,23 @@ class GithubRepository : Repository {
 		string m_owner;
 		string m_project;
 		string m_authUser;
-		string m_authPassword;
+		string m_authToken;
 	}
 
-	static void register(string user, string password)
+	static void register(string user, string token)
 	{
 		Repository factory(DbRepository info) @safe {
-			return new GithubRepository(info.owner, info.project, user, password);
+			return new GithubRepository(info.owner, info.project, user, token);
 		}
 		addRepositoryFactory("github", &factory);
 	}
 
-	this(string owner, string project, string auth_user, string auth_password)
+	this(string owner, string project, string auth_user, string auth_token)
 	{
 		m_owner = owner;
 		m_project = project;
 		m_authUser = auth_user;
-		m_authPassword = auth_password;
+		m_authToken = auth_token;
 	}
 
 	RefInfo[] getTags()
@@ -50,14 +51,14 @@ class GithubRepository : Repository {
 		for (size_t page = 1; ; page++)
 		{
 			Json tags;
-			try tags = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/tags?per_page=100&page=" ~ page.text);
+			try tags = readJsonFromRepo("/tags?per_page=100&page=" ~ page.text);
 			catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
 			size_t count;
 			foreach_reverse (tag; tags) {
 				try {
 					count++;
 					auto tagname = tag["name"].get!string;
-					Json commit = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/commits/"~tag["commit"]["sha"].get!string, true, true);
+					Json commit = readJsonFromRepo("/commits/"~tag["commit"]["sha"].get!string, true, true);
 					ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
 					logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 				} catch( Exception e ){
@@ -74,11 +75,11 @@ class GithubRepository : Repository {
 	{
 		import std.datetime.systime : SysTime;
 
-		Json branches = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/branches");
+		Json branches = readJsonFromRepo("/branches");
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch["name"].get!string;
-			Json commit = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/commits/"~branch["commit"]["sha"].get!string, true, true);
+			Json commit = readJsonFromRepo("/commits/"~branch["commit"]["sha"].get!string, true, true);
 			ret ~= RefInfo(branchname, branch["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
@@ -87,7 +88,7 @@ class GithubRepository : Repository {
 
 	RepositoryInfo getInfo()
 	{
-		auto nfo = readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project);
+		auto nfo = readJsonFromRepo("");
 		RepositoryInfo ret;
 		ret.isFork = nfo["fork"].opt!bool;
 		ret.stats.stars = nfo["stargazers_count"].opt!uint;
@@ -100,8 +101,8 @@ class GithubRepository : Repository {
 	RepositoryFile[] listFiles(string commit_sha, InetPath path)
 	{
 		assert(path.absolute, "Passed relative path to listFiles.");
-		auto url = getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~"/contents"~path.toString()~"?ref="~commit_sha;
-		auto ls = readJson(url).get!(Json[]);
+		auto url = "/contents"~path.toString()~"?ref="~commit_sha;
+		auto ls = readJsonFromRepo(url).get!(Json[]);
 		RepositoryFile[] ret;
 		ret.reserve(ls.length);
 		foreach (entry; ls) {
@@ -128,7 +129,7 @@ class GithubRepository : Repository {
 		auto url = getContentURLPrefix()~"/"~m_owner~"/"~m_project~"/"~commit_sha~path.toString();
 		downloadCached(url, (scope input) {
 			reader(input);
-		}, true);
+		}, true, &addAuthentication);
 	}
 
 	string getDownloadUrl(string ver)
@@ -142,14 +143,23 @@ class GithubRepository : Repository {
 
 	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
-		downloadCached(getDownloadUrl(ver), del);
+		downloadCached(getDownloadUrl(ver), del, false, &addAuthentication);
+	}
+
+	private Json readJsonFromRepo(string api_path, bool sanitize = false, bool cache_priority = false)
+	{
+		return readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~api_path,
+			sanitize, cache_priority, &addAuthentication);
+	}
+
+	private void addAuthentication(scope HTTPClientRequest req)
+	{
+		req.headers["Authorization"] = "token " ~ m_authToken;
 	}
 
 	private string getAPIURLPrefix()
 	{
-		import std.uri : encodeComponent;
-		if (m_authUser.length) return "https://"~m_authUser~":"~m_authPassword~"@api.github.com";
-		else return "https://api.github.com";
+		return "https://api.github.com";
 	}
 
 	private string getContentURLPrefix()

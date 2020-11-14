@@ -87,7 +87,8 @@ struct RepositoryFile {
 	Type type;
 }
 
-package Json readJson(string url, bool sanitize = false, bool cache_priority = false)
+package Json readJson(string url, bool sanitize = false, bool cache_priority = false,
+	RequestModifier request_modifier = null)
 @safe {
 	import dubregistry.internal.utils : black;
 
@@ -100,7 +101,7 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 				scope (failure) clearCacheEntry(url);
 				auto text = input.readAllUTF8(sanitize);
 				ret = parseJsonString(text);
-			}, cache_priority);
+			}, cache_priority, request_modifier);
 			return ret;
 		} catch (FileNotFoundException e) {
 			throw e;
