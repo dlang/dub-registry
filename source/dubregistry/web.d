@@ -483,7 +483,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	void getUsage() { getGettingStarted(); }
 	void getAdvancedUsage() { redirect("https://dub.pm/getting_started"); }
 
-	void getPublish() { redirect("https://dub.pm/commandline"); }
+	void getPublish() { redirect("https://dub.pm/publish"); }
 	void getDevelop() { redirect("https://dub.pm/commandline"); }
 
 	@path("/package-format")
