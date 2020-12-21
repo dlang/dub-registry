@@ -46,23 +46,26 @@ void validateMirrorURL(ref string base_url)
 
 void mirrorRegistry(DubRegistry registry, string fileOrUrl)
 nothrow {
+	import vibe.core.file : existsFile, readFileUTF8;
+	import vibe.stream.operations : readAllUTF8;
+
 	logInfo("Polling '%s' for updates...", fileOrUrl);
 	try {
-		import vibe.core.file : existsFile, readFileUTF8;
-
 		DbPackage[] packs;
 		URL url;
 		auto path = NativePath(fileOrUrl);
 
-		if (path.existsFile)
-		{
-			packs = path.readFileUTF8.deserializeJson!(DbPackage[]);
-		}
-		else
-		{
+		string source_text;
+
+		if (path.existsFile) source_text = path.readFileUTF8;
+		else {
 			url = URL(fileOrUrl);
-			packs = requestHTTP(url ~ InetPath("api/packages/dump")).readJson().deserializeJson!(DbPackage[]);
+			source_text = requestHTTP(url ~ InetPath("api/packages/dump"))
+				.bodyReader
+				.readAllUTF8;
 		}
+
+		packs = source_text.deserializeJson!(DbPackage[]);
 
 		logInfo("Updates for '%s' downloaded.", url);
 
