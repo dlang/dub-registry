@@ -147,7 +147,7 @@ struct AppConfig
 
 void main()
 {
-	bool noMonitoring;
+	bool noMonitoring, noServe;
 	setLogFile("log.txt", LogLevel.diagnostic);
 
 	version (linux) version (DMD)
@@ -165,6 +165,7 @@ void main()
 	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
 	readOption("hostname", &hostname, "Domain name of this instance (default: code.dlang.org)");
 	readOption("no-monitoring", &noMonitoring, "Don't periodically monitor for updates (for local development)");
+	readOption("no-serve", &noServe, "Just poll for updates and exit");
 
 	// validate provided mirror URL
 	if (s_mirror.length)
@@ -231,6 +232,12 @@ void main()
 		}
 
 		userdb = createUserManController(udbsettings);
+	}
+
+	if (noServe) {
+		if (!noMonitoring)
+			checkForNewVersions();
+		return;
 	}
 
 	// web front end
