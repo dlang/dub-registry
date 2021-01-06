@@ -61,6 +61,7 @@
 			{"name": "vcs", "description": "Version control"},
 			{"name": "video", "description": "Video libraries"},
 			{"name": "vibed", "description": "vibe.d compatible library"},
+			{"name": "wasm", "description": "WebAssembly compatible"},
 			{"name": "web", "description": "Web related", "categories": [
 				{"name": "auth", "description": "Authentication and user management"},
 				{"name": "communication", "description": "Communication components"},
