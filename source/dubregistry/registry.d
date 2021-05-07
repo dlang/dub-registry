@@ -444,7 +444,8 @@ class DubRegistry {
 		auto allpacks = this.availablePackages.array;
 		randomShuffle(allpacks);
 		foreach (packname; allpacks)
-			triggerPackageUpdate(packname);
+			if (!m_updateQueue.isPending(packname))
+				triggerPackageUpdate(packname);
 	}
 
 	protected string validateRepository(DbRepository repository)
