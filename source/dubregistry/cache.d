@@ -52,8 +52,25 @@ class URLCache {
 			request_modifier);
 	}
 
+	void get(URL url, scope void delegate(scope InputStream str, scope string[string] headers) @safe callback,
+		scope string[] record_headers, bool cache_priority = false,
+		scope RequestModifier request_modifier = null)
+	{
+		get(url, callback, record_headers,
+			cache_priority ? CacheMatchMode.always : CacheMatchMode.etag,
+			request_modifier);
+	}
+
 	void get(URL url, scope void delegate(scope InputStream str) @safe callback,
 		CacheMatchMode mode = CacheMatchMode.etag, scope RequestModifier request_modifier = null)
+	{
+		get(url, delegate(scope InputStream str, scope string[string] headers) @safe => callback(str),
+			null, mode, request_modifier);
+	}
+
+	void get(URL url, scope void delegate(scope InputStream str, scope string[string] headers) @safe callback,
+		scope string[] record_headers, CacheMatchMode mode = CacheMatchMode.etag,
+		scope RequestModifier request_modifier = null)
 	{
 		import std.datetime : Clock, UTC;
 		import vibe.http.auth.basic_auth;
@@ -66,6 +83,7 @@ class URLCache {
 		url.password = null;
 
 		InputStream result;
+		string[string] result_headers;
 		bool handled_uncached = false;
 
 		auto now = Clock.currTime(UTC());
@@ -89,7 +107,7 @@ class URLCache {
 						auto data = be["data"].get!BsonBinData().rawData();
 						auto mdata = () @trusted { return cast(ubyte[])data; } ();
 						scope tmpresult = createMemoryStream(mdata, false);
-						callback(tmpresult);
+						callback(tmpresult, entry.headers);
 						return;
 					}
 				}
@@ -105,6 +123,12 @@ class URLCache {
 					if (request_modifier) request_modifier(req);
 				},
 				(scope res){
+					foreach (header; record_headers) {
+						auto v = res.headers.get(header, null);
+						if (v !is null)
+							result_headers[header] = v;
+					}
+
 					switch (res.statusCode) {
 						default:
 							throw new Exception("Unexpected reply for '"~url.toString().black~"': "~httpStatusText(res.statusCode));
@@ -112,6 +136,7 @@ class URLCache {
 							logDiagnostic("Cache HIT: %s", url.toString());
 							res.dropBody();
 							auto data = be["data"].get!BsonBinData().rawData();
+							result_headers = entry.headers;
 							result = createMemoryStream(cast(ubyte[])data, false);
 							break;
 						case HTTPStatus.notFound:
@@ -127,6 +152,7 @@ class URLCache {
 							res.dropBody();
 
 							entry.redirectURL = url.toString();
+							entry.headers = result_headers;
 							m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
 							break;
 						case HTTPStatus.ok:
@@ -138,6 +164,7 @@ class URLCache {
 								auto rawdata = dst.data;
 								if (pet) entry.etag = *pet;
 								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
+								entry.headers = result_headers;
 								m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
 								result = createMemoryStream(rawdata, false);
 								break;
@@ -147,7 +174,7 @@ class URLCache {
 
 							logDiagnostic("Cache MISS (no etag): %s", url.toString());
 							handled_uncached = true;
-							callback(res.bodyReader.asInterface!InputStream);
+							callback(res.bodyReader.asInterface!InputStream, result_headers);
 							break;
 					}
 				}
@@ -156,7 +183,7 @@ class URLCache {
 			if (handled_uncached) return;
 
 			if (result) {
-				callback(result);
+				callback(result, result_headers);
 				return;
 			}
 		}
@@ -177,6 +204,7 @@ private struct CacheEntry {
 	string url;
 	string etag;
 	BsonBinData data;
+	@optional string[string] headers;
 	@optional string redirectURL;
 }
 
@@ -195,6 +223,19 @@ void downloadCached(string url, scope void delegate(scope InputStream str) @safe
 	return downloadCached(URL.parse(url), callback, cache_priority, request_modifier);
 }
 
+void downloadCached(URL url, scope void delegate(scope InputStream str, scope string[string] headers) @safe callback,
+	scope string[] record_headers, bool cache_priority = false, scope RequestModifier request_modifier = null)
+@safe {
+	if (!s_cache) s_cache = new URLCache;
+	s_cache.get(url, callback, record_headers, cache_priority, request_modifier);
+}
+
+void downloadCached(string url, scope void delegate(scope InputStream str, scope string[string] headers) @safe callback,
+	scope string[] record_headers, bool cache_priority = false, scope RequestModifier request_modifier = null)
+@safe {
+	return downloadCached(URL.parse(url), callback, record_headers, cache_priority, request_modifier);
+}
+
 void clearCacheEntry(URL url)
 @safe {
 	if (!s_cache) s_cache = new URLCache;
@@ -207,3 +248,27 @@ void clearCacheEntry(string url)
 }
 
 alias RequestModifier = void delegate(scope HTTPClientRequest req);
+
+// test header persistence in DB
+unittest
+{
+	try {
+		import dubregistry.mongodb : getMongoClient;
+		getMongoClient();
+	} catch (Exception) {
+		logWarn("Skipping URLCache test because no MongoDB server is available");
+		return;
+	}
+
+	downloadCached("https://api.github.com/repos/libmir/mir-algorithm/tags?per_page=10", (scope input, scope headers) {
+		assert(headers.length);
+
+		downloadCached("https://api.github.com/repos/libmir/mir-algorithm/tags?per_page=10", (scope input, scope headers) {
+			assert(headers.length);
+		}, ["Link"], true);
+
+		downloadCached("https://api.github.com/repos/libmir/mir-algorithm/tags?per_page=10", (scope input, scope headers) {
+			assert(headers.length);
+		}, ["Link"], false);
+	}, ["Link"], false);
+}
