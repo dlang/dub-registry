@@ -36,6 +36,7 @@
 		{"name": "library", "description": "Development library", "categories": [
 			{"name": "std_aspirant", "description": "Candidate for inclusion in the D standard library"},
 			{"name": "audio", "description": "Audio libraries"},
+			{"name": "betterc", "description": "BetterC compatible"},
 			{"name": "binding", "description": "D language bindings", "categories": [
 				{"name": "deimos", "description": "Deimos header-only binding"}
 			]},
