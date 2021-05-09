@@ -49,7 +49,7 @@ void startMonitoring()
 	s_checkTask = runTask(&monitorPackages);
 }
 
-version (linux) private immutable string certPath;
+private immutable string certPath;
 
 shared static this()
 {
