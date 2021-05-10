@@ -6,34 +6,38 @@ import vibe.db.mongo.mongo : connectMongoDB;
 import vibe.db.mongo.settings : MongoClientSettings, MongoAuthMechanism, parseMongoDBUrl;
 import std.typecons : Nullable;
 
+/// Database name
 string databaseName = "vpmreg";
 private Nullable!MongoClientSettings _mongoSettings;
 
 @safe:
 
 /**
-Initializes mongoSettings if it's null
+Initializes mongoSettings if null
 
 Params:
-    anonymousAuth = whether to allow anonymous access
+	allowUnauthenticated = whether to allow unauthenticated access
 
-Returns: MongoClientSettings
+Examples:
+	dub -- --allow-unauthenticated=true
+
+Returns:
+	MongoClientSettings
 */
-MongoClientSettings mongoSettings(bool anonymousAuth = false) {
+MongoClientSettings mongoSettings(bool allowUnauthenticated = false)
+{
 	if (_mongoSettings.isNull)
 	{
 		import std.process : environment;
-		auto mongodbURI = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1"));
+
+		auto mongodbURI = environment.get("MONGODB_URI",
+				environment.get("MONGO_URI", "mongodb://127.0.0.1"));
 		logInfo("Found mongodbURI: %s", mongodbURI);
 		_mongoSettings = MongoClientSettings.init;
 		parseMongoDBUrl(_mongoSettings, mongodbURI);
 
-		if (!anonymousAuth)
-		{
-			import std.stdio;
-			writeln("Using scramSHA1");
+		if (!allowUnauthenticated)
 			_mongoSettings.authMechanism = MongoAuthMechanism.scramSHA1;
-		}
 
 		if (_mongoSettings.database.length > 0)
 			databaseName = _mongoSettings.database;
@@ -43,7 +47,9 @@ MongoClientSettings mongoSettings(bool anonymousAuth = false) {
 	return _mongoSettings;
 }
 
-///
+/**
+Returns: MongoClient using the current settings
+*/
 MongoClient getMongoClient()
 {
 	return connectMongoDB(mongoSettings);
