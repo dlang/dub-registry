@@ -22,7 +22,7 @@ Running as a mirror
 dub -- --mirror=https://code.dlang.org
 ```
 
-To access MongoDB without authentication:
+To access MongoDB **without** authentication:
 
 ```d
 dub -- --allow-unauthenticated=true
