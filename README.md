@@ -108,11 +108,21 @@ Staging server
 
 An auto-deployed version of `master` can be found at <https://dub-registry-staging.herokuapp.com>.
 
-FAQ: I'm getting an "undefined reference to 'SSLv23_client_method'"
--------------------------------------------------------------------
+Troubleshooting
+---------------
 
-Link with OpenSSL 1.1:
+Q: I'm getting an "undefined reference to SSLv23_client_method"
+
+A: Link with OpenSSL 1.1:
 
 ```d
 dub --override-config="vibe-d:tls/openssl-1.1"
+```
+
+Q: I'm getting "Authentication failed"
+
+A: Try accessing mongodb without authentication
+
+```d
+dub -- --allow-unauthenticated=true
 ```
