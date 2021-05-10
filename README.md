@@ -15,10 +15,6 @@ Requirements:
 - OpenSSL
 - MongoDB
 
-```d
-dub
-```
-
 Running as a mirror
 -------------------
 
