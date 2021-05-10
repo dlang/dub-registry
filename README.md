@@ -25,6 +25,11 @@ Running as a mirror
 dub -- --mirror=https://code.dlang.org
 ```
 
+To access MongoDB without authentication:
+```
+dub -- --anonymous-auth=true
+```
+
 GitHub/GitLab API
 -----------------
 

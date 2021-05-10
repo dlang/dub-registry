@@ -160,12 +160,14 @@ void main()
 		}
 	}
 
+	bool anonymousAuth;
 	string hostname = "code.dlang.org";
 
 	readOption("mirror", &s_mirror, "URL of a package registry that this instance should mirror (WARNING: will overwrite local database!)");
 	readOption("hostname", &hostname, "Domain name of this instance (default: code.dlang.org)");
 	readOption("no-monitoring", &noMonitoring, "Don't periodically monitor for updates (for local development)");
 	readOption("no-serve", &noServe, "Just poll for updates and exit");
+	readOption("anonymous-auth", &anonymousAuth, "Allow anonymous authentication");
 
 	// validate provided mirror URL
 	if (s_mirror.length)
@@ -195,7 +197,7 @@ void main()
 
 	// init mongo
 	import dubregistry.mongodb : databaseName, mongoSettings;
-	mongoSettings();
+	mongoSettings(anonymousAuth);
 
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
