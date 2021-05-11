@@ -18,13 +18,13 @@ Requirements:
 Running as a mirror
 -------------------
 
-```d
+```bash
 dub -- --mirror=https://code.dlang.org
 ```
 
 To access MongoDB **without** authentication:
 
-```d
+```bash
 dub -- --allow-unauthenticated=true
 ```
 
@@ -58,7 +58,7 @@ Running without the cron job
 
 For local development it's often useful to disable the cron job, you can do so with the `--no-monitoring` flag:
 
-```d
+```bash
 dub -- --no-monitoring
 ```
 
@@ -67,7 +67,7 @@ Importing a one-time snapshot from the registry
 
 You can download a dump of all packages and import it into your local registry for development:
 
-```d
+```bash
 curl https://code.dlang.org/api/packages/dump | gunzip > mirror.json
 dub -- --mirror=mirror.json
 ```
@@ -75,7 +75,7 @@ dub -- --mirror=mirror.json
 Starting the registry with `mirror.json` will import all packages within the JSON file.
 Once all packages have been imported, you can start the registry as you normally would:
 
-```d
+```bash
 dub
 ```
 
@@ -115,7 +115,7 @@ Q: I'm getting an "undefined reference to SSLv23_client_method"
 
 A: Link with OpenSSL 1.1:
 
-```d
+```bash
 dub --override-config="vibe-d:tls/openssl-1.1"
 ```
 
@@ -123,6 +123,6 @@ Q: I'm getting "Authentication failed"
 
 A: Try accessing mongodb without authentication
 
-```d
+```bash
 dub -- --allow-unauthenticated=true
 ```

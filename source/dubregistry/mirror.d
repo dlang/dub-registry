@@ -109,6 +109,6 @@ nothrow {
 		logInfo("Updates for '%s' successfully processed.", fileOrUrl);
 	} catch (Exception e) {
 		logError("Fetching updated packages failed: %s", e.msg);
-		logError("Full error: %s", e.toString().sanitize);
+		logDiagnostic("Full error: %s", e.toString().sanitize);
 	}
 }

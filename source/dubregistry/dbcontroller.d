@@ -119,7 +119,9 @@ class DbController
 
 		// add current text index
 		immutable keyWeights = [
-			"name" : 8, "categories" : 4, "versions.info.description" : 2,
+			"name" : 8, 
+			"categories" : 4, 
+			"versions.info.description" : 2,
 			"versions.info.authors" : 1
 		];
 		Bson[string] fts;
