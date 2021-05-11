@@ -78,9 +78,15 @@ class DbController {
 		m_packages.update(["logoHash": ["$exists": true]], ["$unset": ["logo": 0, "logoHash": 0]], UpdateFlags.multiUpdate);
 
 		// create indices
-		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
-		m_packages.ensureIndex([tuple("stats.score", 1)]);
-		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
+		IndexOptions options;
+		options.unique = true;
+
+		scope IndexModel[3] models = [
+			IndexModel().add("name", 1).withOptions(options),
+			IndexModel().add("stats.score", 1),
+			IndexModel().add("package", 1)
+		];
+		m_packages.createIndexes(models);
 
 		// drop old text index versions
 		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
@@ -149,7 +155,7 @@ class DbController {
 		static struct PID { BsonObjectID _id; }
 		auto pid = m_packages.findOne!PID(["name": packname], ["_id": 1]);
 		enforce(!pid.isNull(), "Unknown package name.");
-		return pid._id;
+		return pid.get._id;
 	}
 
 	DbPackage getPackage(BsonObjectID id)
@@ -183,7 +189,7 @@ class DbController {
 	{
 		static struct PO { BsonObjectID owner; }
 		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1]);
-		return !p.isNull && p.owner == user_id;
+		return !p.isNull && p.get.owner == user_id;
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -366,8 +372,8 @@ class DbController {
 		static struct PS { DbPackageStats stats; }
 		auto pack = m_packages.findOne!PS(["name": Bson(packname)], ["stats": true]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
-		logDebug("getPackageStats(%s) %s", packname, pack.stats);
-		return pack.stats;
+		logDebug("getPackageStats(%s) %s", packname, pack.get.stats);
+		return pack.get.stats;
 	}
 
 	void updatePackageStats(BsonObjectID packId, ref DbPackageStats stats)

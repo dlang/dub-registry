@@ -34,17 +34,23 @@ MongoClientSettings mongoSettings(bool allowUnauthenticated = false)
 				environment.get("MONGO_URI", "mongodb://127.0.0.1"));
 		logInfo("Found mongodbURI: %s", mongodbURI);
 		_mongoSettings = MongoClientSettings.init;
-		parseMongoDBUrl(_mongoSettings, mongodbURI);
+
+		MongoClientSettings _settings = _mongoSettings.get;
+
+		parseMongoDBUrl(_settings, mongodbURI);
 
 		if (!allowUnauthenticated)
-			_mongoSettings.authMechanism = MongoAuthMechanism.scramSHA1;
+			_settings.authMechanism = MongoAuthMechanism.scramSHA1;
 
-		if (_mongoSettings.database.length > 0)
-			databaseName = _mongoSettings.database;
+		if (_settings.database.length > 0)
+			databaseName = _settings.database;
 
-		_mongoSettings.safe = true;
+		_settings.safe = true;
+
+		_mongoSettings = _settings;
 	}
-	return _mongoSettings;
+	
+	return _mongoSettings.get;
 }
 
 /**

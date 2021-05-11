@@ -37,7 +37,7 @@ class URLCache {
 		import dubregistry.mongodb : databaseName, getMongoClient;
 		m_db = getMongoClient();
 		m_entries = m_db.getDatabase(databaseName)["urlcache.entries"];
-		m_entries.ensureIndex([tuple("url", 1)]);
+		m_entries.createIndex([tuple("url", 1)]);
 	}
 
 	void clearEntry(URL url)

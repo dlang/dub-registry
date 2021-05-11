@@ -8,7 +8,7 @@ block title
 	- import vibe.inet.url;
 	- import vibe.textfilter.urlencode;
 	- import dubregistry.viewutils;
-	- import userman.controller;
+	- import userman.db.controller;
 	- title = "Package " ~ packageName ~ " version " ~ versionInfo["version"].get!string;
 	- auto packageInfo = packinfo.info;
 

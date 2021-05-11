@@ -53,18 +53,29 @@ nothrow {
 	try {
 		DbPackage[] packs;
 		URL url;
-		auto path = NativePath(fileOrUrl);
+
+		const path = NativePath(fileOrUrl);
 
 		string source_text;
 
-		if (path.existsFile) source_text = path.readFileUTF8;
+		if (path.existsFile) {
+			logInfo("Using local file at %s", path);
+			source_text = path.readFileUTF8;
+		}
 		else {
+			import std.range;
 			url = URL(fileOrUrl);
+
+			const uri = url ~ InetPath("api/packages/dump");
+
+			logInfo("Downloading packages from %s", uri);
+
 			source_text = requestHTTP(url ~ InetPath("api/packages/dump"))
 				.bodyReader
 				.readAllUTF8;
 		}
 
+		logInfo("Download complete. Begin deserializing");
 		packs = source_text.deserializeJson!(DbPackage[]);
 
 		logInfo("Updates for '%s' downloaded.", url);
@@ -99,6 +110,6 @@ nothrow {
 		logInfo("Updates for '%s' successfully processed.", fileOrUrl);
 	} catch (Exception e) {
 		logError("Fetching updated packages failed: %s", e.msg);
-		logDiagnostic("Full error: %s", e.toString().sanitize);
+		logError("Full error: %s", e.toString().sanitize);
 	}
 }

@@ -75,8 +75,8 @@ block body
 						- string image, imageDescription;
 						- bool isApplication;
 						- if (pl["categories"].length)
-							- foreach (category; pl["categories"])
-								- if (category.get!string.startsWith("application"))
+							- foreach (c; pl["categories"])
+								- if (c.get!string.startsWith("application"))
 									- isApplication = true;
 									- break;
 							- if (auto pc = pl["categories"][0].get!string in info.categoryMap)
