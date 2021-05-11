@@ -78,7 +78,7 @@ nothrow {
 		logInfo("Download complete. Begin deserializing");
 		packs = source_text.deserializeJson!(DbPackage[]);
 
-		logInfo("Updates for '%s' downloaded.", url);
+		logInfo("Deserialization complete");
 
 		bool[BsonObjectID] current_packs;
 		foreach (p; packs) current_packs[p._id] = true;
@@ -99,7 +99,7 @@ nothrow {
 		// then add/update all existing packages
 		foreach (p; packs) {
 			try {
-				logInfo("Updating package '%s'", p.name);
+				logDebug("Updating package '%s'", p.name);
 				registry.addOrSetPackage(p);
 			} catch (Exception e) {
 				logError("Failed to add/update package '%s': %s", p.name, e.msg);
