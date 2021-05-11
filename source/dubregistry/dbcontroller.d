@@ -41,12 +41,11 @@ class DbController
 		m_files = db["files"];
 
 		logInfo("Creating package cache");
-		pkgCache = m_packages.find().sort(["stats.score": 1])
-			.map!(deserializeBson!DbPackage).array;
+		updateCache();
+		
 		//
 		// migrations:
 		//
-
 		version (DubRegistry_EnableLegacyMigrations)
 		{
 			// update package format
@@ -157,12 +156,16 @@ class DbController
 		if (pack._id == BsonObjectID.init)
 			pack._id = BsonObjectID.generate();
 		m_packages.insert(pack);
+
+		updateCache();
 	}
 
 	void addOrSetPackage(ref DbPackage pack)
 	{
 		enforce(pack._id != BsonObjectID.init, "Cannot update a packag with no ID.");
 		m_packages.update(["_id": pack._id], pack, UpdateFlags.upsert);
+		
+		updateCache();
 	}
 
 	DbPackage getPackage(string packname)
@@ -233,6 +236,8 @@ class DbController
 	void removePackage(string packname, BsonObjectID user)
 	{
 		m_packages.remove(["name": Bson(packname), "owner": Bson(user)]);
+
+		updateCache();
 	}
 
 	void setPackageErrors(string packname, string[] error...)
@@ -285,6 +290,12 @@ class DbController
 		m_packages.update(["name": packname], [
 				"$set": ["documentationURL": documentationURL]
 				]);
+	}
+
+	/// Updates the package cache used when searching
+	void updateCache()
+	{
+		pkgCache = m_packages.find().map!(deserializeBson!DbPackage).array;
 	}
 
 	bdata_t getPackageLogo(string packname, out bdata_t rev)
