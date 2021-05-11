@@ -396,7 +396,6 @@ class DbController
 	DbPackage[] searchPackages(string query)
 	{
 		import std.math : round;
-		import std.algorithm.searching;
 
 		if (!query.strip.length)
 		{
