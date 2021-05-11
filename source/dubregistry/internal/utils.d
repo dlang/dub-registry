@@ -7,7 +7,7 @@ import vibe.core.log;
 import vibe.core.task;
 import vibe.data.bson;
 import vibe.inet.url;
-import vibe.inet.path;
+import vibe.core.path;
 
 import core.time;
 import std.algorithm : any, among, splitter;

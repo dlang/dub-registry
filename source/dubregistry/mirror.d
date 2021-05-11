@@ -63,7 +63,6 @@ nothrow {
 			source_text = path.readFileUTF8;
 		}
 		else {
-			import std.range;
 			url = URL(fileOrUrl);
 
 			const uri = url ~ InetPath("api/packages/dump");
