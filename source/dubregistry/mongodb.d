@@ -8,6 +8,7 @@ import std.typecons : Nullable;
 
 /// Database name
 string databaseName = "vpmreg";
+bool m_allowUnauthenticated;
 private Nullable!MongoClientSettings _mongoSettings;
 
 @safe:
@@ -21,7 +22,7 @@ Params:
 Returns:
 	MongoClientSettings
 */
-MongoClientSettings mongoSettings(bool allowUnauthenticated)
+MongoClientSettings mongoSettings(bool allowUnauthenticated = false)
 {
 	if (_mongoSettings.isNull)
 	{
