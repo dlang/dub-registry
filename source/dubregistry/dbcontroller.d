@@ -439,10 +439,8 @@ class DbController {
 						]);
 			}
 			auto res = () @trusted {
-				return m_packages.aggregate(["$group": group], [
-						"$project": project
-						]);
-			}();
+					return m_packages.aggregate(["$group": group], ["$project": project]);
+				} ();
 
 			static if (groupBy is null)
 			{
@@ -617,7 +615,6 @@ alias DbRepoStats = DbRepoStatsT!uint;
 
 struct DbStatDistributions {
 	static struct Agg { ulong sum; float mean = 0, std = 0; }
-
 	DbDownloadStatsT!Agg downloads;
 	DbRepoStatsT!Agg[string] repos;
 }
