@@ -371,7 +371,6 @@ class DbController {
 	DbPackageStats getPackageStats(string packname)
 	{
 		static struct PS { DbPackageStats stats; }
-
 		auto pack = m_packages.findOne!PS(["name": Bson(packname)], ["stats": true]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
 		logDebug("getPackageStats(%s) %s", packname, pack.get.stats);
@@ -422,19 +421,17 @@ class DbController {
 
 	DbStatDistributions getStatDistributions()
 	{
-		auto aggregate(T, string prefix, string groupBy)() 
+		auto aggregate(T, string prefix, string groupBy)()
 		@safe {
 			auto group = ["_id" : Bson(groupBy ? "$" ~ groupBy : null)];
 			Bson[string] project;
 			foreach (mem; __traits(allMembers, T))
 			{
-				static assert(is(typeof(__traits(getMember, T.init,
-						mem)) == DbStatDistributions.Agg));
-				static assert([__traits(allMembers,
-							DbStatDistributions.Agg)] == ["sum", "mean", "std"]);
-				group[mem ~ "_sum"] = bson(["$sum": "$" ~ prefix ~ "." ~ mem]);
-				group[mem ~ "_mean"] = bson(["$avg": "$" ~ prefix ~ "." ~ mem]);
-				group[mem ~ "_std"] = bson(["$stdDevPop": "$" ~ prefix ~ "." ~ mem]);
+				static assert(is(typeof(__traits(getMember, T.init, mem)) == DbStatDistributions.Agg));
+				static assert([__traits(allMembers, DbStatDistributions.Agg)] == ["sum", "mean", "std"]);
+				group[mem~"_sum"] = bson(["$sum": "$"~prefix~"."~mem]);
+				group[mem~"_mean"] = bson(["$avg": "$"~prefix~"."~mem]);
+				group[mem~"_std"] = bson(["$stdDevPop": "$"~prefix~"."~mem]);
 				project[mem] = bson([
 						"mean": "$" ~ mem ~ "_mean",
 						"sum": "$" ~ mem ~ "_sum",
@@ -471,8 +468,7 @@ class DbController {
 
 	private void repairVersionOrder()
 	{
-		foreach (bp; m_packages.find())
-		{
+		foreach (bp; m_packages.find()) {
 			auto p = deserializeBson!DbPackage(bp);
 			auto newversions = p.versions
 				.filter!(v => v.version_.startsWith("~") || v.version_.isValidVersion)
@@ -481,26 +477,22 @@ class DbController {
 				.uniq!((a, b) => a.version_ == b.version_)
 				.array;
 			if (p.versions != newversions)
-				m_packages.update(["_id": p._id], [
-						"$set": ["versions": newversions]
-						]);
+				m_packages.update(["_id": p._id], ["$set": ["versions": newversions]]);
 		}
 	}
 }
 
 class RecordNotFound : Exception
 {
-	@nogc @safe pure nothrow this(string msg, string file = __FILE__,
-			size_t line = __LINE__, Throwable next = null)
-	{
-		super(msg, file, line, next);
-	}
+    @nogc @safe pure nothrow this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
+    {
+        super(msg, file, line, next);
+    }
 
-	@nogc @safe pure nothrow this(string msg, Throwable next,
-			string file = __FILE__, size_t line = __LINE__)
-	{
-		super(msg, file, line, next);
-	}
+    @nogc @safe pure nothrow this(string msg, Throwable next, string file = __FILE__, size_t line = __LINE__)
+    {
+        super(msg, file, line, next);
+    }
 }
 
 struct DbPackage {
@@ -624,35 +616,29 @@ struct DbRepoStatsT(T = uint) {
 alias DbRepoStats = DbRepoStatsT!uint;
 
 struct DbStatDistributions {
-	static struct Agg
-	{
-		ulong sum;
-		float mean = 0, std = 0;
-	}
+	static struct Agg { ulong sum; float mean = 0, std = 0; }
 
 	DbDownloadStatsT!Agg downloads;
 	DbRepoStatsT!Agg[string] repos;
 }
 
-bool vcmp(DbPackageVersion a, DbPackageVersion b) @safe
-{
+bool vcmp(DbPackageVersion a, DbPackageVersion b)
+@safe {
 	return vcmp(a.version_, b.version_);
 }
 
-bool vcmp(string va, string vb) 
+bool vcmp(string va, string vb)
 @safe {
 	import dub.dependency;
 	return Version(va) < Version(vb);
 }
 
-private string[] splitAlphaNumParts(string str) 
+private string[] splitAlphaNumParts(string str)
 @safe {
 	string[] ret;
 	while (!str.empty) {
-		while (!str.empty && !str.front.isIdentChar())
-			str.popFront();
-		if (str.empty)
-			break;
+		while (!str.empty && !str.front.isIdentChar()) str.popFront();
+		if (str.empty) break;
 		size_t i = str.length;
 		foreach (j, dchar ch; str)
 			if (!isIdentChar(ch)) {
@@ -663,13 +649,12 @@ private string[] splitAlphaNumParts(string str)
 			ret ~= str[0 .. i];
 			str = str[i .. $];
 		}
-		if (!str.empty)
-			str.popFront(); // pop non-ident-char
+		if (!str.empty) str.popFront(); // pop non-ident-char
 	}
 	return ret;
 }
 
-private bool isIdentChar(dchar ch) 
+private bool isIdentChar(dchar ch)
 @safe {
 	return std.uni.isAlpha(ch) || std.uni.isNumber(ch);
 }
