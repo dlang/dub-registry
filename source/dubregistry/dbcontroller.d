@@ -9,7 +9,6 @@ import dub.semver;
 import std.array;
 import std.algorithm;
 import std.exception;
-
 import std.typecons : tuple;
 import std.uni;
 import vibe.vibe;
