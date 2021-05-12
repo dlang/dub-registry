@@ -151,9 +151,7 @@ class DbController {
 
 	auto getPackages(scope string[] packnames...)
 	{
-		return m_packages.find!DbPackage([
-				"name": ["$in": serializeToBson(packnames)]
-				]);
+		return m_packages.find!DbPackage(["name": ["$in": serializeToBson(packnames)]]);
 	}
 
 	BsonObjectID getPackageID(string packname)
