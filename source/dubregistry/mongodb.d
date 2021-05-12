@@ -18,9 +18,6 @@ Initializes mongoSettings if null
 Params:
 	allowUnauthenticated = whether to allow unauthenticated access
 
-Examples:
-	dub -- --allow-unauthenticated=true
-
 Returns:
 	MongoClientSettings
 */
