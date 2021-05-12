@@ -27,11 +27,9 @@ MongoClientSettings mongoSettings(bool allowUnauthenticated)
 	{
 		import std.process : environment;
 
-		auto mongodbURI = environment.get("MONGODB_URI",
-				environment.get("MONGO_URI", "mongodb://127.0.0.1"));
+		auto mongodbURI = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1"));
 		logInfo("Found mongodbURI: %s", mongodbURI);
 		_mongoSettings = MongoClientSettings.init;
-
 		auto _settings = _mongoSettings.get;
 
 		parseMongoDBUrl(_settings, mongodbURI);
@@ -43,7 +41,6 @@ MongoClientSettings mongoSettings(bool allowUnauthenticated)
 			databaseName = _settings.database;
 
 		_settings.safe = true;
-
 		_mongoSettings = _settings;
 	}
 	
