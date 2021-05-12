@@ -24,7 +24,7 @@ Examples:
 Returns:
 	MongoClientSettings
 */
-MongoClientSettings mongoSettings(bool allowUnauthenticated = false)
+MongoClientSettings mongoSettings(bool allowUnauthenticated)
 {
 	if (_mongoSettings.isNull)
 	{
@@ -35,7 +35,7 @@ MongoClientSettings mongoSettings(bool allowUnauthenticated = false)
 		logInfo("Found mongodbURI: %s", mongodbURI);
 		_mongoSettings = MongoClientSettings.init;
 
-		MongoClientSettings _settings = _mongoSettings.get;
+		auto _settings = _mongoSettings.get;
 
 		parseMongoDBUrl(_settings, mongodbURI);
 

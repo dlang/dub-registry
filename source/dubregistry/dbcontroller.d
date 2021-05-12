@@ -15,7 +15,7 @@ import std.typecons : tuple;
 import std.uni;
 import vibe.vibe;
 
-/// Package cache used for seraching in-memory
+/// Package cache used for searching in-memory
 DbPackage[] pkgCache;
 
 class DbController

@@ -77,8 +77,6 @@ nothrow {
 		logInfo("Download complete. Begin deserializing");
 		packs = source_text.deserializeJson!(DbPackage[]);
 
-		logInfo("Deserialization complete");
-
 		bool[BsonObjectID] current_packs;
 		foreach (p; packs) current_packs[p._id] = true;
 
