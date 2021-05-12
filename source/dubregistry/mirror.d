@@ -66,10 +66,9 @@ nothrow {
 			url = URL(fileOrUrl);
 
 			const uri = url ~ InetPath("api/packages/dump");
-
 			logInfo("Downloading packages from %s", uri);
 
-			source_text = requestHTTP(url ~ InetPath("api/packages/dump"))
+			source_text = requestHTTP(uri)
 				.bodyReader
 				.readAllUTF8;
 		}
