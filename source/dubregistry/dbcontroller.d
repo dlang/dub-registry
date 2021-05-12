@@ -18,12 +18,10 @@ import vibe.vibe;
 /// Package cache used for searching in-memory
 DbPackage[] pkgCache;
 
-class DbController
-{
+class DbController {
 @safe:
 
-	private
-	{
+	private	{
 		MongoCollection m_packages;
 		MongoCollection m_downloads;
 		MongoCollection m_files;
@@ -46,8 +44,7 @@ class DbController
 		//
 		// migrations:
 		//
-		version (DubRegistry_EnableLegacyMigrations)
-		{
+		version (DubRegistry_EnableLegacyMigrations) {
 			// update package format
 			foreach (p; m_packages.find())
 			{
@@ -410,8 +407,7 @@ class DbController
 	{
 		import std.math : round;
 
-		if (!query.strip.length)
-		{
+		if (!query.strip.length) {
 			return pkgCache;
 		}
 
@@ -508,8 +504,8 @@ class DbController
 
 	DbStatDistributions getStatDistributions()
 	{
-		auto aggregate(T, string prefix, string groupBy)() @safe
-		{
+		auto aggregate(T, string prefix, string groupBy)() 
+		@safe {
 			auto group = ["_id" : Bson(groupBy ? "$" ~ groupBy : null)];
 			Bson[string] project;
 			foreach (mem; __traits(allMembers, T))
@@ -589,8 +585,7 @@ class RecordNotFound : Exception
 	}
 }
 
-struct DbPackage
-{
+struct DbPackage {
 	BsonObjectID _id;
 	BsonObjectID owner;
 	string name;
@@ -605,8 +600,7 @@ struct DbPackage
 	@optional float textScore = 0; // for FTS textScore in searchPackages
 }
 
-struct DbRepository
-{
+struct DbRepository {
 	string kind;
 	string owner;
 	string project;
@@ -616,22 +610,14 @@ struct DbRepository
 		string host = url.host;
 		if (!url.schema.among!("http", "https"))
 			throw new Exception("Invalid Repository Schema (only supports http and https)");
-		if (host.endsWith(".github.com") || host == "github.com" || host == "github")
-		{
+		if (host.endsWith(".github.com") || host == "github.com" || host == "github") {
 			kind = "github";
-		}
-		else if (host.endsWith(".gitlab.com") || host == "gitlab.com" || host == "gitlab")
-		{
+		} else if (host.endsWith(".gitlab.com") || host == "gitlab.com" || host == "gitlab") {
 			kind = "gitlab";
-		}
-		else if (host.endsWith(".bitbucket.org") || host == "bitbucket.org" || host == "bitbucket")
-		{
+		} else if (host.endsWith(".bitbucket.org") || host == "bitbucket.org" || host == "bitbucket") {
 			kind = "bitbucket";
-		}
-		else
-		{
-			throw new Exception(
-					"Please input a valid project URL to a GitHub, GitLab or BitBucket project.");
+		} else {
+			throw new Exception("Please input a valid project URL to a GitHub, GitLab or BitBucket project.");
 		}
 		auto path = url.path.relativeTo(InetPath("/")).bySegment;
 		if (path.empty)
@@ -652,8 +638,7 @@ struct DbRepository
 			throw new Exception("Invalid Repository URL (got more than owner and project)");
 	}
 
-	unittest
-	{
+	unittest {
 		DbRepository r;
 		r.parseURL(URL("https://github.com/foo/bar"));
 		assert(r == DbRepository("github", "foo", "bar"));
@@ -671,14 +656,12 @@ struct DbRepository
 	}
 }
 
-struct DbPackageFile
-{
+struct DbPackageFile {
 	BsonObjectID _id;
 	BsonBinData data;
 }
 
-struct DbPackageVersion
-{
+struct DbPackageVersion {
 	SysTime date;
 	string version_;
 	@optional string commitID;
@@ -688,8 +671,7 @@ struct DbPackageVersion
 	@optional string docFolder;
 }
 
-struct DbPackageDownload
-{
+struct DbPackageDownload {
 	BsonObjectID _id;
 	BsonObjectID package_;
 	string version_;
@@ -697,8 +679,7 @@ struct DbPackageDownload
 	string userAgent;
 }
 
-struct DbPackageStats
-{
+struct DbPackageStats {
 	SysTime updatedAt;
 	DbDownloadStats downloads;
 	DbRepoStats repo;
@@ -712,22 +693,19 @@ struct DbPackageStats
 	}
 }
 
-struct DbDownloadStatsT(T = uint)
-{
+struct DbDownloadStatsT(T = uint) {
 	T total, monthly, weekly, daily;
 }
 
 alias DbDownloadStats = DbDownloadStatsT!uint;
 
-struct DbRepoStatsT(T = uint)
-{
+struct DbRepoStatsT(T = uint) {
 	T stars, watchers, forks, issues;
 }
 
 alias DbRepoStats = DbRepoStatsT!uint;
 
-struct DbStatDistributions
-{
+struct DbStatDistributions {
 	static struct Agg
 	{
 		ulong sum;
@@ -743,31 +721,27 @@ bool vcmp(DbPackageVersion a, DbPackageVersion b) @safe
 	return vcmp(a.version_, b.version_);
 }
 
-bool vcmp(string va, string vb) @safe
-{
+bool vcmp(string va, string vb) 
+@safe {
 	import dub.dependency;
-
 	return Version(va) < Version(vb);
 }
 
-private string[] splitAlphaNumParts(string str) @safe
-{
+private string[] splitAlphaNumParts(string str) 
+@safe {
 	string[] ret;
-	while (!str.empty)
-	{
+	while (!str.empty) {
 		while (!str.empty && !str.front.isIdentChar())
 			str.popFront();
 		if (str.empty)
 			break;
 		size_t i = str.length;
 		foreach (j, dchar ch; str)
-			if (!isIdentChar(ch))
-			{
+			if (!isIdentChar(ch)) {
 				i = j;
 				break;
 			}
-		if (i > 0)
-		{
+		if (i > 0) {
 			ret ~= str[0 .. i];
 			str = str[i .. $];
 		}
@@ -777,7 +751,7 @@ private string[] splitAlphaNumParts(string str) @safe
 	return ret;
 }
 
-private bool isIdentChar(dchar ch) @safe
-{
+private bool isIdentChar(dchar ch) 
+@safe {
 	return std.uni.isAlpha(ch) || std.uni.isNumber(ch);
 }
