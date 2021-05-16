@@ -2,11 +2,11 @@
 	"fileVersion": 1,
 	"versions": {
 		"backtrace-d": "~master",
-		"botan": "1.12.18",
+		"botan": "1.12.19",
 		"botan-math": "1.0.3",
-		"diet-ng": "1.7.4",
-		"dub": "1.21.0",
-		"eventcore": "0.9.10",
+		"diet-ng": "1.7.5",
+		"dub": "1.25.0",
+		"eventcore": "0.9.13",
 		"libasync": "0.8.6",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
@@ -14,9 +14,9 @@
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
 		"stdx-allocator": "2.77.5",
-		"taggedalgebraic": "0.11.18",
+		"taggedalgebraic": "0.11.21",
 		"userman": "0.4.1+commit.1.ged5ea95",
-		"vibe-core": "1.11.0",
-		"vibe-d": "0.9.2"
+		"vibe-core": "1.16.0",
+		"vibe-d": "0.9.3+commit.2.g77632176"
 	}
 }
