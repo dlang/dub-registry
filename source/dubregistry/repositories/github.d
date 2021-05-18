@@ -45,25 +45,18 @@ class GithubRepository : Repository {
 		import std.datetime.systime : SysTime;
 		import std.conv: text;
 		RefInfo[] ret;
-		for (size_t page = 1; ; page++)
-		{
-			Json tags;
-			try tags = readJsonFromRepo("/tags?per_page=100&page=" ~ page.text);
-			catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
-			size_t count;
-			foreach_reverse (tag; tags) {
-				try {
-					count++;
-					auto tagname = tag["name"].get!string;
-					Json commit = readJsonFromRepo("/commits/"~tag["commit"]["sha"].get!string, true, true);
-					ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
-					logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
-				} catch( Exception e ){
-					throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
-				}
+		Json[] tags;
+		try tags = readPagedListFromRepo("/tags?per_page=100");
+		catch( Exception e ) { throw new Exception("Failed to get tags: "~e.msg); }
+		foreach_reverse (tag; tags) {
+			try {
+				auto tagname = tag["name"].get!string;
+				Json commit = readJsonFromRepo("/commits/"~tag["commit"]["sha"].get!string, true, true);
+				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
+				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
+			} catch( Exception e ){
+				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
 			}
-			if (count < 100)
-				break;
 		}
 		return ret;
 	}
@@ -149,6 +142,12 @@ class GithubRepository : Repository {
 			sanitize, cache_priority, &addAuthentication);
 	}
 
+	private Json[] readPagedListFromRepo(string api_path, bool sanitize = false, bool cache_priority = false)
+	{
+		return readPagedList(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~api_path,
+			sanitize, cache_priority, &addAuthentication);
+	}
+
 	private void addAuthentication(scope HTTPClientRequest req)
 	{
 		req.headers["Authorization"] = "token " ~ m_authToken;
@@ -163,4 +162,58 @@ class GithubRepository : Repository {
 	{
 		return "https://raw.githubusercontent.com";
 	}
+}
+
+package Json[] readPagedList(string url, bool sanitize = false, bool cache_priority = false, RequestModifier request_modifier = null)
+@safe {
+	import dubregistry.internal.utils : black;
+	import std.array : appender;
+	import std.format : format;
+	import vibe.stream.operations : readAllUTF8;
+
+	auto ret = appender!(Json[]);
+	Exception ex;
+	string next = url;
+
+	NextLoop: while (next.length) {
+		logDiagnostic("Getting paged JSON response from %s", next.black);
+		foreach (i; 0 .. 2) {
+			try {
+				downloadCached(next, (scope input, scope headers) {
+					scope (failure) clearCacheEntry(url);
+					next = getNextLink(headers);
+
+					auto text = input.readAllUTF8(sanitize);
+					ret ~= parseJsonString(text).get!(Json[]);
+				}, ["Link"], cache_priority, request_modifier);
+				continue NextLoop;
+			} catch (FileNotFoundException e) {
+				throw e;
+			} catch (Exception e) {
+				logDiagnostic("Failed to parse downloaded JSON document (attempt #%s): %s", i+1, e.msg);
+				ex = e;
+			}
+		}
+		throw new Exception(format("Failed to read JSON from %s: %s", url.black, ex.msg), __FILE__, __LINE__, ex);
+	}
+
+	return ret.data;
+}
+
+private string getNextLink(scope string[string] headers)
+@safe {
+	import uritemplate : expandTemplateURIString;
+	import std.algorithm : endsWith, splitter, startsWith;
+
+	static immutable string startPart = `<`;
+	static immutable string endPart = `>; rel="next"`;
+
+	if (auto link = "Link" in headers) {
+		foreach (part; (*link).splitter(", ")) {
+			if (part.startsWith(startPart) && part.endsWith(endPart)) {
+				return expandTemplateURIString(part[startPart.length .. $ - endPart.length], null);
+			}
+		}
+	}
+	return null;
 }

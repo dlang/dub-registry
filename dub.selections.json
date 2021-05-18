@@ -15,6 +15,7 @@
 		"openssl": "1.1.6+1.0.1g",
 		"stdx-allocator": "2.77.5",
 		"taggedalgebraic": "0.11.21",
+		"uritemplate": "1.0.0",
 		"userman": "0.4.1+commit.1.ged5ea95",
 		"vibe-core": "1.16.0",
 		"vibe-d": "0.9.3+commit.2.g77632176"
