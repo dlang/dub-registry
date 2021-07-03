@@ -1,21 +1,21 @@
+function handleMenuClick(container, e, isHamburger){
+    container.classList.toggle('open');
+
+    // Only one dropdown can be open at a time
+    if (open_main_item !== container && open_main_item !== null) {
+        open_main_item.classList.remove("open");
+    }
+
+    // On mobiles devices the hamburger toggles the menu
+    if (!isHamburger) {
+        open_main_item = container.classList.contains('open') ? container: null;
+    }
+    e.stopPropagation();
+    e.preventDefault();
+}
+
 if (typeof cssmenu_no_js === 'undefined') {
     var open_main_item = null;
-
-    function handleMenuClick(container, e, isHamburger){
-        container.classList.toggle('open');
-
-        // Only one dropdown can be open at a time
-        if (open_main_item !== container && open_main_item !== null) {
-            open_main_item.classList.remove("open");
-        }
-
-        // On mobiles devices the hamburger toggles the menu
-        if (!isHamburger) {
-            open_main_item = container.classList.contains('open') ? container: null;
-        }
-        e.stopPropagation();
-        e.preventDefault();
-    }
 
     // menu button for mobile devices
     var dom_hamburger = document.body.querySelector(".hamburger.expand-toggle");
@@ -42,7 +42,9 @@ if (typeof cssmenu_no_js === 'undefined') {
     document.getElementById('top').addEventListener('click', function(e) {
         e.stopPropagation();
     });
+    /* eslint-disable no-unused-vars */
     window.addEventListener("click", function(e) {
+    /* eslint-enable no-unused-vars */
         if (open_main_item !== null) {
             open_main_item.classList.remove("open");
         }

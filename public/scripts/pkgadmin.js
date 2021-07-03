@@ -1,6 +1,9 @@
 var logoUploadButton = document.getElementById("logo-upload-button");
 logoUploadButton.disabled = true;
+
+/* eslint-disable no-unused-vars */
 function updateLogoPreview(input) {
+/* eslint-enable no-unused-vars */
 	var f = input.files[0];
 	if (!f) return;
 	logoUploadButton.disabled = true;
@@ -42,6 +45,7 @@ function upgradeSubtabs(subtabs, openPage) {
 		return;
 
 	var first;
+	var page;
 	var gotActive = false;
 
 	for (var i = 0; i < links.length; i++) {
@@ -49,7 +53,7 @@ function upgradeSubtabs(subtabs, openPage) {
 		if (link.classList.contains("external"))
 			continue;
 
-		var page = link.getAttribute("data-tab");
+		page = link.getAttribute("data-tab");
 		if (!page)
 			continue;
 
@@ -75,7 +79,7 @@ function upgradeSubtabs(subtabs, openPage) {
 
 	if (!gotActive && first) {
 		first.classList.add("active");
-		var page = first.getAttribute("data-tab");
+		page = first.getAttribute("data-tab");
 		upgradeSubtabPage(document.getElementById("tab-" + page), page, true);
 	}
 }

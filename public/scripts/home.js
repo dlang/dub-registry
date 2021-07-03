@@ -1,9 +1,9 @@
+/* eslint-disable no-unused-vars */
 function setupCategoryForm()
+/* eslint-enable no-unused-vars */
 {
 	el("category-form").style.display = "none";
 	el("category-dynamic-form").style.display = "block";
-	selected_cats = el("category").value.split(".");
-	var parentcat = null;
 	setCategory(el("category").value);
 }
 
@@ -26,7 +26,9 @@ function updateCategorySelector(i, parentcat)
 	sel.style.display = "inline-block";
 }
 
+/* eslint-disable no-unused-vars */
 function setCategoryFromSelector(selidx)
+/* eslint-enable no-unused-vars */
 {
 	var cat = getSel(selidx).value;
 	if (selidx > 0 && cat == "") cat = getSel(selidx-1).value;
