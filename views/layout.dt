@@ -7,6 +7,7 @@ html
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/top_p.css")
 
 		link(rel="shortcut icon", href="#{req.rootDir}favicon.ico")
+		link(rel="search", href="#{req.rootDir}opensearch.xml", type="application/opensearchdescription+xml", title="DUB")
 		meta(name="viewport",content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0")
 		- string title;
 		block title
