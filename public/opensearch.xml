@@ -3,5 +3,5 @@
   <ShortName>DUB</ShortName>
   <Description>Search for dub packages</Description>
   <Image type="image/png">https://code.dlang.org/images/logo-small.png</Image>
-  <Url type="text/html" method="get" template="https://code.dlang.org/search?q={search-query}"/>
+  <Url type="text/html" method="get" template="https://code.dlang.org/search?q={searchTerms}"/>
 </OpenSearchDescription>
