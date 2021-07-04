@@ -7,7 +7,7 @@
   },
   "license": "BSL-1.0",
   "scripts": {
-    "lint:js": "eslint . --cache"
+    "lint": "eslint . --cache"
   },
   "devDependencies": {
     "eslint": "^7.30.0"
