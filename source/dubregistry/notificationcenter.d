@@ -88,7 +88,7 @@ class NotificationCenter {
 				auto mail = new Mail;
 				mail.headers["From"] = format("%s <%s>", settings.serviceName, settings.serviceEmail);
 				mail.headers["To"] = format("%s <%s>", user.fullName, user.email); // FIXME: sanitize/escape user.fullName
-				mail.headers["Subject"] = format("Weekly deprecation warnings reminder");
+				mail.headers["Subject"] = "Weekly deprecation warnings reminder";
 
 				auto dst = appender!string();
 				dst.compileHTMLDietFile!("dubregistry.mail.package-deprecation-warnings.dt", user, settings, deprecations);
