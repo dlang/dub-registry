@@ -58,7 +58,10 @@ block body
 							.dub-package-name
 								a(href='packages/#{pl["name"].get!string}')= pl["name"].get!string
 							.dub-package-version
-								| #{ ver.length <= 20 ? ver : ver[0 .. 18] ~ "&hellip;" }
+								- if (ver.length <= 20)
+									|= ver
+								- else
+									| #{ver[0 .. 18]}&hellip;
 							.dub-package-desc
 								|= desc
 							.dub-package-author
