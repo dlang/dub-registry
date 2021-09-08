@@ -12,19 +12,19 @@ private Nullable!MongoClientSettings _mongoSettings;
 @safe:
 
 MongoClientSettings mongoSettings() {
-	if (_mongoSettings.isNull)
-	{
+	if (_mongoSettings.isNull) {
 		import std.process : environment;
 		auto mongodbURI = environment.get("MONGODB_URI", environment.get("MONGO_URI", "mongodb://127.0.0.1"));
 		logInfo("Found mongodbURI: %s", mongodbURI);
-		_mongoSettings = MongoClientSettings.init;
-		parseMongoDBUrl(_mongoSettings, mongodbURI);
-		_mongoSettings.authMechanism = MongoAuthMechanism.scramSHA1;
-		if (_mongoSettings.database.length > 0)
-			databaseName = _mongoSettings.database;
-		_mongoSettings.safe = true;
+		MongoClientSettings settings;
+		parseMongoDBUrl(settings, mongodbURI);
+		settings.authMechanism = MongoAuthMechanism.scramSHA1;
+		if (settings.database.length > 0)
+			databaseName = settings.database;
+		settings.safe = true;
+		_mongoSettings = settings;
 	}
-	return _mongoSettings;
+	return _mongoSettings.get;
 }
 
 MongoClient getMongoClient()

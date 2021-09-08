@@ -149,7 +149,7 @@ class DbController {
 		static struct PID { BsonObjectID _id; }
 		auto pid = m_packages.findOne!PID(["name": packname], ["_id": 1]);
 		enforce(!pid.isNull(), "Unknown package name.");
-		return pid._id;
+		return pid.get._id;
 	}
 
 	DbPackage getPackage(BsonObjectID id)
@@ -183,7 +183,7 @@ class DbController {
 	{
 		static struct PO { BsonObjectID owner; }
 		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1]);
-		return !p.isNull && p.owner == user_id;
+		return !p.isNull && p.get.owner == user_id;
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -366,8 +366,8 @@ class DbController {
 		static struct PS { DbPackageStats stats; }
 		auto pack = m_packages.findOne!PS(["name": Bson(packname)], ["stats": true]);
 		enforce!RecordNotFound(!pack.isNull(), "Unknown package name.");
-		logDebug("getPackageStats(%s) %s", packname, pack.stats);
-		return pack.stats;
+		logDebug("getPackageStats(%s) %s", packname, pack.get.stats);
+		return pack.get.stats;
 	}
 
 	void updatePackageStats(BsonObjectID packId, ref DbPackageStats stats)
