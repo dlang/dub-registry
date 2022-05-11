@@ -763,7 +763,8 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 
 	private void enforceUserPackage(User user, string package_name)
 	{
-		enforceHTTP(m_registry.isUserPackage(user.id, package_name), HTTPStatus.forbidden, "You don't have access rights for this package.");
+		enforceHTTP(m_registry.isAdmin(user) || m_registry.isUserPackage(user.id, package_name),
+			HTTPStatus.forbidden, "You don't have access rights for this package.");
 	}
 
 	// Attribute for authenticated routes
