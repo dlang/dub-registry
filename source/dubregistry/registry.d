@@ -590,19 +590,21 @@ class DubRegistry {
 		import std.encoding;
 		string[] errors;
 
+		scope (exit) m_db.setPackageErrors(packname, errors);
+
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
-		catch( Exception e ){
+		catch (Exception e) {
 			errors ~= format("Error getting package info: %s", e.msg);
-			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
+			logException!(LogLevel.diagnostic)(e, "Failed to get package info for " ~ packname);
 			return;
 		}
 
 		Repository rep;
 		try rep = getRepository(pack.repository);
-		catch( Exception e ){
+		catch (Exception e) {
 			errors ~= format("Error accessing repository: %s", e.msg);
-			() @trusted { logDebug("%s", sanitize(e.toString())); } ();
+			logException!(LogLevel.diagnostic)(e, "Failed to get package info for " ~ packname);
 			return;
 		}
 
@@ -656,7 +658,6 @@ class DubRegistry {
 				}
 			}
 		}
-		m_db.setPackageErrors(packname, errors);
 
 		m_updateStatsQueue.put(packname);
 	}
