@@ -49,13 +49,15 @@ void startMonitoring()
 	s_checkTask = runTask(&monitorPackages);
 }
 
-version (linux) private immutable string certPath;
+version (linux) {
+	private immutable string certPath;
 
-shared static this()
-{
-	enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
-	enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
-	certPath = redhatCA.exists ? redhatCA : debianCA;
+	shared static this()
+	{
+		enum debianCA = "/etc/ssl/certs/ca-certificates.crt";
+		enum redhatCA = "/etc/pki/tls/certs/ca-bundle.crt";
+		certPath = redhatCA.exists ? redhatCA : debianCA;
+	}
 }
 
 // generate dummy data for e.g. Heroku's preview apps
@@ -102,10 +104,14 @@ struct AppConfig
 	string mailUser;
 	string mailPassword;
 
+	string[] administrators;
+
 
 	void init()
 	{
 		import dub.internal.utils : jsonFromFile;
+		import std.algorithm : map;
+		import std.array : array;
 		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
 		// TODO: use UDAs instead
 		static immutable variables = [
@@ -124,6 +130,7 @@ struct AppConfig
 			["mailClientName", "mail-client-name"],
 			["mailUser", "mail-user"],
 			["mailPassword", "mail-password"],
+			["administrators", "administrators"],
 		];
 		static foreach (var; variables) {{
 			alias T = typeof(__traits(getMember, this, var[0]));
@@ -133,11 +140,16 @@ struct AppConfig
 			if (var[1] in regsettingsjson) {
 				static if (is(T == bool)) val = regsettingsjson[var[1]].get!bool;
 				else static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
+				else static if (is(T == string[])) val = regsettingsjson[var[1]].get!(Json[]).map!(j => j.get!string).array;
 				else val = regsettingsjson[var[1]].get!string.to!T;
 			} else {
 				// fallback to environment variables
 				auto ev = environment.get(var[1].replace("-", "_").toUpper);
-				if (ev.length) val = ev.to!T;
+				if (ev.length) {
+					static if (is(T == string[]))
+						val = ev.split(',');
+					else val = ev.to!T;
+				}
 			}
 
 			__traits(getMember, this, var[0]) = val;
@@ -204,6 +216,7 @@ void main()
 	// VPM registry
 	auto regsettings = new DubRegistrySettings;
 	regsettings.databaseName = databaseName;
+	regsettings.administrators = appConfig.administrators;
 	s_registry = new DubRegistry(regsettings);
 
 	UserManController userdb;

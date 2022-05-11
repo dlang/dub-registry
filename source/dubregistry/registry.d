@@ -37,6 +37,7 @@ import vibe.stream.operations;
 /// Settings to configure the package registry.
 class DubRegistrySettings {
 	string databaseName = "vpmreg";
+	string[] administrators;
 }
 
 class DubRegistry {
@@ -142,6 +143,11 @@ class DubRegistry {
 	auto getPackages(User.ID user)
 	{
 		return m_db.getUserPackages(user.bsonObjectIDValue);
+	}
+
+	bool isAdmin(userman.api.User user)
+	{
+		return m_settings.administrators.canFind(user.name);
 	}
 
 	bool isUserPackage(User.ID user, string package_name)
