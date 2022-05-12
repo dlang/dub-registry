@@ -43,7 +43,7 @@ void startMonitoring()
 		sleep(1.seconds()); // give the cache a chance to warm up first
 		while(true){
 			checkForNewVersions;
-			sleep(30.minutes());
+			sleep(60.minutes());
 		}
 	}
 	s_checkTask = runTask(&monitorPackages);
