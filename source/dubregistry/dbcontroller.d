@@ -43,10 +43,6 @@ class DbController {
 		m_packages.ensureIndex([tuple("stats.score", 1)]);
 		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
 
-		// drop old text index versions
-		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index"]);
-		db.runCommand(["dropIndexes": "packages", "index": "packages_full_text_search_index_v2"]);
-
 		// add current text index
 		immutable keyWeights = [
 			"name": 8,
