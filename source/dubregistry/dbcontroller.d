@@ -38,17 +38,6 @@ class DbController {
 		// migrations:
 		//
 
-		// add default non-@optional stats to packages
-		DbPackageStats stats;
-		m_packages.update(["stats": ["$exists": false]], ["$set": ["stats": stats]], UpdateFlags.multiUpdate);
-
-		// rename stats.rating -> stats.score
-		m_packages.update(Bson.emptyObject(), ["$rename": ["stats.rating": "stats.score"]], UpdateFlags.multiUpdate);
-
-		// default initialize missing scores with zero
-		float score = 0;
-		m_packages.update(["stats.score": ["$exists": false]], ["$set": ["stats.score": score]], UpdateFlags.multiUpdate);
-
 		// remove old logo fields
 		m_packages.update(["logoHash": ["$exists": true]], ["$unset": ["logo": 0, "logoHash": 0]], UpdateFlags.multiUpdate);
 
