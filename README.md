@@ -101,12 +101,3 @@ Staging server
 --------------
 
 An auto-deployed version of `master` can be found at https://dub-registry-staging.herokuapp.com.
-
-FAQ: I'm getting an "undefined reference to 'SSLv23_client_method'"
--------------------------------------------------------------------
-
-Link with OpenSSL 1.1:
-
-```
-dub --override-config="vibe-d:tls/openssl-1.1"
-```
