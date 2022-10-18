@@ -38,9 +38,6 @@ class DbController {
 		// migrations:
 		//
 
-		// remove old logo fields
-		m_packages.update(["logoHash": ["$exists": true]], ["$unset": ["logo": 0, "logoHash": 0]], UpdateFlags.multiUpdate);
-
 		// create indices
 		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
 		m_packages.ensureIndex([tuple("stats.score", 1)]);
