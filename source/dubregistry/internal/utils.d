@@ -4,10 +4,10 @@ import vibe.core.core;
 import vibe.core.concurrency;
 import vibe.core.file;
 import vibe.core.log;
+import vibe.core.path;
 import vibe.core.task;
 import vibe.data.bson;
 import vibe.inet.url;
-import vibe.inet.path;
 
 import core.time;
 import std.algorithm : any, among, splitter;
