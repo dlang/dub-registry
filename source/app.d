@@ -242,7 +242,7 @@ void main()
 		version (linux) {
 			if (appConfig.enforceCertificateTrust) {
 				udbsettings.mailSettings.tlsValidationMode = TLSPeerValidationMode.trustedCert;
-				udbsettings.mailSettings.tlsContextSetup = (ctx) {
+				udbsettings.mailSettings.tlsContextSetup = (scope ctx) {
 					ctx.useTrustedCertificateFile(certPath);
 				};
 			}
