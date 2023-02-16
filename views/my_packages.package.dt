@@ -12,7 +12,7 @@ block body
 
 	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
-		- if (latest.type == Json.Type.Object)
+		- if (latest.type == Json.Type.object)
 			|  #[strong.badge= latest["version"].opt!string]
 
 	.subtabsHeader

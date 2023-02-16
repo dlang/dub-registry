@@ -358,7 +358,7 @@ class DubRegistryWebFrontend {
 					break;
 				}
 			}
-			if (ver_info.info.type != Json.Type.Object) return false;
+			if (ver_info.info.type != Json.Type.object) return false;
 		} else {
 			import dubregistry.viewutils;
 			if (pkg_info.versions.length == 0) return false;
