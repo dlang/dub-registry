@@ -77,7 +77,10 @@ bdata_t generateLogo(NativePath file) @trusted
 	static assert (isWeaklyIsolated!NativePath);
 	static assert (isWeaklyIsolated!LogoGenerateResponse);
 
-	runWorkerTask((NativePath file, Tid par) { par.send(generateLogoUnsafe(file)); }, file, thisTid);
+	runWorkerTask((NativePath file, Tid par) {
+		try par.send(generateLogoUnsafe(file));
+		catch (Exception e) assert(false, e.msg);
+	}, file, thisTid);
 	auto res = receiveOnly!LogoGenerateResponse();
 	if (res.error.length)
 		throw new Exception("Failed to generate logo: " ~ res.error);

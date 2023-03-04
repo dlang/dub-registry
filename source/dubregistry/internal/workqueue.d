@@ -86,9 +86,8 @@ final class PackageWorkQueue {
 	}
 
 	private void processQueue()
-	{
-		scope (exit) logWarn("Update task was killed!");
-		while (true) {
+	nothrow {
+		try while (true) {
 			m_lastSignOfLifeOfUpdateTask = Clock.currTime(UTC());
 			logDiagnostic("Getting new package to be updated...");
 			string pack;
@@ -109,6 +108,7 @@ final class PackageWorkQueue {
 				() @trusted { logDiagnostic("Full error: %s", e.toString().sanitize); } ();
 			}
 		}
+		catch (Exception e) logException(e, "Update task was killed");
 	}
 }
 
