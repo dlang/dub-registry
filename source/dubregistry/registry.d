@@ -556,7 +556,7 @@ class DubRegistry {
 			if (readme != -1) {
 				rep.readFile(reference.sha, files[readme].path, (scope input) {
 					dbver.readme = input.readAllUTF8();
-					string ext = files[readme].path.head.name.extension;
+					auto ext = files[readme].path.head2.extension;
 					// endsWith doesn't like to work with asLowerCase
 					dbver.readmeMarkdown = ext.sicmp(".md") == 0;
 				});

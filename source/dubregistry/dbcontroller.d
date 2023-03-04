@@ -474,7 +474,7 @@ struct DbRepository {
 			throw new Exception("Invalid Repository URL (no path)");
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing owner)");
-		owner = path.front.name;
+		owner = path.front.name.to!string;
 		path.popFront;
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing project)");
@@ -482,7 +482,7 @@ struct DbRepository {
 		if(kind == "gitlab")  // Allow any number of segments, as GitLab's subgroups can be nested
 			project = path.map!"a.name".join("/");
 		else
-			project = path.front.name;
+			project = path.front.name.to!string;
 		path.popFront;
 		if (!path.empty && kind != "gitlab")
 			throw new Exception("Invalid Repository URL (got more than owner and project)");
