@@ -39,11 +39,12 @@ void checkForNewVersions()
 void startMonitoring()
 {
 	void monitorPackages()
-	{
-		sleep(1.seconds()); // give the cache a chance to warm up first
-		while(true){
-			checkForNewVersions;
-			sleep(60.minutes());
+	nothrow {
+		sleepUninterruptible(1.seconds()); // give the cache a chance to warm up first
+		while (true) {
+			try checkForNewVersions();
+			catch (Exception e) logException(e, "Failed to check for new versions");
+			sleepUninterruptible(60.minutes());
 		}
 	}
 	s_checkTask = runTask(&monitorPackages);
