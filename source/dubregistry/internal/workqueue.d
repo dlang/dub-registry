@@ -124,8 +124,11 @@ unittest {
 		sleep(100.msecs);
 	}
 
-	void test()
+	void test() @safe nothrow
 	{
+        // `runTask` expect a `nothrow` delegate but this class is not
+        // because _d_monitorenter & co are not nothrow.
+        scope (failure) assert(0, "Test has thrown");
 		auto q = new PackageWorkQueue(&handler);
 		assert(!q.isPending("foo"));
 		assert(!q.isPending("bar"));

@@ -6,7 +6,7 @@
 		"botan-math": "1.0.3",
 		"diet-ng": "1.8.1",
 		"dub": "1.29.2",
-		"eventcore": "0.9.23",
+		"eventcore": "0.9.25",
 		"libasync": "0.8.6",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
@@ -17,8 +17,8 @@
 		"stdx-allocator": "2.77.5",
 		"taggedalgebraic": "0.11.22",
 		"uritemplate": "1.0.0",
-		"userman": "0.4.1",
-		"vibe-core": "1.23.0",
-		"vibe-d": "0.9.5"
+		"userman": "0.4.2",
+		"vibe-core": "2.2.0",
+		"vibe-d": "0.9.6"
 	}
 }
