@@ -91,11 +91,11 @@ class DubRegistryWebFrontend {
 		auto pcount = packages.length;
 
 		// sort by date of last version
-		SysTime getDate(in ref CachedPackageSlot p) {
+		SysTime getDate(const ref CachedPackageSlot p) {
 			if (p.versions.length == 0) return SysTime(0, UTC());
 			return p.versions[$-1].date;
 		}
-		bool compare(in ref CachedPackageSlot a, in ref CachedPackageSlot b) {
+		bool compare(const ref CachedPackageSlot a, const ref CachedPackageSlot b) {
 			bool a_has_ver = a.versions.any!(v => !v.version_.startsWith("~"));
 			bool b_has_ver = b.versions.any!(v => !v.version_.startsWith("~"));
 			if (a_has_ver != b_has_ver) return a_has_ver;

@@ -510,7 +510,7 @@ class DubRegistry {
 		return name;
 	}
 
-	protected bool addVersion(in ref DbPackage dbpack, string ver, Repository rep, RefInfo reference)
+	protected bool addVersion(const ref DbPackage dbpack, string ver, Repository rep, RefInfo reference)
 	{
 		logDiagnostic("Adding new version info %s for %s", ver, dbpack.name);
 		assert(ver.startsWith("~") && !ver.startsWith("~~") || isValidVersion(ver));
@@ -763,7 +763,7 @@ enum PackageInfoFlags
 }
 
 /// Computes a package score from given package stats and global distributions of those stats.
-private float computeScore(DownDist, RepoDist)(in ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
+private float computeScore(DownDist, RepoDist)(const ref DbPackageStats stats, DownDist downDist, RepoDist repoDist)
 @safe {
 	import std.algorithm.comparison : max;
 	import std.math : log1p, round, tanh;
