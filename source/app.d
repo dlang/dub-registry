@@ -13,6 +13,7 @@ import dubregistry.repositories.gitlab;
 import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
+import dubregistry.config;
 
 import std.algorithm : sort;
 import std.process : environment;
@@ -86,78 +87,6 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 	}
 }
 
-struct AppConfig
-{
-	string ghauth,
-		   glurl, glauth,
-		   bbuser, bbpassword;
-
-	bool enforceCertificateTrust = false;
-
-	string serviceName = "DUB - The D package registry";
-	string serviceURL = "https://code.dlang.org/";
-	string serviceEmail = "noreply@rejectedsoftware.com";
-
-	string mailServer;
-	ushort mailServerPort;
-	SMTPConnectionType mailConnectionType;
-	string mailClientName;
-	string mailUser;
-	string mailPassword;
-
-	string[] administrators;
-
-
-	void init()
-	{
-		import dub.internal.utils : jsonFromFile;
-		import std.algorithm : map;
-		import std.array : array;
-		auto regsettingsjson = jsonFromFile(NativePath("settings.json"), true);
-		// TODO: use UDAs instead
-		static immutable variables = [
-			["ghauth", "github-auth"],
-			["glurl", "gitlab-url"],
-			["glauth", "gitlab-auth"],
-			["bbuser", "bitbucket-user"],
-			["bbpassword", "bitbucket-password"],
-			["enforceCertificateTrust", "enforce-certificate-trust"],
-			["serviceName", "service-name"],
-			["serviceURL", "service-url"],
-			["serviceEmail", "service-email"],
-			["mailServer", "mail-server"],
-			["mailServerPort", "mail-server-port"],
-			["mailConnectionType", "mail-connection-type"],
-			["mailClientName", "mail-client-name"],
-			["mailUser", "mail-user"],
-			["mailPassword", "mail-password"],
-			["administrators", "administrators"],
-		];
-		static foreach (var; variables) {{
-			alias T = typeof(__traits(getMember, this, var[0]));
-
-			T val = __traits(getMember, this, var[0]);
-
-			if (var[1] in regsettingsjson) {
-				static if (is(T == bool)) val = regsettingsjson[var[1]].get!bool;
-				else static if (isIntegral!T && !is(T == enum)) val = regsettingsjson[var[1]].get!int.to!T;
-				else static if (is(T == string[])) val = regsettingsjson[var[1]].get!(Json[]).map!(j => j.get!string).array;
-				else val = regsettingsjson[var[1]].get!string.to!T;
-			} else {
-				// fallback to environment variables
-				auto ev = environment.get(var[1].replace("-", "_").toUpper);
-				if (ev.length) {
-					static if (is(T == string[]))
-						val = ev.split(',');
-					else val = ev.to!T;
-				}
-			}
-
-			__traits(getMember, this, var[0]) = val;
-		}}
-	}
-}
-
 void main()
 {
 	bool noMonitoring, noServe;
@@ -188,8 +117,7 @@ void main()
 	if (s_mirror.length)
 		validateMirrorURL(s_mirror);
 
-	AppConfig appConfig;
-	appConfig.init();
+	auto appConfig = AppConfig.read();
 
 	version (linux) {
 		if (appConfig.enforceCertificateTrust) {
