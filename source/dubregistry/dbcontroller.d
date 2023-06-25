@@ -39,9 +39,13 @@ class DbController {
 		//
 
 		// create indices
-		m_packages.ensureIndex([tuple("name", 1)], IndexFlags.Unique);
-		m_packages.ensureIndex([tuple("stats.score", 1)]);
-		m_downloads.ensureIndex([tuple("package", 1), tuple("version", 1)]);
+		IndexOptions opt;
+		opt.unique = true;
+		m_packages.createIndexes([
+			IndexModel().add("name", 1).withOptions(opt),
+			IndexModel().add("stats.score", 1)
+		]);
+		m_downloads.createIndex(IndexModel().add("package", 1).add("version", 1));
 
 		// add current text index
 		immutable keyWeights = [
@@ -63,8 +67,8 @@ class DbController {
 		auto cmd = Bson.emptyObject;
 		cmd["createIndexes"] = Bson("packages");
 		cmd["indexes"] = [Bson(fts)];
-		auto res = db.runCommand(cmd);
-		enforce(res["ok"].opt!double == 1.0, "Failed to create search index.\n"~res.toString);
+		// Create search index
+		db.runCommandChecked(cmd);
 	}
 
 	void addPackage(ref DbPackage pack)
@@ -72,13 +76,15 @@ class DbController {
 		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
 		if (pack._id == BsonObjectID.init)
 			pack._id = BsonObjectID.generate();
-		m_packages.insert(pack);
+		m_packages.insertOne(pack);
 	}
 
 	void addOrSetPackage(ref DbPackage pack)
 	{
 		enforce(pack._id != BsonObjectID.init, "Cannot update a packag with no ID.");
-		m_packages.update(["_id": pack._id], pack, UpdateFlags.upsert);
+		UpdateOptions opts;
+		opts.upsert = true;
+		m_packages.replaceOne(["_id": pack._id], pack, opts);
 	}
 
 	DbPackage getPackage(string packname)
@@ -137,22 +143,22 @@ class DbController {
 
 	void removePackage(string packname, BsonObjectID user)
 	{
-		m_packages.remove(["name": Bson(packname), "owner": Bson(user)]);
+		m_packages.deleteOne(["name": Bson(packname), "owner": Bson(user)]);
 	}
 
 	void setPackageErrors(string packname, string[] error...)
 	{
-		m_packages.update(["name": packname], ["$set": ["errors": error]]);
+		m_packages.updateOne(["name": packname], ["$set": ["errors": error]]);
 	}
 
 	void setPackageCategories(string packname, string[] categories...)
 	{
-		m_packages.update(["name": packname], ["$set": ["categories": categories]]);
+		m_packages.updateOne(["name": packname], ["$set": ["categories": categories]]);
 	}
 
 	void setPackageRepository(string packname, DbRepository repo)
 	{
-		m_packages.update(["name": packname], ["$set": ["repository": repo]]);
+		m_packages.updateOne(["name": packname], ["$set": ["repository": repo]]);
 	}
 
 	void setPackageLogo(string packname, bdata_t png)
@@ -161,7 +167,7 @@ class DbController {
 
 		if (png.length) {
 			auto id = BsonObjectID.generate();
-			m_files.insert([
+			m_files.insertOne([
 				"_id": Bson(id),
 				"data": Bson(BsonBinData(BsonBinData.Type.generic, png))
 			]);
@@ -174,15 +180,15 @@ class DbController {
 		// remove existing logo file
 		auto l = m_packages.findOne(["name": packname], ["logo": 1]);
 		if (!l.isNull && !l.tryIndex("logo").isNull)
-			m_files.remove(["_id": l["logo"]]);
+			m_files.deleteOne(["_id": l["logo"]]);
 
 		// set the new logo
-		m_packages.update(["name": packname], update);
+		m_packages.updateOne(["name": packname], update);
 	}
 
 	void setDocumentationURL(string packname, string documentationURL)
 	{
-		m_packages.update(["name": packname], ["$set": ["documentationURL": documentationURL]]);
+		m_packages.updateOne(["name": packname], ["$set": ["documentationURL": documentationURL]]);
 	}
 
 	bdata_t getPackageLogo(string packname, out bdata_t rev)
@@ -237,13 +243,13 @@ class DbController {
 	void removeVersion(string packname, string ver)
 	{
 		assert(ver.startsWith("~") || ver.isValidVersion());
-		m_packages.update(["name": packname], ["$pull": ["versions": ["version": ver]]]);
+		m_packages.updateOne(["name": packname], ["$pull": ["versions": ["version": ver]]]);
 	}
 
 	void updateVersion(string packname, DbPackageVersion ver)
 	{
 		assert(ver.version_.startsWith("~") || ver.version_.isValidVersion());
-		m_packages.update(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
+		m_packages.updateOne(["name": packname, "versions.version": ver.version_], ["$set": ["versions.$": ver]]);
 	}
 
 	bool hasVersion(string packname, string ver)
@@ -306,7 +312,7 @@ class DbController {
 		download.version_ = ver;
 		download.time = Clock.currTime(UTC());
 		download.userAgent = user_agent;
-		m_downloads.insert(download);
+		m_downloads.insertOne(download);
 		return download._id;
 	}
 
@@ -323,7 +329,7 @@ class DbController {
 	{
 		stats.updatedAt = Clock.currTime(UTC());
 		logDebug("updatePackageStats(%s, %s)", packId, stats);
-		m_packages.update(["_id": packId], ["$set": ["stats": stats]]);
+		m_packages.updateOne(["_id": packId], ["$set": ["stats": stats]]);
 	}
 
 	DbDownloadStats aggregateDownloadStats(BsonObjectID packId, string ver = null)
@@ -417,7 +423,7 @@ class DbController {
 				.uniq!((a, b) => a.version_ == b.version_)
 				.array;
 			if (p.versions != newversions)
-				m_packages.update(["_id": p._id], ["$set": ["versions": newversions]]);
+				m_packages.updateOne(["_id": p._id], ["$set": ["versions": newversions]]);
 		}
 	}
 }

@@ -37,12 +37,12 @@ class URLCache {
 		import dubregistry.mongodb : databaseName, getMongoClient;
 		m_db = getMongoClient();
 		m_entries = m_db.getDatabase(databaseName)["urlcache.entries"];
-		m_entries.ensureIndex([tuple("url", 1)]);
+		m_entries.createIndex(IndexModel().add("url", 1));
 	}
 
 	void clearEntry(URL url)
 	{
-		m_entries.remove(["url": url.toString()]);
+		m_entries.deleteOne(["url": url.toString()]);
 	}
 
 	void get(URL url, scope void delegate(scope InputStream str) @safe callback,
@@ -94,7 +94,7 @@ class URLCache {
 			if (!be.isNull()) {
 				// invalidate out of date cache entries
 				if (be["_id"].get!BsonObjectID.timeStamp < now - m_maxCacheTime)
-					m_entries.remove(["_id": be["_id"]]);
+					m_entries.deleteOne(["_id": be["_id"]]);
 
 				deserializeBson(entry, be);
 				if (mode == CacheMatchMode.always) {
@@ -129,6 +129,8 @@ class URLCache {
 							result_headers[header] = v;
 					}
 
+					UpdateOptions upsert;
+					upsert.upsert = true;
 					switch (res.statusCode) {
 						default:
 							throw new Exception("Unexpected reply for '"~url.toString().black~"': "~httpStatusText(res.statusCode));
@@ -153,7 +155,7 @@ class URLCache {
 
 							entry.redirectURL = url.toString();
 							entry.headers = result_headers;
-							m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
+							m_entries.replaceOne(["_id": entry._id], entry, upsert);
 							break;
 						case HTTPStatus.ok:
 							auto pet = "ETag" in res.headers;
@@ -165,7 +167,7 @@ class URLCache {
 								if (pet) entry.etag = *pet;
 								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
 								entry.headers = result_headers;
-								m_entries.update(["_id": entry._id], entry, UpdateFlags.Upsert);
+								m_entries.replaceOne(["_id": entry._id], entry, upsert);
 								result = createMemoryStream(rawdata, false);
 								break;
 							}
