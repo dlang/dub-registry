@@ -149,6 +149,10 @@ h3 {
 	font-weight: bold;
 }
 
+#content th.center, #content td.center {
+	text-align: center;
+}
+
 /* sortable table headers */
 #content th a { color: #eee; text-decoration: none; }
 #content th a:hover { text-decoration: underline; }
@@ -581,6 +585,10 @@ div.packageInfo > .actions > a + p.detail {
 	text-align: left;
 }
 
+.inputForm.wide {
+	max-width: unset;
+}
+
 .inputForm h1 p {
 	font-size: 0.5em;
 }
@@ -600,6 +608,19 @@ div.packageInfo > .actions > a + p.detail {
 	font-weight: bold;
 }
 
+.inputForm label.checkbox {
+	padding: 0.5em 0;
+	padding-left: 2em;
+	display: block;
+	font-weight: unset;
+}
+
+.inputForm label.checkbox > input {
+	margin-left: -2em;
+	display: inline-block;
+	width: unset;
+}
+
 .inputForm form p {
 	margin-bottom: 1em;
 }
@@ -612,17 +633,37 @@ div.packageInfo > .actions > a + p.detail {
 	border-color: #4cae4c;
 }
 
+.inputForm button.danger {
+	background-color: #943029;
+	border-color: #872c25;
+	padding: 0.5em;
+	margin-top: 0.5em;
+}
+
 .inputForm button:disabled {
 	background-color: #888;
 	border-color: #666;
 	cursor: default;
 }
 
-.inputForm button.danger {
-	background-color: #943029;
-	border-color: #872c25;
-	padding: 0.5em;
-	margin-top: 0.5em;
+.inputForm td > input[type="checkbox"] {
+	margin: 0;
+}
+
+@media (min-width: 600px) {
+	.responsive-text .short {
+		display: none;
+	}
+}
+@media (max-width: 600px) {
+	.responsive-text .long {
+		display: none;
+	}
+}
+
+#shared-users tr.to-remove {
+	text-decoration: line-through;
+	opacity: 0.5;
 }
 
 .redAlert {
