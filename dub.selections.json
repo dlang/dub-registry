@@ -19,6 +19,6 @@
 		"uritemplate": "1.0.0",
 		"userman": "0.4.2",
 		"vibe-core": "2.2.0",
-		"vibe-d": "0.9.6"
+		"vibe-d": "0.9.7-alpha.3"
 	}
 }
