@@ -33,7 +33,7 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 {
 	"github-auth": "<github-personal-access-token from https://github.com/settings/tokens>",
 	"gitlab-url": "https://gitlab.com/",
-	"gitlab-auth": "<gitlab-api-token from https://gitlab.com/profile/personal_access_tokens>",
+	"gitlab-auth": "<gitlab-api-token from https://gitlab.com/-/profile/personal_access_tokens>",
 	"bitbucket-user": "<your-fancy-user-name>",
 	"bitbucket-password": "<your-fancy-password>"
 }
