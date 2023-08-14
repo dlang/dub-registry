@@ -145,6 +145,11 @@ class DubRegistry {
 		return m_db.getUserPackages(user.bsonObjectIDValue);
 	}
 
+	auto getSharedPackages(User.ID user)
+	{
+		return m_db.getSharedPackages(user.bsonObjectIDValue);
+	}
+
 	bool isAdmin(userman.api.User user)
 	{
 		return m_settings.administrators.canFind(user.name);

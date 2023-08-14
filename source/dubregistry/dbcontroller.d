@@ -134,6 +134,11 @@ class DbController {
 		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p["name"].get!string)();
 	}
 
+	auto getSharedPackages(BsonObjectID user_id)
+	{
+		return m_packages.find(["sharedUsers.id": user_id], ["name": 1]).map!(p => p["name"].get!string)();
+	}
+
 	bool isUserPackage(BsonObjectID user_id, string package_name,
 		DbPackage.Permissions permissions = DbPackage.Permissions.ownerOnly)
 	{
