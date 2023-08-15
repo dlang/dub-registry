@@ -681,12 +681,15 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 			sharedUser.name = user.name;
 		}
 
+		// DUB admins have full access rights everywhere
+		bool isDubAdmin = m_registry.isAdmin(_user);
+
 		auto uid = _user.id.bsonObjectIDValue;
-		bool permUpdate = nfo.hasPermissions(uid, DbPackage.Permissions.update);
-		bool permMetadata = nfo.hasPermissions(uid, DbPackage.Permissions.metadata);
-		bool permSource = nfo.hasPermissions(uid, DbPackage.Permissions.source);
-		bool permAdmin = nfo.hasPermissions(uid, DbPackage.Permissions.admin);
-		bool isOwner = nfo.hasPermissions(uid, DbPackage.Permissions.ownerOnly);
+		bool permUpdate = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.update);
+		bool permMetadata = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.metadata);
+		bool permSource = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.source);
+		bool permAdmin = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.admin);
+		bool isOwner = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.ownerOnly);
 
 		auto categories = m_categories;
 		auto registry = m_registry;
