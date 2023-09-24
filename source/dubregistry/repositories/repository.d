@@ -26,6 +26,13 @@ Repository getRepository(DbRepository repinfo)
 	return rep;
 }
 
+
+/** Adds a new provider to support for accessing repositories.
+
+	Note that currently only one provider instance of each `kind` may be used,
+	because the `kind` value is used to identify the provider as opposed to its
+	URL.
+*/
 void addRepositoryProvider(string kind, RepositoryProvider factory)
 @safe {
 	assert(kind !in s_repositoryProviders);
