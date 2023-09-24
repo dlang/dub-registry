@@ -129,9 +129,9 @@ void main()
 		}
 	}
 
-	GithubRepository.register(appConfig.ghauth);
-	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
-	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
+	GithubRepositoryProvider.register(appConfig.ghauth);
+	BitbucketRepositoryProvider.register(appConfig.bbuser, appConfig.bbpassword);
+	if (appConfig.glurl.length) GitLabRepositoryProvider.register(appConfig.glauth, appConfig.glurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });

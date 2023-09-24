@@ -19,6 +19,30 @@ import vibe.inet.url;
 import vibe.textfilter.urlencode;
 
 
+class GitLabRepositoryProvider : RepositoryProvider {
+	private {
+		string m_token;
+		string m_url;
+	}
+
+	private this(string token, string url)
+	{
+		m_token = token;
+		m_url = url;
+	}
+
+	static void register(string auth_token, string url)
+	{
+		addRepositoryProvider("gitlab", new GitLabRepositoryProvider(auth_token, url));
+	}
+
+	Repository getRepository(DbRepository repo)
+	@safe {
+		return new GitLabRepository(repo.owner, repo.project, m_token, m_url.length ? URL(m_url) : URL("https://gitlab.com/"));
+	}
+
+}
+
 class GitLabRepository : Repository {
 @safe:
 
@@ -27,14 +51,6 @@ class GitLabRepository : Repository {
 		string m_projectPath;
 		URL m_baseURL;
 		string m_authToken;
-	}
-
-	static void register(string auth_token, string url)
-	{
-		Repository factory(DbRepository info) @safe {
-			return new GitLabRepository(info.owner, info.project, auth_token, url.length ? URL(url) : URL("https://gitlab.com/"));
-		}
-		addRepositoryFactory("gitlab", &factory);
 	}
 
 	this(string owner, string projectPath, string auth_token, URL base_url)

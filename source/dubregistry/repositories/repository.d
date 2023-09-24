@@ -19,26 +19,29 @@ Repository getRepository(DbRepository repinfo)
 		return *pr;
 
 	logDebug("Returning new repository: %s", repinfo);
-	auto pf = repinfo.kind in s_repositoryFactories;
+	auto pf = repinfo.kind in s_repositoryProviders;
 	enforce(pf, "Unknown repository type: "~repinfo.kind);
-	auto rep = (*pf)(repinfo);
+	auto rep = pf.getRepository(repinfo);
 	s_repositories[repinfo] = rep;
 	return rep;
 }
 
-void addRepositoryFactory(string kind, RepositoryFactory factory)
+void addRepositoryProvider(string kind, RepositoryProvider factory)
 @safe {
-	assert(kind !in s_repositoryFactories);
-	s_repositoryFactories[kind] = factory;
+	assert(kind !in s_repositoryProviders);
+	s_repositoryProviders[kind] = factory;
 }
 
 bool supportsRepositoryKind(string kind)
 @safe {
-	return (kind in s_repositoryFactories) !is null;
+	return (kind in s_repositoryProviders) !is null;
 }
 
 
-alias RepositoryFactory = Repository delegate(DbRepository) @safe;
+
+interface RepositoryProvider {
+	Repository getRepository(DbRepository repo) @safe;
+}
 
 interface Repository {
 @safe:
@@ -115,5 +118,5 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 
 private {
 	Repository[DbRepository] s_repositories;
-	RepositoryFactory[string] s_repositoryFactories;
+	RepositoryProvider[string] s_repositoryProviders;
 }

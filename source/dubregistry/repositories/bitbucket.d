@@ -16,6 +16,27 @@ import vibe.core.stream;
 import vibe.data.json;
 import vibe.inet.url;
 
+class BitbucketRepositoryProvider : RepositoryProvider {
+	private {
+		string m_user, m_password;
+	}
+@safe:
+	private this(string user, string password)
+	{
+		m_user = user;
+		m_password = password;
+	}
+
+	static void register(string user, string password)
+	{
+		addRepositoryProvider("bitbucket", new BitbucketRepositoryProvider(user, password));
+	}
+
+	Repository getRepository(DbRepository repo)
+	@safe {
+		return new BitbucketRepository(repo.owner, repo.project, m_user, m_password);
+	}
+}
 
 class BitbucketRepository : Repository {
 @safe:
@@ -25,14 +46,6 @@ class BitbucketRepository : Repository {
 		string m_project;
 		string m_authUser;
 		string m_authPassword;
-	}
-
-	static void register(string user, string password)
-	{
-		Repository factory(DbRepository info) @safe {
-			return new BitbucketRepository(info.owner, info.project, user, password);
-		}
-		addRepositoryFactory("bitbucket", &factory);
 	}
 
 	this(string owner, string project, string auth_user, string auth_password)

@@ -17,20 +17,36 @@ import vibe.http.client : HTTPClientRequest;
 import vibe.inet.url;
 
 
+class GithubRepositoryProvider : RepositoryProvider {
+	private {
+		string m_token;
+	}
+@safe:
+
+	private this(string token)
+	{
+		m_token = token;
+	}
+
+	static void register(string token)
+	{
+		auto h = new GithubRepositoryProvider(token);
+		addRepositoryProvider("github", h);
+	}
+
+	Repository getRepository(DbRepository repo)
+	@safe {
+		return new GithubRepository(repo.owner, repo.project, m_token);
+	}
+}
+
+
 class GithubRepository : Repository {
 @safe:
 	private {
 		string m_owner;
 		string m_project;
 		string m_authToken;
-	}
-
-	static void register(string token)
-	{
-		Repository factory(DbRepository info) @safe {
-			return new GithubRepository(info.owner, info.project, token);
-		}
-		addRepositoryFactory("github", &factory);
 	}
 
 	this(string owner, string project, string auth_token)
