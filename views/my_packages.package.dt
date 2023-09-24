@@ -8,8 +8,6 @@ block body
 	- import dubregistry.registry : PackageInfoFlags;
 	- import dubregistry.web : Category;
 
-	- auto pack = registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors).info;
-
 	h1 Edit package #[a.blind(href="#{req.rootDir}packages/#{packageName}")= packageName]
 		- auto latest = pack["versions"].length ? pack["versions"][pack["versions"].length-1] : Json(null);
 		- if (latest.type == Json.Type.object)
@@ -19,6 +17,8 @@ block body
 		a.tab(data-tab="general", href="#general") General
 		a.tab(data-tab="categories", href="#categories") Categories
 		a.tab(data-tab="repository", href="#repository") Repository
+		- if (permAdmin)
+			a.tab(data-tab="permissions", href="#permissions") Permissions
 		a.tab(data-tab="danger", href="#danger") Advanced
 	section.pkgconfig#tab-general
 		a#general(name="general")
@@ -40,17 +40,18 @@ block body
 		.sideways
 			aside
 				.inputForm
-					form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo")
+					form(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/set_logo", disabled=!permMetadata)
 						- string logoPath = "/packages/" ~ packageName ~ "/logo";
 						img.packageLogo(src=logoPath)
 						p.logoError.error
 						label
 							| Select new Logo (max. 1 MiB, optimal size 512x512)
-							input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)")
-						button#logo-upload-button(type="submit") Upload
+							input(name="logo", type="file", accept="image/png,image/jpeg,image/gif,image/bmp", onchange="updateLogoPreview(this)", disabled=!permMetadata)
+						button#logo-upload-button(type="submit", disabled=!permMetadata) Upload
 					form.deleteLogo(method="POST", enctype="multipart/form-data", action="#{req.rootDir}my_packages/#{packageName}/delete_logo",
-							onsubmit="return confirm('Do you really want to reset the package logo back to the default one? You cannot undo this action.')")
-						button.danger.icon-cancel(type="submit", aria-lable="Delete", title="Delete")
+							onsubmit="return confirm('Do you really want to reset the package logo back to the default one? You cannot undo this action.')",
+							disabled=!permMetadata)
+						button.danger.icon-cancel(type="submit", aria-label="Delete", title="Delete")
 
 			section.contents
 				h3 Statistics
@@ -66,10 +67,10 @@ block body
 
 				hr
 
-				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url")
+				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_documentation_url", disabled=!permMetadata)
 					h3 Documentation URL
-					input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+")
-					button.danger(type="submit") Change documentation URL
+					input(name="documentation_url", value="#{pack[`documentationURL`].get!string}", pattern="https?://.+", disabled=!permMetadata)
+					button.danger(type="submit", disabled=!permMetadata) Change documentation URL
 
 				hr
 
@@ -82,9 +83,9 @@ block body
 					p Package is scheduled for an automatic update check. Still have to wait for one more package.
 				- else if (update_check_index > 1)
 					p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
-				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update")
+				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update", disabled=!permUpdate)
 					p
-						button(type="submit") Trigger manual update
+						button(type="submit", disabled=!permUpdate) Trigger manual update
 
 	section.pkgconfig#tab-categories
 		a#categories(name="categories")
@@ -93,13 +94,13 @@ block body
 		p You can choose up to four categories for this package here. Please select only the categories that match most closely. If you feel like there is a category missing, please edit the <a href="https://github.com/rejectedsoftware/dub-registry/blob/master/categories.json">category file</a> and submit a pull request.
 
 		.inputForm
-			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories")
+			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_categories", disabled=!permMetadata)
 				- foreach (i; 0 .. 4)
 					p
 						label(for="categories_#{i}") Category #{i+1}:
 						- string selected;
 						- if (i < pack["categories"].length) selected = pack["categories"][i].get!string;
-						select(name="categories_#{i}", id="category#{i}", size="1")
+						select(name="categories_#{i}", id="category#{i}", size="1", disabled=!permMetadata)
 							- void outputCat(Category cat)
 								- if (!cat)
 									option(value="")
@@ -110,7 +111,7 @@ block body
 										- outputCat(c);
 							- outputCat(null);
 				p
-					button(type="submit") Apply
+					button(type="submit", disabled=!permMetadata) Apply
 
 	section.pkgconfig#tab-repository
 		a#repository(name="repository")
@@ -118,41 +119,115 @@ block body
 
 		h3 Transfer Repository
 		.inputForm
-			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository")
+			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/set_repository", disabled=!permSource)
 				p
 					label(for="kind") Repository type
 					select(name="kind", size="1")
 						- import dubregistry.repositories.repository;
 						- auto rkind = pack["repository"]["kind"].get!string;
 						- if (supportsRepositoryKind("github"))
-							option(value="github", selected=rkind == "github") GitHub
+							option(value="github", selected=rkind == "github", disabled=!permSource) GitHub
 						- if (supportsRepositoryKind("bitbucket"))
-							option(value="bitbucket", selected=rkind == "bitbucket") Bitbucket
+							option(value="bitbucket", selected=rkind == "bitbucket", disabled=!permSource) Bitbucket
 						- if (supportsRepositoryKind("gitlab"))
-							option(value="gitlab", selected=rkind == "gitlab") GitLab
+							option(value="gitlab", selected=rkind == "gitlab", disabled=!permSource) GitLab
 				p
 					label(for="owner") Repository owner:
-					input(type="text", name="owner", value=pack["repository"]["owner"].get!string)
+					input(type="text", name="owner", value=pack["repository"]["owner"].get!string, disabled=!permSource)
 				p
 					label(for="project") Repository name:
-					input(type="text", name="project", value=pack["repository"]["project"].get!string)
+					input(type="text", name="project", value=pack["repository"]["project"].get!string, disabled=!permSource)
 				p
-					button(type="submit") Apply
+					button(type="submit", disabled=!permSource) Apply
+
+	- if (permAdmin)
+		section.pkgconfig#tab-permissions
+			a#permissions(name="permissions")
+			h2 Permissions
+			h3 Control who has access to managing this package.
+
+			form.inputForm.wide(method="POST", action="#{req.rootDir}my_packages/#{packageName}/shared_users")
+				table#shared-users
+					thead
+						tr
+							th.center(title="Revoke membership"): span.fa.icon-delete
+							th(style="width: 70%") Username
+							th.center.responsive-text(title="Can trigger updates")
+								span.short Upd
+								span.long Update
+							th.center.responsive-text(title="Can change metadata (logo, documentation URL, categories)")
+								span.short Meta
+								span.long Metadata
+							th.center.responsive-text(title="Can change the repository URL")
+								span.short Repo
+								span.long Repository
+							th.center.responsive-text(title="Can manage access for other users")
+								span.short Adm
+								span.long Admin
+					tbody
+						- auto sharedUsers = privateInfo.sharedUsers;
+						- foreach (sharedUser; sharedUsers)
+							- bool canEdit = user.id.bsonObjectIDValue != sharedUser.id || isOwner;
+							- string id = sharedUser.id.toString;
+							- uint permissions = sharedUser.permissions;
+							tr
+								td.center
+									input(name=id ~ "_src_perms", value=permissions, type="hidden")
+									input(name=id ~ "_delete", value=1, type="checkbox", title="Revoke membership", disabled=!canEdit)
+								td= sharedUser.name
+								- void permissionCheckbox(uint value, string title) {
+									td.center: input(name=id ~ "_new_perms", value=value, type="checkbox", title="Update", checked=((permissions & value) == value), disabled=!canEdit)
+								- }
+								- permissionCheckbox(1u << 0, "Update");
+								- permissionCheckbox(1u << 1, "Meta");
+								- permissionCheckbox(1u << 2, "Repo");
+								- permissionCheckbox((1u << 3) | 0b111, "Admin");
+				button.danger(type="submit") Save
+
+			hr
+
+			form.inputForm.wide(method="POST", action="#{req.rootDir}my_packages/#{packageName}/add_shared_user")
+				p Add management rights to DUB user:
+				input(type="text", name="username", placeholder="Username on code.dlang.org")
+				label.checkbox
+					input(type="checkbox", checked, disabled)
+					span (always on) Allow read-only access to this "Edit package" page, including package errors and statistics. The "Permissions" tab is not included with this permission.
+				label.checkbox
+					input(type="checkbox", name="permissions", value=(1u << 0))
+					span Allow triggering manual updates
+				label.checkbox
+					input(type="checkbox", name="permissions", value=(1u << 1))
+					span Allow changing metadata (Logo, Documentation URL, Categories)
+				label.checkbox
+					input(type="checkbox", name="permissions", value=(1u << 2))
+					span Allow transferring the repository / allow changing repository host, owner and name
+				label.checkbox
+					input(type="checkbox", name="permissions", value=(1u << 3) | 0b111)
+					span Make Admin. Allows all of the above, as well as modifying the users and management permissions for this DUB package.
+				button.danger(type="submit") Add Member
 
 	section.pkgconfig#tab-danger
 		a#danger(name="danger")
 		h2 Advanced
-		h3 Delete Package
-		p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
-		p
-			| If you want to #[strong rename] the project, create a new repository and keep the old one.
-				br
-			| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") repository tab].
-				br
-			| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
+		- if (isOwner)
+			h3 Delete Package
+			p #[strong Warning!] This will remove package from the registry and break all packages that depend on it.
+			p
+				| If you want to #[strong rename] the project, create a new repository and keep the old one.
+					br
+				| If you want to #[strong migrate] to a different repository location, use the #[a(href="#repository") repository tab].
+					br
+				| If you want to #[strong transfer] the ownership, please open a ticket on #[a(href="https://github.com/dlang/dub-registry/issues") GitHub].
 
-		.inputForm
-			form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
-				button.danger(type="submit") Remove this package
+			.inputForm
+				form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/remove")
+					button.danger(type="submit") Remove this package
+		- else
+			h3 Leave Package
+			p This will remove your own permissions to manage this package on the DUB registry.
+			p You will not be able to trigger updates or edit this package afterwards, until you are invited again by an admin or the owner.
+			.inputForm
+				form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/leave")
+					button.danger(type="submit") Leave package
 
 	script(src="#{req.rootDir}scripts/pkgadmin.js")

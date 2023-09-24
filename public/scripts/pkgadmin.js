@@ -84,8 +84,7 @@ function upgradeSubtabs(subtabs, openPage) {
  * @param {HTMLElement} subtabs the subtabs header containing links
  * @param {string} page
  */
-function subtabsHasPage(subtabs, page)
-{
+function subtabsHasPage(subtabs, page) {
 	var links = subtabs.querySelectorAll("a.tab");
 	for (var i = 0; i < links.length; i++)
 		if (links[i].getAttribute("data-tab") == page)
@@ -130,3 +129,41 @@ else
 window.addEventListener("hashchange", function () {
 	upgradeAllSubtabs();
 });
+
+/* checkboxes in permissions tab */
+var sharedUsers = document.getElementById("shared-users");
+
+function setupPermissionsRow(row) {
+	var checkboxes = row.querySelectorAll("input[type=\"checkbox\"]");
+	/** @type {HTMLInputElement} */
+	var deleteBox = checkboxes[0];
+	var adminBox = checkboxes[checkboxes.length - 1];
+	if (adminBox.disabled)
+		return;
+	for (var i = 1; i < checkboxes.length; i++) {
+		checkboxes[i].onchange = function() {
+			if (this == adminBox && this.checked) {
+				for (var j = 1; j < checkboxes.length - 1; j++) {
+					checkboxes[j].checked = true;
+				}
+			}
+			else if (this != adminBox && adminBox.checked) {
+				adminBox.checked = false;
+			}
+		};
+	}
+	deleteBox.onchange = function() {
+		if (this.checked)
+			row.classList.add("to-remove");
+		else
+			row.classList.remove("to-remove");
+	}
+}
+
+if (sharedUsers) {
+	var rows = sharedUsers.querySelectorAll("tbody tr");
+	for (var i = 0; i < rows.length; i++) {
+		var row = rows[i];
+		setupPermissionsRow(row);
+	}
+}

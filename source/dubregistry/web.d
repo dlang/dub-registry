@@ -13,7 +13,7 @@ import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import dub.semver;
-import std.algorithm : sort, startsWith, splitter;
+import std.algorithm : sort, startsWith, splitter, findSplit;
 import std.array;
 import std.file;
 import std.path;
@@ -305,6 +305,18 @@ class DubRegistryWebFrontend {
 				return url;
 			}
 
+			bool hasManagementAccess;
+			bool isMine;
+			if (req.session) {
+				auto userId = User.ID.fromString(req.session.get!string("userID"));
+				hasManagementAccess = packinfo.hasPermissions(
+						userId.bsonObjectIDValue,
+						DbPackage.Permissions.readonly);
+				isMine = packinfo.hasPermissions(
+						userId.bsonObjectIDValue,
+						DbPackage.Permissions.ownerOnly);
+			}
+
 			auto packageName = pname;
 			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
@@ -313,6 +325,8 @@ class DubRegistryWebFrontend {
 			auto activeTab = req.query.get("tab", "info");
 			render!("view_package.dt",
 					packageName,
+					hasManagementAccess,
+					isMine,
 					user,
 					packinfo,
 					versionInfo,
@@ -648,21 +662,47 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/my_packages/:packname")
 	void getMyPackagesPackage(string _packname, User _user, string _error = null)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.readonly);
 		auto packageName = _packname;
 		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors);
 		if (nfo.info.type == Json.Type.null_) return;
+
+		auto pack = nfo.info;
+		auto privateInfo = nfo.privateInfo;
+		foreach (ref sharedUser; privateInfo.sharedUsers) {
+			userman.db.controller.User user;
+			if (m_userman) {
+				try user = m_userman.getUser(User.ID(sharedUser.id));
+				catch (Exception e) {
+					logDebug("Failed to get shared owner '%s' for %s: %s",
+						sharedUser.id, pack["name"], e.msg);
+				}
+			}
+			sharedUser.name = user.name;
+		}
+
+		// DUB admins have full access rights everywhere
+		bool isDubAdmin = m_registry.isAdmin(_user);
+
+		auto uid = _user.id.bsonObjectIDValue;
+		bool permUpdate = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.update);
+		bool permMetadata = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.metadata);
+		bool permSource = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.source);
+		bool permAdmin = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.admin);
+		bool isOwner = isDubAdmin || nfo.hasPermissions(uid, DbPackage.Permissions.ownerOnly);
+
 		auto categories = m_categories;
 		auto registry = m_registry;
 		auto user = _user;
 		auto error = _error;
-		render!("my_packages.package.dt", packageName, categories, user, registry, error);
+		render!("my_packages.package.dt", packageName, categories, user, registry, error, pack,
+			permUpdate, permMetadata, permSource, permAdmin, isOwner, privateInfo);
 	}
 
 	@auth @path("/my_packages/:packname/update")
 	void postUpdatePackage(string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.update);
 		m_registry.triggerPackageUpdate(_packname);
 		redirect("/my_packages/"~_packname);
 	}
@@ -672,14 +712,14 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	{
 		auto packageName = _packname;
 		auto user = _user;
-		enforceUserPackage(user, packageName);
+		enforceUserPackage(user, packageName, DbPackage.Permissions.ownerOnly);
 		render!("my_packages.remove.dt", packageName, user);
 	}
 
 	@auth @path("/my_packages/:packname/remove_confirm")
 	void postRemovePackage(string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.ownerOnly);
 		m_registry.removePackage(_packname, _user.id);
 		redirect("/my_packages");
 	}
@@ -687,7 +727,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/my_packages/:packname/set_categories")
 	void postSetPackageCategories(string[] categories, string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.metadata);
 		string[] uniquecategories;
 		outer: foreach (cat; categories) {
 			if (!cat.length) continue;
@@ -708,7 +748,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/my_packages/:packname/set_repository") @errorDisplay!getMyPackagesPackage
 	void postSetPackageRepository(string kind, string owner, string project, string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.source);
 
 		DbRepository rep;
 		rep.kind = kind;
@@ -722,7 +762,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/my_packages/:packname/set_logo") @errorDisplay!getMyPackagesPackage
 	void postSetLogo(scope HTTPServerRequest request, string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.metadata);
 		const FilePart logo = request.files.get("logo");
 		enforceBadRequest(logo != FilePart.init);
 		auto info = getFileInfo(logo.tempPath);
@@ -736,22 +776,126 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname);
 	}
 
-	@auth @path("/my_packages/:packname/delete_logo")
-	void postDeleteLogo(scope HTTPServerRequest request, string _packname, User _user)
+	@auth @path("/my_packages/:packname/delete_logo") @errorDisplay!getMyPackagesPackage
+	void postDeleteLogo(string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.metadata);
 		m_registry.unsetPackageLogo(_packname);
 
 		redirect("/my_packages/"~_packname);
 	}
 
 	@auth @path("/my_packages/:packname/set_documentation_url") @errorDisplay!getMyPackagesPackage
-	void postSetDocumentationURL(scope HTTPServerRequest request, string documentation_url, string _packname, User _user)
+	void postSetDocumentationURL(string documentation_url, string _packname, User _user)
 	{
-		enforceUserPackage(_user, _packname);
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.metadata);
 		auto isValidURL = documentation_url.empty || documentation_url.startsWith("http://", "https://");
 		enforceBadRequest(isValidURL, "URL is neither null nor starts with http:// or https://");
 		m_registry.setDocumentationURL(_packname, documentation_url);
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/leave") @errorDisplay!getMyPackagesPackage
+	void postLeavePackage(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.readonly);
+		m_registry.removeSharedUser(_packname, _user.id);
+		redirect("/my_packages");
+	}
+
+	@auth @path("/my_packages/:packname/shared_users") @errorDisplay!getMyPackagesPackage
+	void postModifySharedUsers(scope HTTPServerRequest request, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+
+		User.ID[] toDelete;
+		uint[User.ID] beforePermissions;
+		uint[User.ID] afterPermissions;
+
+		bool isOwner = m_registry.isAdmin(_user) || m_registry.isUserPackage(_user.id, _packname, DbPackage.Permissions.ownerOnly);
+
+		foreach (key, value; request.form.byKeyValue)
+		{
+			auto parts = key.findSplit("_");
+			if (parts[0].length != 24 || !parts[2].length)
+				continue;
+			auto id = User.ID.fromString(parts[0]);
+			auto op = parts[2];
+
+			switch (op)
+			{
+			case "delete":
+				toDelete ~= id;
+				break;
+			case "src_perms":
+				beforePermissions[id] = value.to!uint;
+				break;
+			case "new_perms":
+				afterPermissions[id] |= value.to!uint;
+				break;
+			default:
+				enforceBadRequest(false, "invalid key sent in form: " ~ key);
+				return;
+			}
+		}
+
+		foreach (d; toDelete)
+			enforceBadRequest(d != _user.id || isOwner,
+				"Can't remove self from shared owners, use the 'Leave Project' function instead");
+
+		foreach (p; afterPermissions.byValue)
+			enforceBadRequest(DbPackage.isValidPermissions(p), "Invalid given permissions change");
+
+		foreach (id, beforePerms; beforePermissions)
+		{
+			if (id == _user.id && !isOwner)
+				continue; // Can't change own permissions, they may be 0 here since they are disabled in HTML
+
+			uint afterPerms = 0;
+			if (auto a = id in afterPermissions)
+				afterPerms = *a;
+			if (afterPerms != beforePerms)
+				m_registry.upsertSharedUser(_packname, id, cast(DbPackage.Permissions) afterPerms);
+		}
+
+		// delete after upserting, since with the HTML form we submit all the rows every time!
+		foreach (d; toDelete)
+			m_registry.removeSharedUser(_packname, d);
+
+		redirect("/my_packages/"~_packname);
+	}
+
+	@auth @path("/my_packages/:packname/add_shared_user") @errorDisplay!getMyPackagesPackage
+	void postAddSharedUser(scope HTTPServerRequest request, string _packname, User _user, string username)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+
+		bool isOwner = m_registry.isAdmin(_user) || m_registry.isUserPackage(_user.id, _packname, DbPackage.Permissions.ownerOnly);
+
+		uint permissions;
+		foreach (kv; request.form.byKeyValue)
+			if (kv.key == "permissions")
+				permissions |= kv.value.to!uint;
+
+		enforceBadRequest(DbPackage.isValidPermissions(permissions), "Invalid given permissions");
+
+		enforce(m_userman, "Userman not available");
+
+		User.ID invited;
+		try invited = m_userman.getUserByName(username).id;
+		catch (Exception e) {
+			logDebug("Failed to add shared owner '%s' for %s: %s",
+				username, _packname, e.msg);
+			enforceBadRequest(false, "invited user does not exist");
+			return;
+		}
+
+		enforceBadRequest(invited != _user.id || isOwner, "Can't change own permissions");
+
+		m_registry.upsertSharedUser(_packname,
+			invited,
+			cast(DbPackage.Permissions) permissions);
+
 		redirect("/my_packages/"~_packname);
 	}
 
@@ -761,9 +905,9 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("https://dub.pm/commandline");
 	}
 
-	private void enforceUserPackage(User user, string package_name)
+	private void enforceUserPackage(User user, string package_name, DbPackage.Permissions permissions)
 	{
-		enforceHTTP(m_registry.isAdmin(user) || m_registry.isUserPackage(user.id, package_name),
+		enforceHTTP(m_registry.isAdmin(user) || m_registry.isUserPackage(user.id, package_name, permissions),
 			HTTPStatus.forbidden, "You don't have access rights for this package.");
 	}
 

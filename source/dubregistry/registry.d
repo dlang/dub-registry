@@ -145,14 +145,20 @@ class DubRegistry {
 		return m_db.getUserPackages(user.bsonObjectIDValue);
 	}
 
+	auto getSharedPackages(User.ID user)
+	{
+		return m_db.getSharedPackages(user.bsonObjectIDValue);
+	}
+
 	bool isAdmin(userman.api.User user)
 	{
 		return m_settings.administrators.canFind(user.name);
 	}
 
-	bool isUserPackage(User.ID user, string package_name)
+	bool isUserPackage(User.ID user, string package_name,
+		DbPackage.Permissions permissions = DbPackage.Permissions.ownerOnly)
 	{
-		return m_db.isUserPackage(user.bsonObjectIDValue, package_name);
+		return m_db.isUserPackage(user.bsonObjectIDValue, package_name, permissions);
 	}
 
 	/// get stats (including downloads of all version) for a package
@@ -267,6 +273,7 @@ class DubRegistry {
 		}
 		if (flags & PackageInfoFlags.includeErrors)
 			nfo["errors"] = serializeToJson(pack.errors);
+		ret.privateInfo.sharedUsers = pack.sharedUsers;
 
 		ret.info = nfo;
 
@@ -433,6 +440,16 @@ class DubRegistry {
 	bdata_t getPackageLogo(string pack_name, out bdata_t rev)
 	{
 		return m_db.getPackageLogo(pack_name, rev);
+	}
+
+	void upsertSharedUser(string pack_name, User.ID id, DbPackage.Permissions permissions)
+	{
+		m_db.upsertSharedUser(pack_name, id.bsonObjectIDValue, permissions);
+	}
+
+	void removeSharedUser(string pack_name, User.ID id)
+	{
+		m_db.removeSharedUser(pack_name, id.bsonObjectIDValue);
 	}
 
 	void updatePackages()
@@ -748,9 +765,27 @@ struct PackageVersionInfo {
 }
 
 struct PackageInfo {
+	struct Private {
+		DbPackage.SharedUser[] sharedUsers;
+	}
+
 	PackageVersionInfo[] versions;
 	BsonObjectID logo;
 	Json info; /// JSON package information, as reported to the client
+	Private privateInfo; /// Extra info that's not reported to the client, such as detailed ownership info
+
+	bool hasPermissions(BsonObjectID user, DbPackage.Permissions permissions)
+	const @safe {
+		assert(user != BsonObjectID.init);
+		assert("owner" in info, "can't check permissions with minimized PackageInfo");
+
+		const dummy = const(DbPackage)(
+			BsonObjectID.init,
+			BsonObjectID.fromString(info["owner"].get!string),
+			privateInfo.sharedUsers
+		);
+		return dummy.hasPermissions(user, permissions);
+	}
 }
 
 /// flags to customize getPackageInfo* methods

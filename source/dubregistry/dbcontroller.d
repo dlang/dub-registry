@@ -134,11 +134,24 @@ class DbController {
 		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p["name"].get!string)();
 	}
 
-	bool isUserPackage(BsonObjectID user_id, string package_name)
+	auto getSharedPackages(BsonObjectID user_id)
 	{
-		static struct PO { BsonObjectID owner; }
-		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1]);
-		return !p.isNull && p.get.owner == user_id;
+		return m_packages.find(["sharedUsers.id": user_id], ["name": 1]).map!(p => p["name"].get!string)();
+	}
+
+	bool isUserPackage(BsonObjectID user_id, string package_name,
+		DbPackage.Permissions permissions = DbPackage.Permissions.ownerOnly)
+	{
+		static struct PO {
+			BsonObjectID owner;
+			DbPackage.SharedUser[] sharedUsers;
+		}
+
+		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1, "sharedUsers": 1]);
+		if (p.isNull)
+			return false;
+		auto dummy = DbPackage(BsonObjectID.init, p.get.owner, p.get.sharedUsers);
+		return dummy.hasPermissions(user_id, permissions);
 	}
 
 	void removePackage(string packname, BsonObjectID user)
@@ -204,6 +217,31 @@ class DbController {
 
 		rev = (cast(ubyte[])id.get.get!BsonObjectID).idup;
 		return data.get.data.rawData;
+	}
+
+	void upsertSharedUser(string packname, BsonObjectID sharedUser, DbPackage.Permissions permissions)
+	{
+		Bson obj = Bson([
+			"id": Bson(sharedUser),
+			"permissions": Bson(cast(uint) permissions)
+		]);
+		// bulk operation with updateImpl to make array upsert as close to atomic as we can
+		Bson opts = Bson.emptyObject;
+		opts["multi"] = Bson(false);
+		auto query = ["name": Bson(packname)];
+		m_packages.updateImpl([query, query], [
+			["$pull": Bson(["sharedUsers": Bson(["id": Bson(sharedUser)])])],
+			["$push": Bson(["sharedUsers": obj])]
+		], [opts, opts]);
+	}
+
+	void removeSharedUser(string packname, BsonObjectID sharedUser)
+	{
+		m_packages.updateOne([
+			"name": packname
+		], [
+			"$pull": ["sharedUsers": ["id": sharedUser]]
+		]);
 	}
 
 	void addVersion(string packname, DbPackageVersion ver)
@@ -442,8 +480,43 @@ class RecordNotFound : Exception
 }
 
 struct DbPackage {
+	enum Permissions : uint {
+		/// Can view metadata, included with all other permissions
+		readonly = 0,
+		/// Trigger updates
+		update = 1u << 0,
+		/// Change picture, documentation URL and categories
+		metadata = 1u << 1,
+		/// Transfer repository
+		source = 1u << 2,
+		/// Manage access of other shared owners + all other permissions.
+		/// Note: when adding new permissions, admins don't get them by default,
+		/// they would need to be reassigned by the owner.
+		admin = 1u << 3,
+
+		/// All other bits (triggers bad request when attempting to give)
+		invalid = ~(admin | source | metadata | update),
+		/// Not usable in DB, only for checks
+		ownerOnly = uint.max
+	}
+
+	static bool isValidPermissions(uint permissions) {
+		if (permissions & Permissions.invalid)
+			return false;
+		return true;
+	}
+
+	struct SharedUser {
+		/// User ID
+		BsonObjectID id;
+		Permissions permissions;
+		/// Set in web.d getMyPackagesPackage
+		@ignore string name;
+	}
+
 	BsonObjectID _id;
 	BsonObjectID owner;
+	@optional SharedUser[] sharedUsers;
 	string name;
 	DbRepository repository;
 	DbPackageVersion[] versions;
@@ -454,6 +527,16 @@ struct DbPackage {
 	@optional BsonObjectID logo; // reference to m_files
 	@optional string documentationURL;
 	@optional float textScore = 0; // for FTS textScore in searchPackages
+
+	bool hasPermissions(BsonObjectID user, Permissions permissions)
+	const @safe pure nothrow @nogc {
+		if (permissions == Permissions.ownerOnly)
+			return user == owner;
+
+		return user == owner // owner has all permissions
+			|| sharedUsers.canFind!(o => o.id == user
+				&& (o.permissions & permissions) == permissions);
+	}
 }
 
 struct DbRepository {

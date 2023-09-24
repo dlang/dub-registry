@@ -51,7 +51,6 @@ block css
 block body
 	.main
 		- import vibe.data.bson;
-		- bool isMine = req.session && user.id == User.ID.fromString(req.session.get!string("userID"));
 
 		- if (packinfo.logo != BsonObjectID.init)
 			img.packageLogo(src=logoURL, alt="#{normalizedPackageName} logo")
@@ -164,13 +163,16 @@ block body
 			- if( auto pl = "copyright" in versionInfo )
 				li#copyright= pl.get!string
 
-		- if (isMine)
-			//- TODO: make .actions not conditional on isMine, instead have actions which are always there here too (either as a: button.large for actions or p.detail for descriptions)
+		- if (hasManagementAccess)
+			//- TODO: make .actions not conditional on hasManagementAccess, instead have actions which are always there here too (either as a: button.large for actions or p.detail for descriptions)
 			.actions
-				- if (isMine) /* check for the future when the upper isMine is removed */
+				- if (hasManagementAccess) /* check for the future when the upper hasManagementAccess is removed */
 					a(href="#{req.rootDir}my_packages/#{normalizedPackageName}")
 						button.primary.large Manage this Package
-					p.detail Change logo, categories and more.
+					- if (isMine)
+						p.detail Change logo, categories and more.
+					- else
+						p.detail Shared with you
 
 		dl
 			- if( auto pa = "authors" in versionInfo )
