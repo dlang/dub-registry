@@ -116,8 +116,7 @@ class GiteaRepository : Repository {
 		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag["name"].get!string;
-				Json commit = readJsonFromRepo("/commits/"~tag["commit"]["sha"].get!string~"/status", true, true);
-				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["statuses"][0]["created_at"].get!string));
+				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(tag["commit"]["created"].get!string));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
@@ -134,8 +133,7 @@ class GiteaRepository : Repository {
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch["name"].get!string;
-			Json commit = readJsonFromRepo("/commits/"~branch["commit"]["id"].get!string~"/status", true, true);
-			ret ~= RefInfo(branchname, branch["commit"]["id"].get!string, SysTime.fromISOExtString(commit["statuses"][0]["created_at"].get!string));
+			ret ~= RefInfo(branchname, branch["commit"]["id"].get!string, SysTime.fromISOExtString(branch["commit"]["timestamp"].get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
 		return ret;
