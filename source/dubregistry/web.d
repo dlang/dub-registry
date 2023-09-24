@@ -637,11 +637,15 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
 	void postRegisterPackage(string url, User _user, bool ignore_fork = false)
 	{
-		import std.algorithm.searching : canFind;
+		import std.algorithm.comparison : among;
+		import dubregistry.repositories.repository : parseRepositoryURL;
+
+		auto urls = parseUserURL(url, "https");
+		if (!urls.schema.among!("http", "https"))
+			throw new Exception("Invalid repository schema: Only 'http' and 'https' are supported");
 		DbRepository rep;
-		if (!url.canFind("://"))
-			url = "https://" ~ url;
-		rep.parseURL(URL.fromString(url));
+		if (!parseRepositoryURL(urls, rep)) // FIXME: query the actually registered providers here
+			throw new Exception("The provided URL does not match any supported provider (GitHub/BitBucket/GitLab)");
 
 		string kind = rep.kind;
 		string owner = rep.owner;

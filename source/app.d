@@ -65,6 +65,8 @@ version (linux) {
 // generate dummy data for e.g. Heroku's preview apps
 void defaultInit(UserManController userMan, DubRegistry registry)
 {
+	import dubregistry.repositories.repository : parseRepositoryURL;
+
 	if (environment.get("GENERATE_DEFAULT_DATA", "0") == "1" &&
 		registry.getPackageDump().empty && userMan.getUserCount() == 0)
 	{
@@ -81,7 +83,7 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 		foreach (url; packages)
 		{
 			DbRepository repo;
-			repo.parseURL(URL(url));
+			parseRepositoryURL(URL(url), repo);
 			registry.addPackage(repo, userId);
 		}
 	}

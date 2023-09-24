@@ -36,11 +36,53 @@ class GitLabRepositoryProvider : RepositoryProvider {
 		addRepositoryProvider("gitlab", new GitLabRepositoryProvider(auth_token, url));
 	}
 
+	bool parseRepositoryURL(URL url, out DbRepository repo)
+	@safe {
+		import std.algorithm.iteration : map;
+		import std.algorithm.searching : endsWith;
+		import std.array : join;
+		import std.conv : to;
+
+		string host = url.host;
+		if (!host.endsWith(".gitlab.com") && host != "gitlab.com" && host != "gitlab")
+			return false;
+
+		repo.kind = "gitlab";
+
+		auto path = url.path.relativeTo(InetPath("/")).bySegment;
+		if (path.empty)
+			throw new Exception("Invalid Repository URL (no path)");
+		if (path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing owner)");
+		repo.owner = path.front.name.to!string;
+		path.popFront;
+		if (path.empty || path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing project)");
+
+		repo.project = path.map!"a.name".join("/");
+
+		// Allow any number of segments, as GitLab's subgroups can be nested
+		return true;
+	}
+
+	unittest {
+		import std.exception : assertThrown;
+
+		auto h = new GitLabRepositoryProvider(null, "https://gitlab.com/");
+		DbRepository r;
+		assert(!h.parseRepositoryURL(URL("https://github.com/foo/bar"), r));
+		assert(h.parseRepositoryURL(URL("https://gitlab.com/foo/bar"), r));
+		assert(r == DbRepository("gitlab", "foo", "bar"));
+		assert(h.parseRepositoryURL(URL("https://gitlab.com/group/subgroup/subsubgroup/project"), r));
+		assert(r == DbRepository("gitlab", "group", "subgroup/subsubgroup/project"));
+		assertThrown(h.parseRepositoryURL(URL("http://gitlab.com/foo/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://gitlab.com/"), r));
+	}
+
 	Repository getRepository(DbRepository repo)
 	@safe {
 		return new GitLabRepository(repo.owner, repo.project, m_token, m_url.length ? URL(m_url) : URL("https://gitlab.com/"));
 	}
-
 }
 
 class GitLabRepository : Repository {

@@ -37,9 +37,42 @@ bool supportsRepositoryKind(string kind)
 	return (kind in s_repositoryProviders) !is null;
 }
 
+/** Attempts to parse a URL that points to a repository.
+
+	Throws:
+		Will throw an exception if the URL corresponds to a registered
+		repository provider, but does not point to a repository.
+
+	Returns:
+		`true` is returned $(EM iff) the URL corresponds to any registered
+		repository provider.
+*/
+bool parseRepositoryURL(URL url, out DbRepository repo)
+{
+	foreach (kind, h; s_repositoryProviders)
+		if (h.parseRepositoryURL(url, repo)) {
+			assert(repo.kind == kind);
+			return true;
+		}
+	return false;
+}
 
 
 interface RepositoryProvider {
+	/** Attempts to parse a URL that points to a repository.
+
+		Throws:
+			Will throw an exception if the URL corresponds to the repository
+			provider, but does not point to a repository.
+
+		Returns:
+			`true` is returned $(EM iff) the URL corresponds to the repository
+			provider.
+	*/
+	bool parseRepositoryURL(URL url, out DbRepository repo) @safe;
+
+	/** Creates a `Repository` instance corresponding to the given repository.
+	*/
 	Repository getRepository(DbRepository repo) @safe;
 }
 

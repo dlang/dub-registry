@@ -34,6 +34,48 @@ class GithubRepositoryProvider : RepositoryProvider {
 		addRepositoryProvider("github", h);
 	}
 
+	bool parseRepositoryURL(URL url, out DbRepository repo)
+	@safe {
+		import std.algorithm.searching : endsWith;
+		import std.conv : to;
+
+		string host = url.host;
+		if (!host.endsWith(".github.com") && host != "github.com" && host != "github")
+			return false;
+
+		repo.kind = "github";
+
+		auto path = url.path.relativeTo(InetPath("/")).bySegment;
+		if (path.empty)
+			throw new Exception("Invalid Repository URL (no path)");
+		if (path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing owner)");
+		repo.owner = path.front.name.to!string;
+		path.popFront;
+		if (path.empty || path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing project)");
+
+		repo.project = path.front.name.to!string;
+		path.popFront();
+		if (!path.empty)
+			throw new Exception("Invalid Repository URL (got more than owner and project)");
+
+		return true;
+	}
+
+	unittest {
+		import std.exception : assertThrown;
+
+		auto h = new GithubRepositoryProvider(null);
+		DbRepository r;
+		assert(h.parseRepositoryURL(URL("https://github.com/foo/bar"), r));
+		assert(r == DbRepository("github", "foo", "bar"));
+		assert(!h.parseRepositoryURL(URL("http://bitbucket.org/bar/baz/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://github.com/foo/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://github.com/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://github.com/foo/bar/baz"), r));
+	}
+
 	Repository getRepository(DbRepository repo)
 	@safe {
 		return new GithubRepository(repo.owner, repo.project, m_token);
