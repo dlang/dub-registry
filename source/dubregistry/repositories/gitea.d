@@ -41,7 +41,7 @@ class GiteaRepositoryProvider : RepositoryProvider {
 		import std.conv : to;
 
 		string host = url.host;
-		if (!url.startsWith(URL(m_url)) && !host.endsWith(".gitea.com") && host != "gitea.com" && host != "gitea")
+		if (!url.startsWith(URL(m_url)))
 			return false;
 
 		repo.kind = "gitea";
@@ -70,12 +70,12 @@ class GiteaRepositoryProvider : RepositoryProvider {
 		DbRepository r;
 		assert(h.parseRepositoryURL(URL("https://example.org/foo/bar"), r));
 		assert(r == DbRepository("gitea", "foo", "bar"));
-		assert(h.parseRepositoryURL(URL("https://gitea.com/foo/bar"), r));
+		assert(h.parseRepositoryURL(URL("https://example.org/foo/bar"), r));
 		assert(r == DbRepository("gitea", "foo", "bar"));
 		assert(!h.parseRepositoryURL(URL("http://bitbucket.org/bar/baz/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://gitea.com/foo/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://gitea.com/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://gitea.com/foo/bar/baz"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/foo/"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/foo/bar/baz"), r));
 	}
 
 	Repository getRepository(DbRepository repo)
