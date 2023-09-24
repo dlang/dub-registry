@@ -28,6 +28,10 @@ public struct AppConfig
 	string bbuser;
 	@Name("bitbucket-password") @Optional
 	string bbpassword;
+	@Name("gitea-url") @Optional
+	string giteaurl;
+	@Name("gitea-auth") @Optional
+	string giteaauth;
 	@Name("enforce-certificate-trust")
 	bool enforceCertificateTrust = false;
 

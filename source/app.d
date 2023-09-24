@@ -10,6 +10,7 @@ import dubregistry.mirror;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.repositories.gitlab;
+import dubregistry.repositories.gitea;
 import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
@@ -134,6 +135,7 @@ void main()
 	GithubRepositoryProvider.register(appConfig.ghauth);
 	BitbucketRepositoryProvider.register(appConfig.bbuser, appConfig.bbpassword);
 	if (appConfig.glurl.length) GitLabRepositoryProvider.register(appConfig.glauth, appConfig.glurl);
+	if (appConfig.giteaurl.length) GiteaRepositoryProvider.register(appConfig.giteaauth, appConfig.giteaurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
