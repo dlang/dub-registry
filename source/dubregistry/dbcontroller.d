@@ -144,7 +144,7 @@ class DbController {
 	{
 		static struct PO {
 			BsonObjectID owner;
-			DbPackage.SharedUser[] sharedUsers;
+			@optional DbPackage.SharedUser[] sharedUsers;
 		}
 
 		auto p = m_packages.findOne!PO(["name": package_name], ["owner": 1, "sharedUsers": 1]);
