@@ -157,7 +157,7 @@ class GiteaRepository : Repository {
 	{
 		assert(path.absolute, "Passed relative path to listFiles.");
 		auto url = "/contents"~path.toString()~"?ref="~commit_sha;
-		auto ls = readJsonFromRepo(url).get!(Json[]);
+		auto ls = readJsonFromRepo(url, false, true).get!(Json[]);
 		RepositoryFile[] ret;
 		ret.reserve(ls.length);
 		foreach (entry; ls) {
