@@ -92,6 +92,7 @@ class GiteaRepository : Repository {
 		string m_project;
 		string m_authToken;
 		string m_url;
+		bool m_public;
 	}
 
 	this(string owner, string project, string auth_token, string url)
@@ -103,6 +104,7 @@ class GiteaRepository : Repository {
 		m_authToken = auth_token;
 		m_url = url;
 		if (m_url[$-1] != '/') m_url ~= "/";
+		m_public = m_url == "https://gitea.com/"; // TODO: determine from repsitory
 	}
 
 	RefInfo[] getTags()
@@ -188,7 +190,8 @@ class GiteaRepository : Repository {
 	string getDownloadUrl(string ver)
 	{
 		import std.uri : encodeComponent;
-		if( ver.startsWith("~") ) ver = ver[1 .. $];
+		if (!m_public) return null;
+		if (ver.startsWith("~")) ver = ver[1 .. $];
 		else ver = ver;
 		auto venc = () @trusted { return encodeComponent(ver); } ();
 		return m_url~m_owner~"/"~m_project~"/archive/"~venc~".zip";
@@ -196,7 +199,13 @@ class GiteaRepository : Repository {
 
 	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
-		downloadCached(getDownloadUrl(ver), del, false, &addAuthentication);
+		import std.uri : encodeComponent;
+		if (ver.startsWith("~")) ver = ver[1 .. $];
+		else ver = ver;
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		auto url = getAPIURLPrefix()~"repos/"~m_owner~"/"~m_project~"/archive/"~venc~".zip";
+
+		downloadCached(url, del, false, &addAuthentication);
 	}
 
 	private Json readJsonFromRepo(string api_path, bool sanitize = false, bool cache_priority = false)
