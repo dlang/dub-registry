@@ -10,6 +10,7 @@ import dubregistry.mirror;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.repositories.gitlab;
+import dubregistry.repositories.gogs;
 import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
@@ -132,6 +133,7 @@ void main()
 	GithubRepository.register(appConfig.ghauth);
 	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
 	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
+	if (appConfig.gogsurl.length) GogsRepository.register(appConfig.gogsauth, appConfig.gogsurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });
