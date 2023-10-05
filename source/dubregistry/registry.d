@@ -225,7 +225,11 @@ class DubRegistry {
 	{
 		DbPackage pack;
 		try pack = m_db.getPackage(packname);
-		catch(Exception) return PackageInfo.init;
+		catch (RecordNotFound) return PackageInfo.init;
+		catch (Exception e) {
+			logError("Unexpected Exception when calling db.getPackage: %s", (() @trusted => e.toString())());
+			return PackageInfo.init;
+		}
 
 		return getPackageInfo(pack, flags);
 	}
