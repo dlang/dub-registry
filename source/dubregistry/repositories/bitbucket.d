@@ -16,6 +16,69 @@ import vibe.core.stream;
 import vibe.data.json;
 import vibe.inet.url;
 
+class BitbucketRepositoryProvider : RepositoryProvider {
+	private {
+		string m_user, m_password;
+	}
+@safe:
+	private this(string user, string password)
+	{
+		m_user = user;
+		m_password = password;
+	}
+
+	static void register(string user, string password)
+	{
+		addRepositoryProvider("bitbucket", new BitbucketRepositoryProvider(user, password));
+	}
+
+	bool parseRepositoryURL(URL url, out DbRepository repo)
+	@safe {
+		import std.algorithm.searching : endsWith;
+		import std.conv : to;
+
+		string host = url.host;
+		if (!host.endsWith(".bitbucket.org") && host != "bitbucket.org" && host != "bitbucket")
+			return false;
+
+		repo.kind = "bitbucket";
+
+		auto path = url.path.relativeTo(InetPath("/")).bySegment;
+		if (path.empty)
+			throw new Exception("Invalid Repository URL (no path)");
+		if (path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing owner)");
+		repo.owner = path.front.name.to!string;
+		path.popFront;
+		if (path.empty || path.front.name.empty)
+			throw new Exception("Invalid Repository URL (missing project)");
+
+		repo.project = path.front.name.to!string;
+		path.popFront;
+		if (!path.empty)
+			throw new Exception("Invalid Repository URL (got more than owner and project)");
+
+		return true;
+	}
+
+	unittest {
+		import std.exception : assertThrown;
+
+		auto h = new BitbucketRepositoryProvider(null, null);
+		DbRepository r;
+		assert(!h.parseRepositoryURL(URL("https://github.com/foo/bar"), r));
+		assert(h.parseRepositoryURL(URL("http://bitbucket.org/bar/baz/"), r));
+		assert(r == DbRepository("bitbucket", "bar", "baz"));
+		assertThrown(h.parseRepositoryURL(URL("http://bitbucket.org/foo/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://bitbucket.org/"), r));
+		assertThrown(h.parseRepositoryURL(URL("http://bitbucket.org/foo/bar/baz"), r));
+	}
+
+	Repository getRepository(DbRepository repo)
+	@safe {
+		return new BitbucketRepository(repo.owner, repo.project, m_user, m_password);
+	}
+}
 
 class BitbucketRepository : Repository {
 @safe:
@@ -25,14 +88,6 @@ class BitbucketRepository : Repository {
 		string m_project;
 		string m_authUser;
 		string m_authPassword;
-	}
-
-	static void register(string user, string password)
-	{
-		Repository factory(DbRepository info) @safe {
-			return new BitbucketRepository(info.owner, info.project, user, password);
-		}
-		addRepositoryFactory("bitbucket", &factory);
 	}
 
 	this(string owner, string project, string auth_user, string auth_password)

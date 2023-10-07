@@ -10,6 +10,7 @@ import dubregistry.mirror;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
 import dubregistry.repositories.gitlab;
+import dubregistry.repositories.gitea;
 import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
@@ -65,6 +66,8 @@ version (linux) {
 // generate dummy data for e.g. Heroku's preview apps
 void defaultInit(UserManController userMan, DubRegistry registry)
 {
+	import dubregistry.repositories.repository : parseRepositoryURL;
+
 	if (environment.get("GENERATE_DEFAULT_DATA", "0") == "1" &&
 		registry.getPackageDump().empty && userMan.getUserCount() == 0)
 	{
@@ -81,7 +84,7 @@ void defaultInit(UserManController userMan, DubRegistry registry)
 		foreach (url; packages)
 		{
 			DbRepository repo;
-			repo.parseURL(URL(url));
+			parseRepositoryURL(URL(url), repo);
 			registry.addPackage(repo, userId);
 		}
 	}
@@ -129,9 +132,10 @@ void main()
 		}
 	}
 
-	GithubRepository.register(appConfig.ghauth);
-	BitbucketRepository.register(appConfig.bbuser, appConfig.bbpassword);
-	if (appConfig.glurl.length) GitLabRepository.register(appConfig.glauth, appConfig.glurl);
+	GithubRepositoryProvider.register(appConfig.ghauth);
+	BitbucketRepositoryProvider.register(appConfig.bbuser, appConfig.bbpassword);
+	if (appConfig.glurl.length) GitLabRepositoryProvider.register(appConfig.glauth, appConfig.glurl);
+	if (appConfig.giteaurl.length) GiteaRepositoryProvider.register(appConfig.giteaauth, appConfig.giteaurl);
 
 	auto router = new URLRouter;
 	if (s_mirror.length) router.any("*", (req, res) { req.params["mirror"] = s_mirror; });

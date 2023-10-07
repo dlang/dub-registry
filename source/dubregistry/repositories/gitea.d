@@ -1,9 +1,9 @@
 /**
-	Copyright: © 2013 rejectedsoftware e.K.
+	Copyright: © 2023 Sönke Ludwig
 	License: Subject to the terms of the GNU GPLv3 license, as written in the included LICENSE.txt file.
 	Authors: Sönke Ludwig
 */
-module dubregistry.repositories.github;
+module dubregistry.repositories.gitea;
 
 import dubregistry.cache;
 import dubregistry.dbcontroller : DbRepository;
@@ -16,22 +16,23 @@ import vibe.data.json;
 import vibe.http.client : HTTPClientRequest;
 import vibe.inet.url;
 
-
-class GithubRepositoryProvider : RepositoryProvider {
+class GiteaRepositoryProvider : RepositoryProvider {
 	private {
 		string m_token;
+		string m_url;
 	}
 @safe:
 
-	private this(string token)
+	private this(string token, string url)
 	{
 		m_token = token;
+		m_url = url.length ? url : "https://gitea.com/";
 	}
 
-	static void register(string token)
+	static void register(string token, string url)
 	{
-		auto h = new GithubRepositoryProvider(token);
-		addRepositoryProvider("github", h);
+		auto h = new GiteaRepositoryProvider(token, url);
+		addRepositoryProvider("gitea", h);
 	}
 
 	bool parseRepositoryURL(URL url, out DbRepository repo)
@@ -40,25 +41,24 @@ class GithubRepositoryProvider : RepositoryProvider {
 		import std.conv : to;
 
 		string host = url.host;
-		if (!host.endsWith(".github.com") && host != "github.com" && host != "github")
+		if (!url.startsWith(URL(m_url)))
 			return false;
 
-		repo.kind = "github";
+		repo.kind = "gitea";
 
 		auto path = url.path.relativeTo(InetPath("/")).bySegment;
-		if (path.empty)
-			throw new Exception("Invalid Repository URL (no path)");
-		if (path.front.name.empty)
-			throw new Exception("Invalid Repository URL (missing owner)");
+
+		if (path.empty) throw new Exception("Invalid Repository URL (no path)");
+		if (path.front.name.empty) throw new Exception("Invalid Repository URL (missing owner)");
 		repo.owner = path.front.name.to!string;
 		path.popFront;
+
 		if (path.empty || path.front.name.empty)
 			throw new Exception("Invalid Repository URL (missing project)");
-
 		repo.project = path.front.name.to!string;
-		path.popFront();
-		if (!path.empty)
-			throw new Exception("Invalid Repository URL (got more than owner and project)");
+		path.popFront;
+
+		if (!path.empty) throw new Exception("Invalid Repository URL (got more than owner and project)");
 
 		return true;
 	}
@@ -66,36 +66,45 @@ class GithubRepositoryProvider : RepositoryProvider {
 	unittest {
 		import std.exception : assertThrown;
 
-		auto h = new GithubRepositoryProvider(null);
+		auto h = new GiteaRepositoryProvider(null, "https://example.org");
 		DbRepository r;
-		assert(h.parseRepositoryURL(URL("https://github.com/foo/bar"), r));
-		assert(r == DbRepository("github", "foo", "bar"));
+		assert(h.parseRepositoryURL(URL("https://example.org/foo/bar"), r));
+		assert(r == DbRepository("gitea", "foo", "bar"));
+		assert(h.parseRepositoryURL(URL("https://example.org/foo/bar"), r));
+		assert(r == DbRepository("gitea", "foo", "bar"));
 		assert(!h.parseRepositoryURL(URL("http://bitbucket.org/bar/baz/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://github.com/foo/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://github.com/"), r));
-		assertThrown(h.parseRepositoryURL(URL("http://github.com/foo/bar/baz"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/foo/"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/"), r));
+		assertThrown(h.parseRepositoryURL(URL("https://example.org/foo/bar/baz"), r));
 	}
 
 	Repository getRepository(DbRepository repo)
 	@safe {
-		return new GithubRepository(repo.owner, repo.project, m_token);
+		return new GiteaRepository(repo.owner, repo.project, m_token, m_url);
 	}
 }
 
 
-class GithubRepository : Repository {
+class GiteaRepository : Repository {
 @safe:
 	private {
 		string m_owner;
 		string m_project;
 		string m_authToken;
+		string m_url;
+		bool m_public;
 	}
 
-	this(string owner, string project, string auth_token)
+	this(string owner, string project, string auth_token, string url)
 	{
+		assert(url.length > 0, "Missing URL for Gitea repository");
+
 		m_owner = owner;
 		m_project = project;
 		m_authToken = auth_token;
+		m_url = url;
+		if (m_url[$-1] != '/') m_url ~= "/";
+		m_public = m_url == "https://gitea.com/"; // TODO: determine from repsitory
 	}
 
 	RefInfo[] getTags()
@@ -109,8 +118,7 @@ class GithubRepository : Repository {
 		foreach_reverse (tag; tags) {
 			try {
 				auto tagname = tag["name"].get!string;
-				Json commit = readJsonFromRepo("/commits/"~tag["commit"]["sha"].get!string, true, true);
-				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
+				ret ~= RefInfo(tagname, tag["commit"]["sha"].get!string, SysTime.fromISOExtString(tag["commit"]["created"].get!string));
 				logDebug("Found tag for %s/%s: %s", m_owner, m_project, tagname);
 			} catch( Exception e ){
 				throw new Exception("Failed to process tag "~tag["name"].get!string~": "~e.msg);
@@ -127,8 +135,7 @@ class GithubRepository : Repository {
 		RefInfo[] ret;
 		foreach_reverse( branch; branches ){
 			auto branchname = branch["name"].get!string;
-			Json commit = readJsonFromRepo("/commits/"~branch["commit"]["sha"].get!string, true, true);
-			ret ~= RefInfo(branchname, branch["commit"]["sha"].get!string, SysTime.fromISOExtString(commit["commit"]["committer"]["date"].get!string));
+			ret ~= RefInfo(branchname, branch["commit"]["id"].get!string, SysTime.fromISOExtString(branch["commit"]["timestamp"].get!string));
 			logDebug("Found branch for %s/%s: %s", m_owner, m_project, branchname);
 		}
 		return ret;
@@ -139,8 +146,8 @@ class GithubRepository : Repository {
 		auto nfo = readJsonFromRepo("");
 		RepositoryInfo ret;
 		ret.isFork = nfo["fork"].opt!bool;
-		ret.stats.stars = nfo["stargazers_count"].opt!uint;
-		ret.stats.watchers = nfo["subscribers_count"].opt!uint;
+		ret.stats.stars = nfo["stars_count"].opt!uint;
+		ret.stats.watchers = nfo["watchers_count"].opt!uint;
 		ret.stats.forks = nfo["forks_count"].opt!uint;
 		ret.stats.issues = nfo["open_issues_count"].opt!uint; // conflates PRs and Issues
 		return ret;
@@ -150,7 +157,7 @@ class GithubRepository : Repository {
 	{
 		assert(path.absolute, "Passed relative path to listFiles.");
 		auto url = "/contents"~path.toString()~"?ref="~commit_sha;
-		auto ls = readJsonFromRepo(url).get!(Json[]);
+		auto ls = readJsonFromRepo(url, false, true).get!(Json[]);
 		RepositoryFile[] ret;
 		ret.reserve(ls.length);
 		foreach (entry; ls) {
@@ -174,7 +181,7 @@ class GithubRepository : Repository {
 	void readFile(string commit_sha, InetPath path, scope void delegate(scope InputStream) @safe reader)
 	{
 		assert(path.absolute, "Passed relative path to readFile.");
-		auto url = getContentURLPrefix()~"/"~m_owner~"/"~m_project~"/"~commit_sha~path.toString();
+		auto url = getContentURLPrefix()~m_owner~"/"~m_project~"/raw/commit/"~commit_sha~path.toString();
 		downloadCached(url, (scope input) {
 			reader(input);
 		}, true, &addAuthentication);
@@ -183,26 +190,33 @@ class GithubRepository : Repository {
 	string getDownloadUrl(string ver)
 	{
 		import std.uri : encodeComponent;
-		if( ver.startsWith("~") ) ver = ver[1 .. $];
+		if (!m_public) return null;
+		if (ver.startsWith("~")) ver = ver[1 .. $];
 		else ver = ver;
 		auto venc = () @trusted { return encodeComponent(ver); } ();
-		return "https://github.com/"~m_owner~"/"~m_project~"/archive/"~venc~".zip";
+		return m_url~m_owner~"/"~m_project~"/archive/"~venc~".zip";
 	}
 
 	void download(string ver, scope void delegate(scope InputStream) @safe del)
 	{
-		downloadCached(getDownloadUrl(ver), del, false, &addAuthentication);
+		import std.uri : encodeComponent;
+		if (ver.startsWith("~")) ver = ver[1 .. $];
+		else ver = ver;
+		auto venc = () @trusted { return encodeComponent(ver); } ();
+		auto url = getAPIURLPrefix()~"repos/"~m_owner~"/"~m_project~"/archive/"~venc~".zip";
+
+		downloadCached(url, del, false, &addAuthentication);
 	}
 
 	private Json readJsonFromRepo(string api_path, bool sanitize = false, bool cache_priority = false)
 	{
-		return readJson(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~api_path,
+		return readJson(getAPIURLPrefix()~"repos/"~m_owner~"/"~m_project~api_path,
 			sanitize, cache_priority, &addAuthentication);
 	}
 
 	private Json[] readPagedListFromRepo(string api_path, bool sanitize = false, bool cache_priority = false)
 	{
-		return readPagedList(getAPIURLPrefix()~"/repos/"~m_owner~"/"~m_project~api_path,
+		return readPagedList(getAPIURLPrefix()~"repos/"~m_owner~"/"~m_project~api_path,
 			sanitize, cache_priority, &addAuthentication);
 	}
 
@@ -213,12 +227,12 @@ class GithubRepository : Repository {
 
 	private string getAPIURLPrefix()
 	{
-		return "https://api.github.com";
+		return m_url ~ "api/v1/";
 	}
 
 	private string getContentURLPrefix()
 	{
-		return "https://raw.githubusercontent.com";
+		return m_url;
 	}
 }
 

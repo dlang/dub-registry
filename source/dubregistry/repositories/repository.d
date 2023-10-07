@@ -19,26 +19,69 @@ Repository getRepository(DbRepository repinfo)
 		return *pr;
 
 	logDebug("Returning new repository: %s", repinfo);
-	auto pf = repinfo.kind in s_repositoryFactories;
+	auto pf = repinfo.kind in s_repositoryProviders;
 	enforce(pf, "Unknown repository type: "~repinfo.kind);
-	auto rep = (*pf)(repinfo);
+	auto rep = pf.getRepository(repinfo);
 	s_repositories[repinfo] = rep;
 	return rep;
 }
 
-void addRepositoryFactory(string kind, RepositoryFactory factory)
+
+/** Adds a new provider to support for accessing repositories.
+
+	Note that currently only one provider instance of each `kind` may be used,
+	because the `kind` value is used to identify the provider as opposed to its
+	URL.
+*/
+void addRepositoryProvider(string kind, RepositoryProvider factory)
 @safe {
-	assert(kind !in s_repositoryFactories);
-	s_repositoryFactories[kind] = factory;
+	assert(kind !in s_repositoryProviders);
+	s_repositoryProviders[kind] = factory;
 }
 
 bool supportsRepositoryKind(string kind)
 @safe {
-	return (kind in s_repositoryFactories) !is null;
+	return (kind in s_repositoryProviders) !is null;
+}
+
+/** Attempts to parse a URL that points to a repository.
+
+	Throws:
+		Will throw an exception if the URL corresponds to a registered
+		repository provider, but does not point to a repository.
+
+	Returns:
+		`true` is returned $(EM iff) the URL corresponds to any registered
+		repository provider.
+*/
+bool parseRepositoryURL(URL url, out DbRepository repo)
+{
+	foreach (kind, h; s_repositoryProviders)
+		if (h.parseRepositoryURL(url, repo)) {
+			assert(repo.kind == kind);
+			return true;
+		}
+	return false;
 }
 
 
-alias RepositoryFactory = Repository delegate(DbRepository) @safe;
+interface RepositoryProvider {
+	/** Attempts to parse a URL that points to a repository.
+
+		Throws:
+			Will throw an exception if the URL corresponds to the repository
+			provider, but does not point to a repository.
+
+		Returns:
+			`true` is returned $(EM iff) the URL corresponds to the repository
+			provider.
+	*/
+	bool parseRepositoryURL(URL url, out DbRepository repo) @safe;
+
+	/** Creates a `Repository` instance corresponding to the given repository.
+	*/
+	Repository getRepository(DbRepository repo) @safe;
+}
 
 interface Repository {
 @safe:
@@ -115,5 +158,5 @@ package Json readJson(string url, bool sanitize = false, bool cache_priority = f
 
 private {
 	Repository[DbRepository] s_repositories;
-	RepositoryFactory[string] s_repositoryFactories;
+	RepositoryProvider[string] s_repositoryProviders;
 }
