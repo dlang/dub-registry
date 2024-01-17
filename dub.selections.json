@@ -6,11 +6,11 @@
 		"botan-math": "1.0.3",
 		"diet-ng": "1.8.1",
 		"dub": "1.33.1",
-		"eventcore": "0.9.26",
+		"eventcore": "0.9.28",
 		"libasync": "0.8.6",
 		"libev": "5.0.0+4.04",
 		"libevent": "2.0.2+2.0.16",
-		"memutils": "1.0.9",
+		"memutils": "1.0.10",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "3.3.3",
 		"openssl-static": "1.0.2+3.0.8",
@@ -18,7 +18,8 @@
 		"taggedalgebraic": "0.11.22",
 		"uritemplate": "1.0.0",
 		"userman": "0.4.2",
-		"vibe-core": "2.2.1",
+		"vibe-container": "1.0.1",
+		"vibe-core": "2.7.3",
 		"vibe-d": "0.9.7"
 	}
 }
