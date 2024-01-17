@@ -73,7 +73,7 @@ class DbController {
 
 	void addPackage(ref DbPackage pack)
 	{
-		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the same name is already registered.");
+		enforce(m_packages.findOne(["name": pack.name], ["_id": true]).isNull(), "A package with the name \""~pack.name~"\" is already registered.");
 		if (pack._id == BsonObjectID.init)
 			pack._id = BsonObjectID.generate();
 		m_packages.insertOne(pack);
