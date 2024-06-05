@@ -62,7 +62,7 @@ Importing a one-time snapshot from the registry
 You can download a dump of all packages and import it into your local registry for development:
 
 ```
-curl https://code.dlang.org/api/packages/dump | gunzip > mirror.json
+curl https://code.dlang.org/api/packages/dump > mirror.json
 dub -- --mirror=mirror.json
 ```
 
