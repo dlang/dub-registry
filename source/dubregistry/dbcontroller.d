@@ -610,29 +610,3 @@ bool vcmp(string va, string vb)
 	import dub.dependency;
 	return Version(va) < Version(vb);
 }
-
-private string[] splitAlphaNumParts(string str)
-@safe {
-	string[] ret;
-	while (!str.empty) {
-		while (!str.empty && !str.front.isIdentChar()) str.popFront();
-		if (str.empty) break;
-		size_t i = str.length;
-		foreach (j, dchar ch; str)
-			if (!isIdentChar(ch)) {
-				i = j;
-				break;
-			}
-		if (i > 0) {
-			ret ~= str[0 .. i];
-			str = str[i .. $];
-		}
-		if (!str.empty) str.popFront(); // pop non-ident-char
-	}
-	return ret;
-}
-
-private bool isIdentChar(dchar ch)
-@safe {
-	return std.uni.isAlpha(ch) || std.uni.isNumber(ch);
-}
