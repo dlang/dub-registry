@@ -111,7 +111,6 @@ block body
 			- auto doc_url = packinfo.info["documentationURL"].get!string;
 			- if (doc_url.length)
 				a.tab.external(href=doc_url, target="_blank") Documentation
-			a.tab.external(href=text("https://",normalizedPackageName,".dpldocs.info/",versionInfo["version"].get!string,"/"), target="_blank") Reference
 		- bool renderedTabContent;
 		- if (activeTab == "info")
 			- if (readmeContents.length)
