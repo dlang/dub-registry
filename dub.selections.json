@@ -1,16 +1,9 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"backtrace-d": "~master",
-		"botan": "1.12.19",
-		"botan-math": "1.0.3",
 		"diet-ng": "1.8.1",
 		"dub": "1.33.1",
 		"eventcore": "0.9.31",
-		"libasync": "0.8.6",
-		"libev": "5.0.0+4.04",
-		"libevent": "2.0.2+2.0.16",
-		"memutils": "1.0.10",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "3.3.3",
 		"openssl-static": "1.0.5+3.0.8",
