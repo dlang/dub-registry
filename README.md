@@ -96,8 +96,3 @@ docker run -d --restart=always -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -
 ```
 
 The registry can be configured by adding the `settings.json` file in `$DUB_REGISTRY_HOME` folder.
-
-Staging server
---------------
-
-An auto-deployed version of `master` can be found at https://dub-registry-staging.herokuapp.com.
