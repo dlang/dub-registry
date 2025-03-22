@@ -79,7 +79,7 @@ string formatFuzzyDate(SysTime st)
 
 string formatScore(float score)
 {
-	return format(`<a href="https://dub.pm/develop#package-scoring">%.1f</a>`, score);
+	return format(`<a href="https://dub.pm/dub-guide/publishing/#package-scoring">%.1f</a>`, score);
 }
 
 string formatPackageStats(Stats)(Stats s)
