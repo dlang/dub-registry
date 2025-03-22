@@ -1,9 +1,11 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"diet-ng": "1.8.1",
+		"diet-ng": "1.8.3",
 		"dub": "1.33.1",
 		"eventcore": "0.9.31",
+		"libasync": "0.8.6",
+		"memutils": "1.0.11",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "3.3.3",
 		"openssl-static": "1.0.5+3.0.8",
