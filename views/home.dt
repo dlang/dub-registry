@@ -27,6 +27,18 @@ block body
 	- else
 		p Welcome to DUB, the D package registry. The following list shows all available packages:
 
+	//New Section
+	h2 📚 Commonly Used Libraries
+	ul
+		li
+			a(href="https://vibed.org/") 🌐 vibe.d - A high-performance asynchronous I/O web framework
+		li
+			a(href="http://gtkd.org/") 🖥️ gtkd - GTK bindings for building GUI applications in D
+		li
+			a(href="https://github.com/BindBC") 🔗 bindbc - A collection of bindings for C libraries
+		li
+			a(href="https://github.com/dlang-community/gettext") 🌎 gettext - A library for handling internationalization
+			
 		form#category-form(method="GET", action="")
 			input(type="hidden", name="sort", value=sort_mode)
 			input(type="hidden", name="limit", value=info.limit)
