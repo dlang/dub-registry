@@ -26,4 +26,4 @@ jobs:
           restore-keys: |
             ${{ matrix.dc }}-dub-
       - name: Run Tests
-        run: dub test --override-config="vibe-d:tls/openssl"
+        run: dub test --override-config="vibe-stream:tls/openssl"
