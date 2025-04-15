@@ -138,6 +138,30 @@ class DbController {
 		return m_packages.find!DbPackage(Bson.emptyObject);
 	}
 
+	auto getShallowPackageDump()
+	{
+		import std.typecons : nullable;
+
+		static immutable fields = Bson([
+			"owner": Bson(1),
+			"name": Bson(1),
+			"repository": Bson(1),
+			"stats": Bson(1),
+			"categories": Bson(1),
+			"logo": Bson(1),
+			"documentationURL": Bson(1),
+			"textScore": Bson(1),
+			"versions.version": Bson(1),
+			"versions.date": Bson(1),
+		]);
+
+		Bson projection = fields;
+		FindOptions options;
+		options.projection = nullable(projection);
+
+		return m_packages.find!DbShallowPackage(Bson.emptyObject, options);
+	}
+
 	auto getUserPackages(BsonObjectID user_id)
 	{
 		return m_packages.find(["owner": user_id], ["name": 1]).map!(p => p["name"].get!string)();
@@ -567,6 +591,24 @@ struct DbPackageVersion {
 	@optional string readme;
 	@optional bool readmeMarkdown;
 	@optional string docFolder;
+}
+
+struct DbShallowPackage {
+	BsonObjectID _id;
+	BsonObjectID owner;
+	string name;
+	DbRepository repository;
+	DBShallowPackageVersion[] versions;
+	DbPackageStats stats;
+	string[] categories;
+	@optional BsonObjectID logo;
+	@optional string documentationURL;
+	@optional float textScore = 0;
+}
+
+struct DBShallowPackageVersion {
+	SysTime date;
+	string version_;
 }
 
 struct DbPackageDownload {

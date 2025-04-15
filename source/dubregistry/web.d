@@ -459,7 +459,7 @@ class DubRegistryWebFrontend {
 		PackedStringAllocator strings;
 		auto newpacks = appender!(CachedPackageSlot[]);
 		newpacks.reserve(m_packages.length);
-		foreach (p; m_registry.db.getPackageDump()) {
+		foreach (p; m_registry.db.getShallowPackageDump()) {
 			CachedPackageSlot cp;
 			cp.id = p._id;
 			cp.name = strings.alloc(p.name);
