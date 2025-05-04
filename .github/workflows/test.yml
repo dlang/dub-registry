@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: CI
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         dc: [dmd-latest, ldc-latest]
