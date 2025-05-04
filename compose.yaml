@@ -1,0 +1,28 @@
+services:
+  server:
+    image: dlang-community/dub-registry
+    build:
+      context: .
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://root:example@mongo:27017/vpmreg?authSource=admin
+    ports:
+      - "127.0.0.1:9095:9095"
+    volumes:
+      - "${DUB_REGISTRY_HOME}:/dub"
+  mongo:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - db:/data/db"
+      - configdb:/data/configdb"
+
+volumes:
+  db:
+  configdb:

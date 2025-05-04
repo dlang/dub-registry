@@ -1,6 +1,6 @@
 name "dub-registry"
 description "Online registry for dub packages"
-homepage "http://code.dlang.org/"
+homepage "https://code.dlang.org/"
 authors "Sönke Ludwig" "Martin Nowak" "Anton Fediushin aka ohdatboi" \
 	"Jan Jurzitza aka WebFreak001" "Sebastian Wilzbach" "Colden Cullen" \
 	"see GitHub for more"
