@@ -4,14 +4,13 @@
 
 set -euo pipefail
 
-# start mongo
-/app-entrypoint.sh /run.sh &
-# and wait until its online
-while ! nc -z localhost 27017; do
+# Connecting to mongo and wait until its online
+echo "Connecting to mongo..."
+while ! nc -z mongo 27017; do
  sleep 0.1
 done
 
-echo Starting dub registry
+echo "Starting dub registry"
 export PATH="/opt/dub-registry:/dub:$PATH"
 cd /opt/dub-registry
 

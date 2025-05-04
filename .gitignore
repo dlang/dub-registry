@@ -6,3 +6,5 @@
 *.exe
 log.txt
 settings.json
+/db
+/configdb

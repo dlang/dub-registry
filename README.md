@@ -9,17 +9,18 @@ How to build & run locally
 --------------------------
 
 Requirements:
+
 - OpenSSL
 - MongoDB
 
-```
+```console
 dub
 ```
 
 Running as a mirror
 -------------------
 
-```
+```console
 dub -- --mirror=https://code.dlang.org
 ```
 
@@ -52,7 +53,7 @@ Running without the cron job
 
 For local development it's often useful to disable the cron job, you can do so with the `--no-monitoring` flag:
 
-```
+```console
 dub -- --no-monitoring
 ```
 
@@ -61,7 +62,7 @@ Importing a one-time snapshot from the registry
 
 You can download a dump of all packages and import it into your local registry for development:
 
-```
+```console
 curl https://code.dlang.org/api/packages/dump > mirror.json
 dub -- --mirror=mirror.json
 ```
@@ -69,7 +70,7 @@ dub -- --mirror=mirror.json
 Starting the registry with `mirror.json` will import all packages within the JSON file.
 Once all packages have been imported, you can start the registry as you normally would:
 
-```
+```console
 dub
 ```
 
@@ -77,22 +78,28 @@ And you should notice that it now contains all packages which are listed on code
 
 Note that `--mirror=mirror.json` and `--mirror=https://code.dlang.org` are very similar and the `mirror.json` is only preferred for local development because it allows to easily nuke the entire mongo database and re-initialize it without needing any connection to the internet.
 
-Deploy your private dub-registry with Docker
---------------------------------------------
+Build/Running dub-registry with Docker
+---------------------------------------
 
-The [dlangcommunity/dub-registry](https://hub.docker.com/r/dlangcommunity/dub-registry/) Docker image is available for an easy setup:
+- Build:
 
+```console
+export DUB_REGISTRY_HOME=$PWD
+docker compose build
 ```
-export DUB_REGISTRY_HOME="$PWD"
-docker run --rm -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlangcommunity/dub-registry
+
+- Run:
+
+```console
+docker compose up -d --remove-orphans
+```
+
+- Stop:
+
+```console
+docker compose down --remove-orphans
 ```
 
 This will run both `mongodb` and `dub-registry` while persisting the database in the `$DUB_REGISTRY_HOME` location. The registry is accessible at http://127.0.0.1:9095
-
-To run it as a daemon and make it auto-restart use:
-
-```
-docker run -d --restart=always -ti -p 9095:9095 -v $DUB_REGISTRY_HOME:/bitnami -v $DUB_REGISTRY_HOME:/dub dlangcommunity/dub-registry
-```
 
 The registry can be configured by adding the `settings.json` file in `$DUB_REGISTRY_HOME` folder.
