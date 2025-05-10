@@ -6,13 +6,13 @@ authors "Sönke Ludwig" "Martin Nowak" "Anton Fediushin aka ohdatboi" \
 	"see GitHub for more"
 license "BSL-1.0"
 
-dependency "vibe-d" version="~>0.9.7-alpha.3"
-dependency "dub" version="~>1.33.0"
+dependency "vibe-d" version="~>0.10.0"
+dependency "dub" version="~>1.33"
 dependency "userman" version="~>0.4.0"
 dependency "uritemplate" version="~>1.0.0"
 subConfiguration "dub" "library-nonet"
 
-versions "VibeJsonFieldNames"
+//versions "VibeJsonFieldNames"
 
 configuration "application" {
 	targetType "executable"

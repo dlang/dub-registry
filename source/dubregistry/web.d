@@ -67,8 +67,13 @@ class DubRegistryWebFrontend {
 		m_registry = registry;
 		m_userman = userman;
 		updateCategories();
-		updatePackageList();
-		setTimer(30.seconds, &updatePackageList, true);
+		runTask(() nothrow {
+			while (true) {
+				try updatePackageList();
+				catch (Exception e) logException(e, "Failed to update package list");
+				sleepUninterruptible(30.seconds);
+			}
+		});
 	}
 
 	private auto searchForPackages(string sort = "updated", string category = null, ulong skip = 0, ulong limit = 20)
@@ -459,7 +464,7 @@ class DubRegistryWebFrontend {
 		PackedStringAllocator strings;
 		auto newpacks = appender!(CachedPackageSlot[]);
 		newpacks.reserve(m_packages.length);
-		foreach (p; m_registry.db.getPackageDump()) {
+		foreach (p; m_registry.db.getShallowPackageDump()) {
 			CachedPackageSlot cp;
 			cp.id = p._id;
 			cp.name = strings.alloc(p.name);
