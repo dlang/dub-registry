@@ -15,6 +15,7 @@ block body
 		h1 Register new account
 			p.light An account on the DUB package registry allows you to register, share and manage packages
 		form(method="POST", action="")
+			input#fc(type="hidden", name="check", value="3fb")
 			p
 				label(for="email") Email:
 				input(type="email", name="email", value=req.form.get("email", ""))
@@ -33,3 +34,5 @@ block body
 				input(type="password", name="passwordConfirmation")
 			p
 				button(type="submit") Register account
+
+	script var fc=document.getElementById("fc");fc.setAttribute("value","a"+fc.getAttribute("value")+"#{postEpoch}");
