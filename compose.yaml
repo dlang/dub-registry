@@ -11,17 +11,25 @@ services:
       - "127.0.0.1:9095:9095"
     volumes:
       - "${DUB_REGISTRY_HOME}:/dub"
+    networks:
+      - default
+      - mongo-network
   mongo:
     image: mongo:6.0
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    ports:
-      - "127.0.0.1:27017:27017"
     volumes:
-      - db:/data/db"
-      - configdb:/data/configdb"
+      - db:/data/db
+      - configdb:/data/configdb
+    networks:
+      - mongo-network
+
+networks:
+  mongo-network:
+    driver: bridge
+    internal: true
 
 volumes:
   db:

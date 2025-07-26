@@ -91,13 +91,14 @@ docker compose build
 - Run:
 
 ```console
-docker compose up -d --remove-orphans
+export DUB_REGISTRY_HOME=$PWD
+docker compose up -d
 ```
 
 - Stop:
 
 ```console
-docker compose down --remove-orphans
+docker compose down
 ```
 
 This will run both `mongodb` and `dub-registry` while persisting the database in the `$DUB_REGISTRY_HOME` location. The registry is accessible at http://127.0.0.1:9095
