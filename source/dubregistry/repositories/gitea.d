@@ -104,7 +104,9 @@ class GiteaRepository : Repository {
 		m_authToken = auth_token;
 		m_url = url;
 		if (m_url[$-1] != '/') m_url ~= "/";
-		m_public = m_url == "https://gitea.com/"; // TODO: determine from repsitory
+		// Consider well-known public Gitea/Forgejo hosts as "public" to allow direct downloads
+		// Note: Codeberg runs Forgejo (Gitea fork) and supports the same archive URLs
+		m_public = m_url.startsWith("https://gitea.com/") || m_url.startsWith("https://codeberg.org/");
 	}
 
 	RefInfo[] getTags()
@@ -222,7 +224,9 @@ class GiteaRepository : Repository {
 
 	private void addAuthentication(scope HTTPClientRequest req)
 	{
-		req.headers["Authorization"] = "token " ~ m_authToken;
+		// Only add Authorization header if a token is provided
+		if (m_authToken.length)
+			req.headers["Authorization"] = "token " ~ m_authToken;
 	}
 
 	private string getAPIURLPrefix()

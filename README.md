@@ -24,7 +24,7 @@ Running as a mirror
 dub -- --mirror=https://code.dlang.org
 ```
 
-GitHub/GitLab API
+GitHub/GitLab/Gitea (Codeberg) API
 -----------------
 
 By default the GitHub/GitLab update cron job will use anonymous authentication on your local machine. As GitHub's API without authentication is quite rate-limited, you probably want to use authenticated API requests.
@@ -36,7 +36,9 @@ You can do so by creating a `settings.json` in the root folder of the dub-regist
 	"gitlab-url": "https://gitlab.com/",
 	"gitlab-auth": "<gitlab-api-token from https://gitlab.com/-/profile/personal_access_tokens>",
 	"bitbucket-user": "<your-fancy-user-name>",
-	"bitbucket-password": "<your-fancy-password>"
+	"bitbucket-password": "<your-fancy-password>",
+	"gitea-url": "https://codeberg.org/",
+	"gitea-auth": "<gitea/forgejo API token (Codeberg: Settings -> Applications -> New Token)>"
 }
 ```
 
@@ -47,6 +49,15 @@ It's absolutely recommended to create a personal access token without any extra 
 ### SECURITY NOTICE
 
 Development versions prior to 2.3.0 were leaking the GitLab private token in error messages shown to the user. Please make sure to use the latest version along with a freshly generated token.
+
+### Codeberg support (via Gitea/Forgejo)
+
+Codeberg runs Forgejo, a fork of Gitea. dub-registry supports generic Gitea/Forgejo instances. To enable Codeberg support:
+
+- Set `gitea-url` to `https://codeberg.org/` in your `settings.json` (or use env var `GITEA_URL`).
+- (Optional) Set `gitea-auth` to a personal access token for higher API rate limits and to access private repositories (env var `GITEA_AUTH`).
+
+Note: currently only a single Gitea/Forgejo instance can be configured at a time.
 
 Running without the cron job
 ----------------------------

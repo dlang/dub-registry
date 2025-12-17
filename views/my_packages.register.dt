@@ -21,7 +21,7 @@ block body
 		form(method="POST", action="#{req.rootDir}register_package")
 			p
 				label(for="project") Repository URL
-				input(type="text", name="url", value=url, pattern="^(https?:\/\/)?(www\.)?(((github(\.com)?|bitbucket(\.org)?)\/[^/]+\/[^/]+([?#.].*)?)|(gitlab(\.com)?(\/[^/]+)+\/[^/]+([?#.].*)?))$", placeholder="github.com/user/repository")
-				span.repoError Please enter a valid project URL or tuple to a GitHub, GitLab or BitBucket project, such as #[code https://gitlab.com/dlang/dub] or #[code bitbucket/dlang/dub].
+				input(type="text", name="url", value=url, pattern="^(https?:\/\/)?(www\.)?(((github(\.com)?|bitbucket(\.org)?|codeberg(\.org)?)\/[^/]+\/[^/]+([?#.].*)?)|(gitlab(\.com)?(\/[^/]+)+\/[^/]+([?#.].*)?))$", placeholder="github.com/user/repository")
+				span.repoError Please enter a valid project URL or tuple to a GitHub, GitLab, Codeberg or BitBucket project, such as #[code https://gitlab.com/dlang/dub] or #[code bitbucket/dlang/dub].
 			p
 				button(type="submit") Register package
