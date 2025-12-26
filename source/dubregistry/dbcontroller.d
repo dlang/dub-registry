@@ -370,6 +370,24 @@ class DbController {
 		foreach (ref pkg; pkgs)
 			pkg.textScore = (pkg.textScore - minMaxTS[0]) * scale + DbPackageStats.minScore;
 
+		// Also search for substring matches in package name using regex
+		auto regexPkgs = m_packages
+			.find(["name": ["$regex": query, "$options": "i"]])
+			.limit(50)
+			.map!(deserializeBson!DbPackage)
+			.array;
+
+		// Merge regex results with text search results, avoiding duplicates
+		bool[string] seen;
+		foreach (ref pkg; pkgs)
+			seen[pkg.name] = true;
+		foreach (ref pkg; regexPkgs) {
+			if (pkg.name !in seen) {
+				pkg.textScore = DbPackageStats.minScore; // give regex-only matches a base score
+				pkgs ~= pkg;
+			}
+		}
+
 		// sort found packages by weighted textScore and package score
 		return pkgs
 			.sort!((a, b) => a.stats.score + 2 * a.textScore > b.stats.score + 2 * b.textScore)
