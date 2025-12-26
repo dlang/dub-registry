@@ -57,22 +57,22 @@ class DbController {
 		m_downloads.createIndex(IndexModel().add("package", 1).add("version", 1));
 
 		// add current text index
- 	immutable keyWeights = [
- 		"name": 8,
- 		"categories": 4,
- 		"versions.info.subPackages.name": 4,
- 		"versions.info.description": 2,
- 		"versions.info.authors": 1
- 	];
- 	Bson[string] fts;
- 	fts["key"] = Bson.emptyObject;
- 	fts["weights"] = Bson.emptyObject;
- 	foreach (k, w; keyWeights)
- 	{
- 		fts["key"][k] = Bson("text");
- 		fts["weights"][k] = Bson(w);
- 	}
- 	fts["name"] = "packages_full_text_search_index_v4";
+		immutable keyWeights = [
+			"name": 8,
+			"categories": 4,
+			"versions.info.subPackages.name": 4,
+			"versions.info.description": 2,
+			"versions.info.authors": 1
+		];
+		Bson[string] fts;
+		fts["key"] = Bson.emptyObject;
+		fts["weights"] = Bson.emptyObject;
+		foreach (k, w; keyWeights)
+		{
+			fts["key"][k] = Bson("text");
+			fts["weights"][k] = Bson(w);
+		}
+		fts["name"] = "packages_full_text_search_index_v4";
 		fts["background"] = true;
 		auto cmd = Bson.emptyObject;
 		cmd["createIndexes"] = Bson("packages");
