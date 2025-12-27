@@ -33,6 +33,8 @@ import vibe.data.bson;
 import vibe.data.json;
 import vibe.stream.operations;
 
+static import userman.api;
+
 
 /// Settings to configure the package registry.
 class DubRegistrySettings {
@@ -577,7 +579,7 @@ class DubRegistry {
 			if (readme != -1) {
 				rep.readFile(reference.sha, files[readme].path, (scope input) {
 					dbver.readme = input.readAllUTF8();
-					auto ext = files[readme].path.head2.extension;
+					auto ext = files[readme].path.head.extension;
 					// endsWith doesn't like to work with asLowerCase
 					dbver.readmeMarkdown = ext.sicmp(".md") == 0;
 				});
