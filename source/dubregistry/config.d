@@ -32,6 +32,10 @@ public struct AppConfig
 	string giteaurl;
 	@Name("gitea-auth") @Optional
 	string giteaauth;
+	@Name("forgejo-url") @Optional
+	string forgejourl;
+	@Name("forgejo-auth") @Optional
+	string forgejoauth;
 	@Name("enforce-certificate-trust")
 	bool enforceCertificateTrust = false;
 
