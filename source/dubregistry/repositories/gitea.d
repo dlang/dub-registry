@@ -23,7 +23,7 @@ class GiteaRepositoryProvider : RepositoryProvider {
 	}
 @safe:
 
-	private this(string token, string url)
+	package this(string token, string url)
 	{
 		m_token = token;
 		m_url = url.length ? url : "https://gitea.com/";
