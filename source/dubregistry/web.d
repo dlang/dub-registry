@@ -22,6 +22,9 @@ import userman.web;
 import userman.db.controller : UserManController;
 import vibe.d;
 
+static import userman.api;
+static import userman.db.controller;
+
 
 DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
 {
@@ -487,7 +490,7 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	this(DubRegistry registry, UserManController userman)
 	{
 		super(registry, userman);
-		m_usermanauth = new UserManWebAuthenticator(userman);
+		m_usermanauth = new UserManWebAuthenticator(createLocalUserManAPI(userman));
 	}
 
 	void querySearch(string q = "")
