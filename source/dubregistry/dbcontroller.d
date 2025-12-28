@@ -52,6 +52,7 @@ class DbController {
 		opt.unique = true;
 		m_packages.createIndexes([
 			IndexModel().add("name", 1).withOptions(opt),
+			IndexModel().add("versions.info.subPackages.name", 1),
 			IndexModel().add("stats.score", 1)
 		]);
 		m_downloads.createIndex(IndexModel().add("package", 1).add("version", 1));
@@ -59,6 +60,7 @@ class DbController {
 		// add current text index
 		immutable keyWeights = [
 			"name": 8,
+			"versions.info.subPackages.name": 6,
 			"categories": 4,
 			"versions.info.description": 2,
 			"versions.info.authors": 1
@@ -71,7 +73,7 @@ class DbController {
 			fts["key"][k] = Bson("text");
 			fts["weights"][k] = Bson(w);
 		}
-		fts["name"] = "packages_full_text_search_index_v3";
+		fts["name"] = "packages_full_text_search_index_v4";
 		fts["background"] = true;
 		auto cmd = Bson.emptyObject;
 		cmd["createIndexes"] = Bson("packages");
@@ -339,7 +341,7 @@ class DbController {
 
 	DbPackageVersion getVersionInfo(string packname, string ver)
 	{
-		auto pack = m_packages.findOne(["name": packname, "versions.version": ver], ["versions.$": true]);
+		auto pack = m_packages.findOne(["name": packname.split(':')[0], "versions.version": ver], ["versions.$": true]);
 		enforce(!pack.isNull(), "unknown package/version");
 		assert(pack["versions"].length == 1);
 		return deserializeBson!(DbPackageVersion)(pack["versions"][0]);
@@ -371,7 +373,8 @@ class DbController {
 		auto projectWithTextScore = project.dup;
 		projectWithTextScore["textScore"] = Bson(["$meta": Bson("textScore")]);
 
-		auto pkgs = m_packages
+		// Perform full-text search (FTS)
+		auto pkgMap = m_packages
 			.aggregate(
 			  ["$match": ["$text": ["$search": query]]],
 				hasVersionFilter,
@@ -379,16 +382,80 @@ class DbController {
 				["$sort": Bson(["textScore": Bson(-1)])],
 				["$limit": 50]
 			)
+			.deserializeBson!(DbSearchPackage[])
+			.map!(x => tuple(x.name, x)).assocArray;
+
+		import std.regex : escaper;
+		auto bsonEscQuery = Bson(query.escaper.to!string);
+
+		// Also search for substring matches in package name using regex
+		auto regexPkgs = m_packages
+			.aggregate(
+			  ["$match": ["name": ["$regex": bsonEscQuery, "$options" : Bson("i")]]],
+				hasVersionFilter,
+				["$project": project],
+				["$limit": 50]
+			)
 			.deserializeBson!(DbSearchPackage[]);
 
+		foreach (ref pkg; regexPkgs) {
+			if (pkg.name !in pkgMap) {
+				pkg.textScore = 7; // regex package name match is one less than full name match
+				pkgMap[pkg.name] = pkg;
+			}
+		}
+
+		// Sub package name regex search, result is: _id, [sub1, ...]
+		struct PkgSubNames
+		{
+			string name;
+			string[] subNames;
+		}
+
+		// Construct map of package id -> string[] subNames
+		auto pkgSubNames = m_packages
+			.aggregate(
+				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				["$addFields": ["lastVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]],
+				["$unwind": ["path": Bson("$lastVersion.info.subPackages")]],
+				["$match": ["lastVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				["$group": ["_id": Bson("$name"), "subNames": Bson(["$addToSet": Bson("$lastVersion.info.subPackages.name")])]],
+				["$project": ["name": Bson("$_id"), "subNames": Bson(1)]],
+				["$limit": 50]
+			)
+			.deserializeBson!(PkgSubNames[])
+			.map!(psn => tuple(psn.name, psn))
+			.assocArray;
+
+		// Get full package info and add sub-packages to pkgs array
+		if (pkgSubNames.length > 0) {
+			auto regexSubPkgs = m_packages
+				.aggregate(
+					["$match": ["name": ["$in": Bson(pkgSubNames.keys.map!Bson.array)]]],
+					["$project" : project]
+				)
+				.deserializeBson!(DbSearchPackage[]);
+
+			foreach (ref pkg; regexSubPkgs) {
+				auto pkgName = pkg.name;
+				pkg.textScore = 5; // regex sub-package name match is one less than full name match
+				if (auto psn = pkg.name in pkgSubNames) {
+					foreach (subName; psn.subNames) {
+						pkg.name = pkgName ~ ":" ~ subName;
+						pkgMap[pkg.name] = pkg;
+					}
+				}
+			}
+		}
+
 		// normalize textScore to same scale as package score
-		immutable minMaxTS = pkgs.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
+		immutable minMaxTS = pkgMap.values.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
 		immutable scale = (DbPackageStats.maxScore - DbPackageStats.minScore) / (minMaxTS[1] - minMaxTS[0]);
-		foreach (ref pkg; pkgs)
+		foreach (name, ref pkg; pkgMap)
 			pkg.textScore = (pkg.textScore - minMaxTS[0]) * scale + DbPackageStats.minScore;
 
 		// sort found packages by weighted textScore and package score
-		return pkgs
+		return pkgMap.values
 			.sort!((a, b) => a.stats.score + 2 * a.textScore > b.stats.score + 2 * b.textScore)
 			.release;
 	}
