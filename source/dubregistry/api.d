@@ -125,7 +125,7 @@ override {
 	@method(HTTPMethod.GET)
 	SearchResult[] search(string q) {
 		return m_registry.searchPackages(q)
-			.map!(p => SearchResult(p.name, p.info["description"].opt!string, p.version_))
+			.map!(p => SearchResult(p.name, p.latestVersion.info["description"].opt!string, p.latestVersion.version_))
 			.array;
 	}
 

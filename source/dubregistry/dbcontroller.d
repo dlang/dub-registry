@@ -345,23 +345,41 @@ class DbController {
 		return deserializeBson!(DbPackageVersion)(pack["versions"][0]);
 	}
 
-	DbPackage[] searchPackages(string query)
+	DbSearchPackage[] searchPackages(string query)
 	{
-		import std.math : round;
+		auto project = [
+			"name": Bson(1),
+			"stats": Bson(1),
+			"latestVersion": Bson(["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])])
+		];
+
+ 		// Filter to only include packages with at least one version
+ 		auto hasVersionFilter = Bson(["$match": Bson(["versions": Bson(["$exists": Bson(true),
+			"$ne": Bson(cast(Bson[])[])])])]);
 
 		if (!query.strip.length) {
-			return m_packages.find()
-				.sort(["stats.score": 1])
-				.map!(deserializeBson!DbPackage)
-				.array;
+			return m_packages
+				.aggregate(
+					hasVersionFilter,
+					["$project": project],
+					["$sort": Bson(["stats.score": Bson(-1)])],
+					["$limit": 50]
+				)
+				.deserializeBson!(DbSearchPackage[]);
 		}
 
+		auto projectWithTextScore = project.dup;
+		projectWithTextScore["textScore"] = Bson(["$meta": Bson("textScore")]);
+
 		auto pkgs = m_packages
-			.find(["$text": ["$search": query]], ["textScore": bson(["$meta": "textScore"])])
-			.sort(["textScore": bson(["$meta": "textScore"])]) // sort to only keep most relevant results
-			.limit(50) // limit irrelevant sort results (fixes #341)
-			.map!(deserializeBson!DbPackage)
-			.array;
+			.aggregate(
+			  ["$match": ["$text": ["$search": query]]],
+				hasVersionFilter,
+				["$project": projectWithTextScore],
+				["$sort": Bson(["textScore": Bson(-1)])],
+				["$limit": 50]
+			)
+			.deserializeBson!(DbSearchPackage[]);
 
 		// normalize textScore to same scale as package score
 		immutable minMaxTS = pkgs.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
@@ -591,6 +609,13 @@ struct DbPackageVersion {
 	@optional string readme;
 	@optional bool readmeMarkdown;
 	@optional string docFolder;
+}
+
+struct DbSearchPackage {
+	string name;
+	DbPackageStats stats;
+	DbPackageVersion latestVersion;
+	@optional float textScore = 0;
 }
 
 struct DbShallowPackage {
