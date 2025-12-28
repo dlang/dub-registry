@@ -405,46 +405,24 @@ class DbController {
 			}
 		}
 
-		// Sub package name regex search, result is: _id, [sub1, ...]
-		struct PkgSubNames
-		{
-			string name;
-			string[] subNames;
-		}
-
 		// Construct map of package id -> string[] subNames
-		auto pkgSubNames = m_packages
+		auto regexSubPkgs = m_packages
 			.aggregate(
-				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
-				["$addFields": ["lastVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]],
-				["$unwind": ["path": Bson("$lastVersion.info.subPackages")]],
-				["$match": ["lastVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
-				["$group": ["_id": Bson("$name"), "subNames": Bson(["$addToSet": Bson("$lastVersion.info.subPackages.name")])]],
-				["$project": ["name": Bson("$_id"), "subNames": Bson(1)]],
+				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],  					// Broad prune using index
+				["$addFields": ["latestVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]], 									// Latest version
+				["$unwind": ["path": Bson("$latestVersion.info.subPackages"), "preserveNullAndEmptyArrays": Bson(false)]],	// Unwind sub-packages
+				["$match": ["latestVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],				// Re-filter unwound sub-packages
+				["$addFields": ["fullName": Bson(["$concat": Bson([Bson("$name"), Bson(":"),
+					Bson("$latestVersion.info.subPackages.name")])])]],																												// Concatenate full package name
+				["$project": Bson(["name": Bson("$fullName"), "stats": Bson(1), "latestVersion": Bson(1)])],								// Project fields
 				["$limit": 50]
 			)
-			.deserializeBson!(PkgSubNames[])
-			.map!(psn => tuple(psn.name, psn))
-			.assocArray;
+			.deserializeBson!(DbSearchPackage[]);
 
-		// Get full package info and add sub-packages to pkgs array
-		if (pkgSubNames.length > 0) {
-			auto regexSubPkgs = m_packages
-				.aggregate(
-					["$match": ["name": ["$in": Bson(pkgSubNames.keys.map!Bson.array)]]],
-					["$project" : project]
-				)
-				.deserializeBson!(DbSearchPackage[]);
-
-			foreach (ref pkg; regexSubPkgs) {
-				auto pkgName = pkg.name;
+		foreach (ref pkg; regexSubPkgs) {
+			if (pkg.name !in pkgMap) {
 				pkg.textScore = 5; // regex sub-package name match is one less than full name match
-				if (auto psn = pkg.name in pkgSubNames) {
-					foreach (subName; psn.subNames) {
-						pkg.name = pkgName ~ ":" ~ subName;
-						pkgMap[pkg.name] = pkg;
-					}
-				}
+				pkgMap[pkg.name] = pkg;
 			}
 		}
 
