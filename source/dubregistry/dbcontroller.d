@@ -349,6 +349,11 @@ class DbController {
 
 	DbSearchPackage[] searchPackages(string query)
 	{
+		query = query.strip;
+
+		if (query.length > 255) // Limit length to prevent DoS
+			query = query[0 .. 256];
+
 		auto project = [
 			"name": Bson(1),
 			"stats": Bson(1),
@@ -359,7 +364,7 @@ class DbController {
  		auto hasVersionFilter = Bson(["$match": Bson(["versions": Bson(["$exists": Bson(true),
 			"$ne": Bson(cast(Bson[])[])])])]);
 
-		if (!query.strip.length) {
+		if (!query.length) {
 			return m_packages
 				.aggregate(
 					hasVersionFilter,
@@ -370,13 +375,19 @@ class DbController {
 				.deserializeBson!(DbSearchPackage[]);
 		}
 
+		import std.regex : escaper;
+		auto bsonEscQuery = Bson(query.escaper.to!string); // Escape query for regex searches and Bson encode
+
+		// Escape double quote and backslash for $search query and enclose in double quotes to search for exact phrase
+		auto searchQuery = '"' ~ query.replace("\"", "\\\"").replace("\\", "\\\\") ~ '"';
+
 		auto projectWithTextScore = project.dup;
 		projectWithTextScore["textScore"] = Bson(["$meta": Bson("textScore")]);
 
 		// Perform full-text search (FTS)
 		auto pkgMap = m_packages
 			.aggregate(
-			  ["$match": ["$text": ["$search": query]]],
+			  ["$match": ["$text": ["$search": searchQuery]]],
 				hasVersionFilter,
 				["$project": projectWithTextScore],
 				["$sort": Bson(["textScore": Bson(-1)])],
@@ -384,9 +395,6 @@ class DbController {
 			)
 			.deserializeBson!(DbSearchPackage[])
 			.map!(x => tuple(x.name, x)).assocArray;
-
-		import std.regex : escaper;
-		auto bsonEscQuery = Bson(query.escaper.to!string);
 
 		// Also search for substring matches in package name using regex
 		auto regexPkgs = m_packages
@@ -405,16 +413,21 @@ class DbController {
 			}
 		}
 
-		// Construct map of package id -> string[] subNames
+		// Sub-string search for matching sub-package names (first version only of each package)
 		auto regexSubPkgs = m_packages
 			.aggregate(
-				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],  					// Broad prune using index
-				["$addFields": ["latestVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]], 									// Latest version
-				["$unwind": ["path": Bson("$latestVersion.info.subPackages"), "preserveNullAndEmptyArrays": Bson(false)]],	// Unwind sub-packages
-				["$match": ["latestVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],				// Re-filter unwound sub-packages
+				// Broad prune using index
+				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				// Latest version
+				["$addFields": ["latestVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]],
+				// Unwind sub-packages
+				["$unwind": ["path": Bson("$latestVersion.info.subPackages"), "preserveNullAndEmptyArrays": Bson(false)]],
+				// Re-filter unwound sub-packages
+				["$match": ["latestVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				// Concatenate full package name
 				["$addFields": ["fullName": Bson(["$concat": Bson([Bson("$name"), Bson(":"),
-					Bson("$latestVersion.info.subPackages.name")])])]],																												// Concatenate full package name
-				["$project": Bson(["name": Bson("$fullName"), "stats": Bson(1), "latestVersion": Bson(1)])],								// Project fields
+					Bson("$latestVersion.info.subPackages.name")])])]],
+				["$project": Bson(["name": Bson("$fullName"), "stats": Bson(1), "latestVersion": Bson(1)])],
 				["$limit": 50]
 			)
 			.deserializeBson!(DbSearchPackage[]);
