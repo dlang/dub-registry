@@ -19,10 +19,11 @@
 					- loginURL = "/my_packages";
 				- listitems ~= tuple("Log in", ["login?redirect=" ~ loginURL]);
 			ul
+				- auto subpath = req.requestPath.toString()[1 .. $];
 				- foreach(items; listitems)
 					- if(items[1].length < 2)
-						- bool active = startsWith(req.path[1..$], items[1][0]);
-						- if( items[1][0].empty ) active = req.path == "/";
+						- bool active = startsWith(subpath, items[1][0]);
+						- if( items[1][0].empty ) active = subpath == "";
 						li(class=(active ? "active" : ""))
 							- if (!(items[1][0].length > 4 && items[1][0][0..4] == "http"))
 								- items[1][0] = req.rootDir ~ items[1][0];
@@ -31,14 +32,14 @@
 					- else
 						- bool active = false;
 						- foreach(itm; items[1])
-							- if (startsWith(req.path[1..$], split(itm, ";")[1])) active = true;
+							- if (startsWith(subpath, split(itm, ";")[1])) active = true;
 						li(class=(active ? "expand-container active" : "expand-container"))
 							a.expand-toggle(href="#")
 								span=items[0]
 							ul.expand-content
 								- foreach(itm; items[1])
 									- auto parts = split(itm, ";");
-									- bool active_item = startsWith(req.path[1..$], parts[1]);
+									- bool active_item = startsWith(subpath, parts[1]);
 									li(class=(active_item ? "active" : ""))
 										- if (!(parts[1].length > 4 && parts[1][0..4] == "http"))
 											- parts[1] = req.rootDir ~ parts[1];

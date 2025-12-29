@@ -12,13 +12,13 @@ import std.encoding : sanitize;
 import vibe.core.core;
 import vibe.core.log;
 import vibe.core.sync;
-import vibe.utils.array : FixedRingBuffer;
+import vibe.container.ringbuffer : RingBuffer;
 
 final class PackageWorkQueue {
 @safe:
 
 	private {
-		FixedRingBuffer!string m_queue;
+		RingBuffer!string m_queue;
 		string m_current;
 		Task m_task;
 		TaskMutex m_mutex;
@@ -97,7 +97,7 @@ final class PackageWorkQueue {
 					m_condition.wait();
 				}
 				pack = m_queue.front;
-				m_queue.popFront();
+				m_queue.removeFront();
 				m_current = pack;
 			}
 			scope(exit) m_current = null;

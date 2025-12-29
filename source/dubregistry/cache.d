@@ -165,7 +165,7 @@ class URLCache {
 								res.bodyReader.pipe(dst);
 								auto rawdata = dst.data;
 								if (pet) entry.etag = *pet;
-								entry.data = BsonBinData(BsonBinData.Type.Generic, cast(immutable)rawdata);
+								entry.data = BsonBinData(BsonBinData.Type.generic, cast(immutable)rawdata);
 								entry.headers = result_headers;
 								m_entries.replaceOne(["_id": entry._id], entry, upsert);
 								result = createMemoryStream(rawdata, false);
