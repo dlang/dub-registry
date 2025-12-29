@@ -148,6 +148,8 @@ block body
 					- case "bitbucket": repo_prefix = "https://bitbucket.org/"; break;
 					- case "github": repo_prefix = "https://github.com/"; break;
 					- case "gitlab": repo_prefix = "https://gitlab.com/"; break;
+					- case "gitea": repo_prefix = "https://gitea.com/"; break;
+					- case "forgejo": repo_prefix = "https://codeberg.org/"; break;
 				li#repository
 					a.blind(class=repo_kind, href="#{repo_prefix}#{repo_path}")= repo_path
 
