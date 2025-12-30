@@ -8,14 +8,11 @@ module dubregistry.repositories.forgejo;
 import dubregistry.dbcontroller : DbRepository;
 import dubregistry.repositories.repository;
 import dubregistry.repositories.gitea;
+import std.algorithm.searching : startsWith;
 import vibe.inet.url : URL;
 
 
 class ForgejoRepositoryProvider : GiteaRepositoryProvider {
-	private {
-		string m_token;
-		string m_url;
-	}
 @safe:
 
 	private this(string token, string url)
@@ -26,7 +23,7 @@ class ForgejoRepositoryProvider : GiteaRepositoryProvider {
 
 	static void register(string token, string url)
 	{
-		auto h = new GiteaRepositoryProvider(token, url);
+		auto h = new ForgejoRepositoryProvider(token, url);
 		addRepositoryProvider("forgejo", h);
 	}
 
@@ -52,5 +49,6 @@ class ForgejoRepository : GiteaRepository {
 	this(string owner, string project, string auth_token, string url)
 	{
 		super(owner, project, auth_token, url);
+		m_public = url.startsWith("https://codeberg.org/");
 	}
 }

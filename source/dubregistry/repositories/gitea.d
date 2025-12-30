@@ -17,7 +17,7 @@ import vibe.http.client : HTTPClientRequest;
 import vibe.inet.url;
 
 class GiteaRepositoryProvider : RepositoryProvider {
-	private {
+	package {
 		string m_token;
 		string m_url;
 	}
@@ -87,7 +87,7 @@ class GiteaRepositoryProvider : RepositoryProvider {
 
 class GiteaRepository : Repository {
 @safe:
-	private {
+	package {
 		string m_owner;
 		string m_project;
 		string m_authToken;
@@ -106,7 +106,7 @@ class GiteaRepository : Repository {
 		if (m_url[$-1] != '/') m_url ~= "/";
 		// Consider well-known public Gitea/Forgejo hosts as "public" to allow direct downloads
 		// Note: Codeberg runs Forgejo (Gitea fork) and supports the same archive URLs
-		m_public = m_url.startsWith("https://gitea.com/") || m_url.startsWith("https://codeberg.org/");
+		m_public = m_url.startsWith("https://gitea.com/");
 	}
 
 	RefInfo[] getTags()
