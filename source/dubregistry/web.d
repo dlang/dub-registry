@@ -7,19 +7,19 @@ module dubregistry.web;
 
 import dubregistry.dbcontroller;
 import dubregistry.internal.utils;
+import dubregistry.registry;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
-import dubregistry.registry;
 import dubregistry.viewutils; // dummy import to make rdmd happy
 
 import dub.semver;
-import std.algorithm : sort, startsWith, splitter, findSplit;
+import std.algorithm : findSplit, sort, splitter, startsWith;
 import std.array;
 import std.file;
 import std.path;
 import std.string;
-import userman.web;
 import userman.db.controller : UserManController;
+import userman.web;
 import vibe.d;
 
 static import userman.api;
@@ -457,8 +457,8 @@ class DubRegistryWebFrontend {
 
 	private void updatePackageList()
 	{
-		import std.algorithm.iteration : map;
 		import core.memory : GC;
+		import std.algorithm.iteration : map;
 		() @trusted { GC.collect(); } ();
 
 
@@ -645,8 +645,8 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	@auth @path("/register_package") @errorDisplay!getRegisterPackage
 	void postRegisterPackage(string url, User _user, bool ignore_fork = false)
 	{
-		import std.algorithm.comparison : among;
 		import dubregistry.repositories.repository : parseRepositoryURL;
+		import std.algorithm.comparison : among;
 
 		auto urls = parseUserURL(url, "https");
 		if (!urls.schema.among!("http", "https"))
@@ -672,11 +672,11 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	}
 
 	@auth @path("/my_packages/:packname")
-	void getMyPackagesPackage(string _packname, User _user, string _error = null)
+	void getMyPackagesPackage(string _packname, User _user, string _error = null, string secret = null)
 	{
 		enforceUserPackage(_user, _packname, DbPackage.Permissions.readonly);
 		auto packageName = _packname;
-		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors);
+		auto nfo = m_registry.getPackageInfo(packageName, PackageInfoFlags.includeErrors | PackageInfoFlags.includeHooks);
 		if (nfo.info.type == Json.Type.null_) return;
 
 		auto pack = nfo.info;
@@ -707,8 +707,33 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		auto registry = m_registry;
 		auto user = _user;
 		auto error = _error;
+		if (secret.length && !validateBcryptHash(nfo.secretBcrypt, secret))
+			secret = "";
+		auto secretBcrypt = nfo.secretBcrypt;
+
 		render!("my_packages.package.dt", packageName, categories, user, registry, error, pack,
-			permUpdate, permMetadata, permSource, permAdmin, isOwner, privateInfo);
+			permUpdate, permMetadata, permSource, permAdmin, isOwner, privateInfo, secret, secretBcrypt);
+	}
+
+	@auth @path("/my_packages/:packname/regen_secret")
+	void postPackageRegenSecret(scope HTTPServerRequest request, scope HTTPServerResponse response, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+		string secret = m_registry.regenPackageSecret(_packname);
+
+		if (request.headers.get("Accept") == "text/plain")
+			response.writeBody(secret, "text/plain");
+		else
+			redirect("/my_packages/" ~ _packname ~ "?secret=" ~ secret ~ "#repository");
+	}
+
+	@auth @path("/my_packages/:packname/unset_secret")
+	void postPackageUnsetSecret(string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+		m_registry.unsetPackageSecret(_packname);
+
+		redirect("/my_packages/"~_packname~"#repository");
 	}
 
 	@auth @path("/my_packages/:packname/update")

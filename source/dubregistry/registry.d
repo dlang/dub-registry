@@ -11,21 +11,20 @@ import dubregistry.internal.utils;
 import dubregistry.internal.workqueue;
 import dubregistry.repositories.repository;
 
-import dub.semver;
 import dub.package_ : packageInfoFilenames;
-import std.algorithm : canFind, countUntil, filter, map, sort, swap, equal, startsWith, endsWith;
+import dub.semver;
+import std.algorithm : canFind, countUntil, endsWith, equal, filter, map, sort, startsWith, swap;
 import std.array;
 import std.conv;
-import std.datetime : Clock, UTC, hours, SysTime;
+import std.datetime : Clock, hours, SysTime, UTC;
 import std.digest : toHexString;
 import std.encoding : sanitize;
 import std.exception : enforce;
-import std.range : chain, walkLength;
 import std.path : extension;
-import std.string : format, toLower, representation;
-import std.uni : sicmp;
+import std.range : chain, walkLength;
+import std.string : format, representation, toLower;
 import std.typecons;
-import std.uni : asUpperCase;
+import std.uni : asUpperCase, sicmp;
 import userman.db.controller;
 import vibe.core.core;
 import vibe.core.log;
@@ -257,7 +256,7 @@ class DubRegistry {
 			.map!(pack => getPackageInfo(pack, flags));
 	}
 
-	auto getPackageInfo(DbPackage pack, PackageInfoFlags flags = PackageInfoFlags.none)
+	PackageInfo getPackageInfo(DbPackage pack, PackageInfoFlags flags = PackageInfoFlags.none)
 	{
 		auto rep = getRepository(pack.repository);
 
@@ -279,6 +278,8 @@ class DubRegistry {
 		}
 		if (flags & PackageInfoFlags.includeErrors)
 			nfo["errors"] = serializeToJson(pack.errors);
+		if (flags & PackageInfoFlags.includeHooks)
+			ret.secretBcrypt = pack.secret;
 		ret.privateInfo.sharedUsers = pack.sharedUsers;
 
 		ret.info = nfo;
@@ -345,8 +346,8 @@ class DubRegistry {
 	private void getPackageInfosRecursive(string packname, PackageInfoFlags flags, ref PackageInfo[string] infos, ref void[0][string] visited)
 	{
 		import dub.recipe.packagerecipe : getBasePackageName, getSubPackageName;
-		import std.range : dropOne;
 		import std.algorithm.searching : find;
+		import std.range : dropOne;
 
 		if (packname in visited)
 			return;
@@ -446,6 +447,33 @@ class DubRegistry {
 	bdata_t getPackageLogo(string pack_name, out bdata_t rev)
 	{
 		return m_db.getPackageLogo(pack_name, rev);
+	}
+
+	void addPackageError(string pack_name, string error)
+	{
+		m_db.addPackageError(pack_name, error);
+	}
+
+	void clearPackageErrors(string pack_name)
+	{
+		m_db.clearPackageErrors(pack_name);
+	}
+
+	bool validatePackageSecret(string pack_name, string secret)
+	{
+		return m_db.validatePackageSecret(pack_name, secret);
+	}
+
+	void unsetPackageSecret(string pack_name)
+	{
+		m_db.setPackageSecret(pack_name, null);
+	}
+
+	string regenPackageSecret(string pack_name)
+	{
+		string token = generateRandomHash!16;
+		m_db.setPackageSecret(pack_name, token);
+		return token;
 	}
 
 	void upsertSharedUser(string pack_name, User.ID id, DbPackage.Permissions permissions)
@@ -779,6 +807,7 @@ struct PackageInfo {
 	BsonObjectID logo;
 	Json info; /// JSON package information, as reported to the client
 	Private privateInfo; /// Extra info that's not reported to the client, such as detailed ownership info
+	string secretBcrypt; /// Webhook secret (as bcrypt)
 
 	bool hasPermissions(BsonObjectID user, DbPackage.Permissions permissions)
 	const @safe {
@@ -801,6 +830,7 @@ enum PackageInfoFlags
 	includeDependencies = 1 << 0, /// include package info of dependencies
 	includeErrors = 1 << 1, /// include package errors
 	minimize = 1 << 2, /// return only minimal information (for dependency resolver)
+	includeHooks = 1 << 3, /// include webhook related information
 }
 
 /// Computes a package score from given package stats and global distributions of those stats.
