@@ -17,8 +17,8 @@ block body
 			th Score
 			th Description
 		- foreach (p; results)
-			- auto desc = p.info["description"].opt!string;
-			- auto ver = p.version_;
+			- auto desc = p.latestVersion.info["description"].opt!string;
+			- auto ver = p.latestVersion.version_;
 			- count++;
 			tr
 				td
@@ -28,7 +28,7 @@ block body
 						|= ver
 					- else
 						| #{ver[0 .. 18]}&hellip;
-				td.nobreak= formatDate(p.date)
+				td.nobreak= formatDate(p.latestVersion.date)
 				td.nobreak(title="#{formatPackageStats(p.stats)}", style="color: #B03931;")!= formatScore(p.stats.score)
 				- if (desc.length <= 100)
 					td= desc

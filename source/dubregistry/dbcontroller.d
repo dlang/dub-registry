@@ -52,6 +52,7 @@ class DbController {
 		opt.unique = true;
 		m_packages.createIndexes([
 			IndexModel().add("name", 1).withOptions(opt),
+			IndexModel().add("versions.info.subPackages.name", 1),
 			IndexModel().add("stats.score", 1)
 		]);
 		m_downloads.createIndex(IndexModel().add("package", 1).add("version", 1));
@@ -59,6 +60,7 @@ class DbController {
 		// add current text index
 		immutable keyWeights = [
 			"name": 8,
+			"versions.info.subPackages.name": 6,
 			"categories": 4,
 			"versions.info.description": 2,
 			"versions.info.authors": 1
@@ -71,7 +73,7 @@ class DbController {
 			fts["key"][k] = Bson("text");
 			fts["weights"][k] = Bson(w);
 		}
-		fts["name"] = "packages_full_text_search_index_v3";
+		fts["name"] = "packages_full_text_search_index_v4";
 		fts["background"] = true;
 		auto cmd = Bson.emptyObject;
 		cmd["createIndexes"] = Bson("packages");
@@ -339,38 +341,112 @@ class DbController {
 
 	DbPackageVersion getVersionInfo(string packname, string ver)
 	{
-		auto pack = m_packages.findOne(["name": packname, "versions.version": ver], ["versions.$": true]);
+		auto pack = m_packages.findOne(["name": packname.split(':')[0], "versions.version": ver], ["versions.$": true]);
 		enforce(!pack.isNull(), "unknown package/version");
 		assert(pack["versions"].length == 1);
 		return deserializeBson!(DbPackageVersion)(pack["versions"][0]);
 	}
 
-	DbPackage[] searchPackages(string query)
+	DbSearchPackage[] searchPackages(string query)
 	{
-		import std.math : round;
+		query = query.strip;
 
-		if (!query.strip.length) {
-			return m_packages.find()
-				.sort(["stats.score": 1])
-				.map!(deserializeBson!DbPackage)
-				.array;
+		if (query.length > 255) // Limit length to prevent DoS
+			query = query[0 .. 256];
+
+		auto project = [
+			"name": Bson(1),
+			"stats": Bson(1),
+			"latestVersion": Bson(["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])])
+		];
+
+ 		// Filter to only include packages with at least one version
+ 		auto hasVersionFilter = Bson(["$match": Bson(["versions": Bson(["$exists": Bson(true),
+			"$ne": Bson(cast(Bson[])[])])])]);
+
+		if (!query.length) {
+			return m_packages
+				.aggregate(
+					hasVersionFilter,
+					["$project": project],
+					["$sort": Bson(["stats.score": Bson(-1)])],
+					["$limit": 50]
+				)
+				.deserializeBson!(DbSearchPackage[]);
 		}
 
-		auto pkgs = m_packages
-			.find(["$text": ["$search": query]], ["textScore": bson(["$meta": "textScore"])])
-			.sort(["textScore": bson(["$meta": "textScore"])]) // sort to only keep most relevant results
-			.limit(50) // limit irrelevant sort results (fixes #341)
-			.map!(deserializeBson!DbPackage)
-			.array;
+		import std.regex : escaper;
+		auto bsonEscQuery = Bson(query.escaper.to!string); // Escape query for regex searches and Bson encode
+
+		// Escape double quote and backslash for $search query and enclose in double quotes to search for exact phrase
+		auto searchQuery = '"' ~ query.replace("\"", "\\\"").replace("\\", "\\\\") ~ '"';
+
+		auto projectWithTextScore = project.dup;
+		projectWithTextScore["textScore"] = Bson(["$meta": Bson("textScore")]);
+
+		// Perform full-text search (FTS)
+		auto pkgMap = m_packages
+			.aggregate(
+			  ["$match": ["$text": ["$search": searchQuery]]],
+				hasVersionFilter,
+				["$project": projectWithTextScore],
+				["$sort": Bson(["textScore": Bson(-1)])],
+				["$limit": 50]
+			)
+			.deserializeBson!(DbSearchPackage[])
+			.map!(x => tuple(x.name, x)).assocArray;
+
+		// Also search for substring matches in package name using regex
+		auto regexPkgs = m_packages
+			.aggregate(
+			  ["$match": ["name": ["$regex": bsonEscQuery, "$options" : Bson("i")]]],
+				hasVersionFilter,
+				["$project": project],
+				["$limit": 50]
+			)
+			.deserializeBson!(DbSearchPackage[]);
+
+		foreach (ref pkg; regexPkgs) {
+			if (pkg.name !in pkgMap) {
+				pkg.textScore = 7; // regex package name match is one less than full name match
+				pkgMap[pkg.name] = pkg;
+			}
+		}
+
+		// Sub-string search for matching sub-package names (first version only of each package)
+		auto regexSubPkgs = m_packages
+			.aggregate(
+				// Broad prune using index
+				["$match": ["versions.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				// Latest version
+				["$addFields": ["latestVersion": ["$arrayElemAt": Bson([Bson("$versions"), Bson(-1)])]]],
+				// Unwind sub-packages
+				["$unwind": ["path": Bson("$latestVersion.info.subPackages"), "preserveNullAndEmptyArrays": Bson(false)]],
+				// Re-filter unwound sub-packages
+				["$match": ["latestVersion.info.subPackages.name": ["$regex": bsonEscQuery, "$options": Bson("i")]]],
+				// Concatenate full package name
+				["$addFields": ["fullName": Bson(["$concat": Bson([Bson("$name"), Bson(":"),
+					Bson("$latestVersion.info.subPackages.name")])])]],
+				["$project": Bson(["name": Bson("$fullName"), "stats": Bson(1), "latestVersion": Bson(1)])],
+				["$limit": 50]
+			)
+			.deserializeBson!(DbSearchPackage[]);
+
+		foreach (ref pkg; regexSubPkgs) {
+			if (pkg.name !in pkgMap) {
+				pkg.textScore = 5; // regex sub-package name match is one less than full name match
+				pkgMap[pkg.name] = pkg;
+			}
+		}
 
 		// normalize textScore to same scale as package score
-		immutable minMaxTS = pkgs.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
+		immutable minMaxTS = pkgMap.values.map!(p => p.textScore).fold!(min, max)(0.0f, 0.0f);
 		immutable scale = (DbPackageStats.maxScore - DbPackageStats.minScore) / (minMaxTS[1] - minMaxTS[0]);
-		foreach (ref pkg; pkgs)
+		foreach (name, ref pkg; pkgMap)
 			pkg.textScore = (pkg.textScore - minMaxTS[0]) * scale + DbPackageStats.minScore;
 
 		// sort found packages by weighted textScore and package score
-		return pkgs
+		return pkgMap.values
 			.sort!((a, b) => a.stats.score + 2 * a.textScore > b.stats.score + 2 * b.textScore)
 			.release;
 	}
@@ -591,6 +667,13 @@ struct DbPackageVersion {
 	@optional string readme;
 	@optional bool readmeMarkdown;
 	@optional string docFolder;
+}
+
+struct DbSearchPackage {
+	string name;
+	DbPackageStats stats;
+	DbPackageVersion latestVersion;
+	@optional float textScore = 0;
 }
 
 struct DbShallowPackage {

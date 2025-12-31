@@ -102,9 +102,7 @@ class DubRegistry {
 
 	auto searchPackages(string query)
 	{
-		static struct Info { string name; DbPackageStats stats; DbPackageVersion _base; alias _base this; }
-		return m_db.searchPackages(query).filter!(p => p.versions.length > 0).map!(p =>
-			Info(p.name, p.stats, m_db.getVersionInfo(p.name, p.versions[$ - 1].version_)));
+		return m_db.searchPackages(query);
 	}
 
 	RepositoryInfo getRepositoryInfo(DbRepository repository)
