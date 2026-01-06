@@ -7,10 +7,12 @@ authors "Sönke Ludwig" "Martin Nowak" "Anton Fediushin aka ohdatboi" \
 license "BSL-1.0"
 
 dependency "vibe-d" version="~>0.10.0"
+dependency "botan" version="*" # needs bcrypt, available since initial release
 dependency "dub" version="~>1.33"
 dependency "userman" version="~>0.4.0"
 dependency "uritemplate" version="~>1.0.0"
 subConfiguration "dub" "library-nonet"
+subConfiguration "botan" "full" # full = everything excluding openssl (needed for bcrypt)
 
 //versions "VibeJsonFieldNames"
 

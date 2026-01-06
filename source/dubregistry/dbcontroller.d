@@ -10,8 +10,8 @@ import dub.semver;
 import vibe.core.log;
 import vibe.db.mongo.collection;
 
-import std.array;
 import std.algorithm;
+import std.array;
 import std.conv;
 import std.datetime.systime;
 import std.datetime.timezone;
@@ -22,6 +22,7 @@ import std.typecons : tuple;
 import std.uni;
 
 import core.time;
+import dubregistry.internal.utils;
 
 
 class DbController {
@@ -199,6 +200,16 @@ class DbController {
 		m_packages.updateOne(["name": packname], ["$set": ["errors": error]]);
 	}
 
+	void addPackageError(string packname, string error)
+	{
+		m_packages.updateOne(["name": packname], ["$push": ["errors": error]]);
+	}
+
+	void clearPackageErrors(string packname)
+	{
+		m_packages.updateOne(["name": packname], ["$set": ["errors": Bson.emptyArray]]);
+	}
+
 	void setPackageCategories(string packname, string[] categories...)
 	{
 		m_packages.updateOne(["name": packname], ["$set": ["categories": categories]]);
@@ -207,6 +218,24 @@ class DbController {
 	void setPackageRepository(string packname, DbRepository repo)
 	{
 		m_packages.updateOne(["name": packname], ["$set": ["repository": repo]]);
+	}
+
+	bool validatePackageSecret(string packname, string secret)
+	{
+		auto ret = m_packages.findOne(["name": packname]).tryIndex("secret");
+		if (ret.isNull) return false;
+		else return validateBcryptHash(ret.get.get!string, secret);
+	}
+
+	void setPackageSecret(string packname, string secret)
+	{
+		// can be calculated "relatively quickly", being 4x faster than the usual password hashing - state of 2026
+		enum BCRYPT_WORK_FACTOR = 10;
+
+		if (secret.length)
+			m_packages.updateOne(["name": packname], ["$set": ["secret": generateBcryptHash(secret, BCRYPT_WORK_FACTOR)]]);
+		else
+			m_packages.updateOne(["name": packname], ["$unset": ["secret": ""]]);
 	}
 
 	void setPackageLogo(string packname, bdata_t png)
@@ -636,6 +665,8 @@ struct DbPackage {
 	@optional BsonObjectID logo; // reference to m_files
 	@optional string documentationURL;
 	@optional float textScore = 0; // for FTS textScore in searchPackages
+	/// BCrypt hashed random secret string used for package management API (webhooks)
+	@optional string secret;
 
 	bool hasPermissions(BsonObjectID user, Permissions permissions)
 	const @safe pure nothrow @nogc {

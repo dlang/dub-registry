@@ -1,7 +1,7 @@
 module dubregistry.internal.utils;
 
-import vibe.core.core;
 import vibe.core.concurrency;
+import vibe.core.core;
 import vibe.core.file;
 import vibe.core.log;
 import vibe.core.path;
@@ -10,7 +10,7 @@ import vibe.data.bson;
 import vibe.inet.url;
 
 import core.time;
-import std.algorithm : any, among, splitter;
+import std.algorithm : among, any, splitter;
 import std.file : tempDir;
 import std.format;
 import std.path;
@@ -64,6 +64,41 @@ string black(string url)
 	assert(black("https://root:root@google.com/?secret_12345&private=2&a=b") == "https://***:***@google.com/?***&private=***&a=b");
 }
 
+private auto rng()
+{
+	import botan.rng.auto_rng;
+
+	static AutoSeededRNG rng;
+	if (rng is null)
+		rng = new AutoSeededRNG;
+
+	return rng;
+}
+
+string generateBcryptHash(in string password, ushort work_factor)
+@trusted {
+	import botan.passhash.bcrypt : generateBcrypt;
+
+	return generateBcrypt(password, rng, work_factor);
+}
+
+bool validateBcryptHash(in string password_hash, in string password)
+@trusted {
+	import botan.passhash.bcrypt : checkBcrypt;
+
+	return checkBcrypt(password, password_hash);
+}
+
+string generateRandomHash(uint length)()
+@safe {
+	import std.base64 : Base64URLNoPadding;
+
+	ubyte[length] buffer;
+	(() @trusted => rng.randomize(&buffer[0], buffer.length))();
+
+	return Base64URLNoPadding.encode(buffer[]).idup;
+}
+
 /**
  * Params:
  *   file = the file to convert
@@ -72,7 +107,7 @@ string black(string url)
  */
 bdata_t generateLogo(NativePath file) @trusted
 {
-	import std.concurrency : send, receiveOnly, Tid;
+	import std.concurrency : receiveOnly, send, Tid;
 	static assert (isWeaklyIsolated!(typeof(&generateLogoUnsafe)));
 	static assert (isWeaklyIsolated!NativePath);
 	static assert (isWeaklyIsolated!LogoGenerateResponse);

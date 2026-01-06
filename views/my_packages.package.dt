@@ -83,9 +83,13 @@ block body
 					p Package is scheduled for an automatic update check. Still have to wait for one more package.
 				- else if (update_check_index > 1)
 					p Package is scheduled for an automatic update check. Still have to wait for #{update_check_index} other packages to complete.
-				form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update", disabled=!permUpdate)
-					p
+				.updates
+					form.inputForm(method="POST", action="#{req.rootDir}my_packages/#{packageName}/update", disabled=!permUpdate)
 						button(type="submit", disabled=!permUpdate) Trigger manual update
+					- if (permAdmin)
+						a(href="#repository"): button Setup update hook
+					- else
+						p The package administrator can setup automatic updates through webhooks.
 
 	section.pkgconfig#tab-categories
 		a#categories(name="categories")
@@ -116,6 +120,44 @@ block body
 	section.pkgconfig#tab-repository
 		a#repository(name="repository")
 		h2 Repository
+
+		- if (permAdmin)
+			h3 Update Hooks
+			p You can POST to a special endpoint on the dub registry to trigger a manual package update.
+			p Setup these hooks in GitHub, GitLab or some other service you use to trigger when you push a new tag to make them available on the registry as quickly as possible.
+			.inputForm
+				- auto apiUrl = req.fullURL;
+				- apiUrl.path = typeof(apiUrl.path).init;
+				#secret-guide(style=secret.length ? "" : "display: none")
+					- auto placeholder = secret.length ? secret : "{SECRET}";
+					p A webhook secret for this package is configured.
+					p
+						label(for="generic-hook") Generic update webhook: (POST)
+						input#generic-hook(type="text", readonly, autocomplete="off", value="#{apiUrl}/api/packages/#{packageName}/update")
+					p
+						label(for="github-hook") GitHub webhook:
+						input#github-hook(type="text", readonly, autocomplete="off", value="#{apiUrl}/api/packages/#{packageName}/update/github?secret=#{placeholder}")
+					p
+						label(for="gitlab-hook") GitLab webhook:
+						input#gitlab-hook(type="text", readonly, autocomplete="off", value="#{apiUrl}/api/packages/#{packageName}/update/gitlab")
+					hr
+					p
+						label(for="secret") Secret:
+						input#secret(type="text", readonly, autocomplete="off", value=placeholder)
+					p.warn This secret will only be shown once, please make sure to note it down.
+					p Read more in the #[a(href="https://github.com/dlang/dub/blob/master/docs/http-update.md", target="_blank") API documentation]
+					hr
+				- if (secretBcrypt.length)
+					form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/unset_secret", onsubmit="return confirm('Are you sure you want to revoke the secret and disable webhook support? Existing update webhooks will stop working.')")
+						button.danger(type="submit") Disable Webhooks
+					form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/regen_secret", onsubmit="return confirm('Are you sure you want to regenerate the secret? Existing webhooks will not work anymore and need to be updated.') && regenerateSecret(event)")
+						button.danger(type="submit") Regenerate Secret
+				- else
+					form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/regen_secret", onsubmit="return regenerateSecret(event)")
+						button(type="submit") Enable Webhooks
+		- else
+			h3 Update Hooks
+			p Only package admins can configure automatic webhook based updates.
 
 		h3 Transfer Repository
 		.inputForm

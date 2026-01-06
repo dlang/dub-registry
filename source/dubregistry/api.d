@@ -11,7 +11,7 @@ import dubregistry.registry;
 import std.algorithm.iteration : map;
 import std.array : array;
 import std.exception : enforce;
-import std.typecons : Flag, Yes, No;
+import std.typecons : Flag, No, Yes;
 import vibe.data.json : Json;
 import vibe.http.router;
 import vibe.inet.url;
@@ -96,6 +96,18 @@ interface IPackages {
 	Json getInfo(string _name, string _version, bool minimize = false);
 
 	Json[string] getInfos(string[] packages, bool include_dependencies = false, bool minimize = false);
+
+	@path(":name/update")
+	string postUpdate(string _name, string secret = "");
+
+	@path(":name/update/github")
+	@headerParam("event", "X-GitHub-Event")
+	@queryParam("secret", "secret")
+	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init);
+
+	@path(":name/update/gitlab")
+	@headerParam("secret", "X-Gitlab-Token")
+	string postUpdateGitlab(string _name, string secret, string object_kind = "");
 }
 
 class LocalDubRegistryAPI : DubRegistryAPI {
@@ -176,6 +188,48 @@ override {
 			.check!(r => r !is null)(HTTPStatus.notFound, "None of the packages were found")
 			.byKeyValue.map!(p => tuple(p.key, p.value.info)).assocArray;
 	}
+
+	@before!extractSecretArgument("secret")
+	string postUpdate(string _name, string secret = "")
+	{
+		if (!m_registry.validatePackageSecret(_name, secret))
+			return "Invalid secret";
+
+		m_registry.triggerPackageUpdate(_name);
+		return "Queued package update";
+	}
+
+	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init)
+	{
+		if (event == "create") {
+			return postUpdate(_name, secret);
+		} else if (event == "ping") {
+			enforceBadRequest(hook.type == Json.Type.object, "hook is not of type json");
+			auto events = *enforceBadRequest("events" in hook, "no events object sent in hook object");
+			enforceBadRequest(events.type == Json.Type.array, "Hook events must be of type array");
+
+			foreach (ev; events[])
+				if (ev.type == Json.Type.string && ev.get!string == "create")
+					return "valid";
+
+			// only add package error message on valid secret
+			if (m_registry.validatePackageSecret(_name, secret))
+				m_registry.addPackageError(_name,
+					"GitHub hook configuration is invalid. Hook is missing 'create' event. (Tags or branches)");
+
+			return "invalid hook - create event missing";
+		} else {
+			return "ignored event " ~ event;
+		}
+	}
+
+	string postUpdateGitlab(string _name, string secret, string object_kind)
+	{
+		if (object_kind != "tag_push")
+			return "ignored event " ~ object_kind;
+
+		return postUpdate(_name, secret);
+	}
 }
 
 private:
@@ -185,6 +239,29 @@ private:
 		//        already decoded.
 		return pkg.urlDecode().findSplitBefore(":")[0];
 	}
+}
+
+/// Attempts to get the secret in a way that should hopefully be configurable in
+/// any webhook system: either
+/// 1. Specify `?header=...` to read the secret from a header (only X-Headers
+///    and Authorization allowed)
+/// 2. Attempt to read a field named `secret` from JSON or form body
+/// 3. Attempt to read the secret from `?secret=...` as query parameter.
+/// (tried in this order, first one matching is used)
+private string extractSecretArgument(scope HTTPServerRequest req, scope HTTPServerResponse res)
+{
+	import std.algorithm : startsWith;
+	import std.uni : sicmp;
+
+	string header = req.query.get("header", "");
+	if (header.length && (header.sicmp("Authorization") == 0 || header.startsWith("X-") || header.startsWith("x-")))
+		return req.headers.get(header);
+
+	string ret = req.contentType == "application/json" ? req.json["secret"].opt!string : req.form.get("secret", "");
+	if (ret.length)
+		return ret;
+
+	return req.query.get("secret", "");
 }
 
 

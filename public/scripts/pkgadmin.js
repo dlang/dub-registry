@@ -167,3 +167,36 @@ if (sharedUsers) {
 		setupPermissionsRow(row);
 	}
 }
+
+/* PACKAGE SECRETS */
+
+/**
+ * @param {SubmitEvent} event
+ */
+function regenerateSecret(event) {
+	const form = event.target;
+	if (form && form instanceof HTMLFormElement) {
+		event.preventDefault();
+		const guide = document.querySelector("#secret-guide");
+		form.querySelector("button").setAttribute("disabled", "disabled");
+		fetch(form.action, {
+			method: "POST",
+			headers: {
+				"Accept": "text/plain"
+			}
+		}).then((res) => res.ok ? res.text() : "")
+		.then((token) => {
+			form.querySelector("button").style.display = "none";
+			if (!token.length) {
+				alert("Generating secret failed, please reload and try again");
+				return;
+			}
+			console.log(token);
+			for (let input of guide.querySelectorAll("input")) {
+				input.value = input.value.replace(/\{SECRET\}/g, token);
+			}
+			guide.style.display = "";
+		});
+		return false;
+	}
+}
