@@ -175,6 +175,8 @@ block body
 							option(value="gitlab", selected=rkind == "gitlab", disabled=!permSource) GitLab
 						- if (supportsRepositoryKind("gitea"))
 							option(value="gitea", selected=rkind == "gitea", disabled=!permSource) Gitea
+						- if (supportsRepositoryKind("forgejo"))
+							option(value="forgejo", selected=rkind == "forgejo", disabled=!permSource) Forgejo
 				p
 					label(for="owner") Repository owner:
 					input(type="text", name="owner", value=pack["repository"]["owner"].get!string, disabled=!permSource)
