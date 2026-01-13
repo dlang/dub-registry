@@ -145,7 +145,7 @@ block body
 						label(for="secret") Secret:
 						input#secret(type="text", readonly, autocomplete="off", value=placeholder)
 					p.warn This secret will only be shown once, please make sure to note it down.
-					p Read more in the #[a(href="https://github.com/dlang/dub/blob/master/docs/http-update.md", target="_blank") API documentation]
+					p Read more in the #[a(href="https://github.com/dlang/dub-registry/blob/master/api-docs/http-update.md", target="_blank") API documentation]
 					hr
 				- if (secretBcrypt.length)
 					form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/unset_secret", onsubmit="return confirm('Are you sure you want to revoke the secret and disable webhook support? Existing update webhooks will stop working.')")
