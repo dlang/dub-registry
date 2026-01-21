@@ -27,6 +27,16 @@
 				{"name": "game", "description": "Game servers"},
 				{"name": "web", "description": "Web servers"}
 			]},
+			{"name": "business", "description": "Business applications", "categories": [
+				{"name": "sap", "description": "SAP solutions"},
+				{"name": "salesforce", "description": "Salesforce solutions"},
+				{"name": "workday", "description": "Workday solutions"}
+			]},
+			{"name": "cloud", "description": "Cloud solutions", "categories": [
+				{"name": "azure", "description": "Azure cloud solutions"},
+				{"name": "aws", "description": "AWS Azure cloud solutions"},
+				{"name": "google", "description": "Google cloud solutions"}
+			]},
 			{"name": "web", "description": "Web applications/sites", "categories": [
 				{"name": "development", "description": "Development tools"},
 				{"name": "communication", "description": "Blogs, chats, forums, etc."},
