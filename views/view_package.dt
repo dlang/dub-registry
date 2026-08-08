@@ -151,12 +151,12 @@ block body
 					- case "gitea": repo_prefix = "https://gitea.com/"; break;
 					- case "forgejo": repo_prefix = "https://codeberg.org/"; break;
 				li#repository
-					a.blind(class=repo_kind, href="#{repo_prefix}#{repo_path}")= repo_path
+					a.blind(class=repo_kind, rel="nofollow noopener", href="#{repo_prefix}#{repo_path}")= repo_path
 
 			- if( auto ph = "homepage" in versionInfo )
 				- auto hpage = URL(ph.get!string);
 				li#homepage
-					a.blind(href="#{hpage.toString}")= hpage.host ~ hpage.localURI
+					a.blind(rel="nofollow noopener", href="#{hpage.toString}")= hpage.host ~ hpage.localURI
 
 			- if( auto pl = "license" in versionInfo )
 				li#license= pl.get!string
