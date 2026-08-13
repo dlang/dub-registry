@@ -29,6 +29,15 @@ block body
 			p
 				button(type="submit") Login
 
+		- import dubregistry.oauthflags : githubOAuthEnabled;
+		- import vibe.textfilter.urlencode : urlEncode;
+		- if (githubOAuthEnabled)
+			- string ghLogin = "login/github";
+			- if (redirect.length)
+				- ghLogin ~= "?redirect=" ~ urlEncode(redirect);
+			p
+				a.blind(href=ghLogin) Log in with GitHub
+
 	p
 		h2 Cannot log in?
 		p

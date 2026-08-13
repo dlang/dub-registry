@@ -20,6 +20,10 @@ public struct AppConfig
 {
 	@Name("github-auth") @Optional
 	string ghauth;
+	@Name("github-oauth-client-id") @Optional
+	string ghoauthid;
+	@Name("github-oauth-client-secret") @Optional
+	string ghoauthsecret;
 	@Name("gitlab-url") @Optional
 	string glurl;
 	@Name("gitlab-auth") @Optional
@@ -116,6 +120,7 @@ unittest
 `;
 	auto conf = AppConfig.readString(str);
     assert(conf.ghauth == "foo");
+    assert(conf.ghoauthid.length == 0);
     assert(conf.glauth.length == 0);
     assert(conf.enforceCertificateTrust == true);
     assert(conf.mailConnectionType == SMTPConnectionType.startTLS);
