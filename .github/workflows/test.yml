@@ -9,17 +9,17 @@ on:
 jobs:
   test:
     name: CI
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         dc: [dmd-latest, ldc-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install D Compiler
         uses: dlang-community/setup-dlang@v2
         with:
           compiler: ${{ matrix.dc }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.dub
           key: ${{ matrix.dc }}-dub-${{ hashFiles('**/dub.selections.json') }}
