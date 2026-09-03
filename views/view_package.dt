@@ -225,7 +225,7 @@ block body
 									span= formatDate(v["date"])
 							- else
 								td
-									a.blind(href='#{req.rootDir}packages/#{urlEncode(packageName)}/#{vs}')
+									a.blind(href=packageVersionURL(req.rootDir, packageName, vs))
 										|= vs
 								td
 									span= formatDate(v["date"])

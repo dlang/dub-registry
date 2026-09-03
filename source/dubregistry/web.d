@@ -238,7 +238,7 @@ class DubRegistryWebFrontend {
 		import std.algorithm : canFind;
 
 		auto pname = _packname;
-		auto ver = _version.replace(" ", "+");
+		auto ver = decodePackageVersion(_version);
 		string ext;
 
 		if (_version.length) {
@@ -480,6 +480,18 @@ class DubRegistryWebFrontend {
 		}
 		m_packages = newpacks.data;
 	}
+}
+
+private string decodePackageVersion(string versionString)
+{
+	return versionString.urlDecode.replace(" ", "+");
+}
+
+unittest
+{
+	assert(decodePackageVersion("~next%2Fv0.6.1") == "~next/v0.6.1");
+	assert(decodePackageVersion("~master") == "~master");
+	assert(decodePackageVersion("0.6.1") == "0.6.1");
 }
 
 class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
