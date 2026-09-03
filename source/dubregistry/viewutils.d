@@ -8,6 +8,12 @@ module dubregistry.viewutils;
 import std.datetime;
 import std.string;
 import vibe.data.json;
+import vibe.textfilter.urlencode;
+
+string packageVersionURL(string rootDir, string packageName, string versionString)
+{
+	return rootDir ~ "packages/" ~ urlEncode(packageName) ~ "/" ~ urlEncode(versionString);
+}
 
 string formatDate(Json date)
 {
@@ -123,6 +129,9 @@ size_t getBestVersionIndex(R)(R versions)
 }
 
 unittest {
+	assert(packageVersionURL("/", "example-package", "~next/v0.6.1") == "/packages/example-package/~next%2Fv0.6.1");
+	assert(packageVersionURL("/", "example-package", "~master") == "/packages/example-package/~master");
+	assert(packageVersionURL("/", "example-package", "0.6.1") == "/packages/example-package/0.6.1");
 	assert(getBestVersionIndex(["~master", "0.0.1", "1.0.0"]) == 2);
 	assert(getBestVersionIndex(["~master", "0.0.1-alpha"]) == 1);
 	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
