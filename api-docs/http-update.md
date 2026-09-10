@@ -2,6 +2,20 @@
 
 To queue an update of your package you can use the `POST /api/packages/:packageName/update` endpoint.
 
+## `GET /my_packages/:packageName/webhook` (authenticated)
+
+Returns whether a webhook secret is configured for the package **without regenerating it**.
+
+Requires a logged-in package admin session (same auth as the My packages UI / `regen_secret`).
+
+Response JSON:
+
+```json
+{"package":"mypkg","configured":true}
+```
+
+The plaintext secret is intentionally never returned here — it is only shown once after `POST .../regen_secret`.
+
 ## `POST /api/packages/:packageName/update`
 
 Queues an update for the specified package.

@@ -748,6 +748,18 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		redirect("/my_packages/"~_packname~"#repository");
 	}
 
+	/// Non-destructive webhook status for package admins / tooling.
+	/// Returns JSON `{"package":"...","configured":true|false}` — never the plaintext secret.
+	@auth @path("/my_packages/:packname/webhook")
+	void getPackageWebhook(scope HTTPServerRequest request, scope HTTPServerResponse response, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+		Json ret = Json.emptyObject;
+		ret["package"] = _packname;
+		ret["configured"] = m_registry.hasPackageSecret(_packname);
+		response.writeJsonBody(ret);
+	}
+
 	@auth @path("/my_packages/:packname/update")
 	void postUpdatePackage(string _packname, User _user)
 	{

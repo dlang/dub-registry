@@ -234,6 +234,15 @@ class DbController {
 		else return validateBcryptHash(ret.get.get!string, secret);
 	}
 
+	/// True when a webhook secret hash is stored (does not reveal the plaintext).
+	bool hasPackageSecret(string packname)
+	{
+		auto ret = m_packages.findOne(["name": packname]).tryIndex("secret");
+		if (ret.isNull) return false;
+		auto hash = ret.get.get!string;
+		return hash.length > 0;
+	}
+
 	void setPackageSecret(string packname, string secret)
 	{
 		// can be calculated "relatively quickly", being 4x faster than the usual password hashing - state of 2026
