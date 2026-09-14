@@ -268,7 +268,7 @@ class DubRegistry {
 		{
 			nfo["name"] = pack.name;
 			nfo["id"] = pack._id.toString();
-			nfo["dateAdded"] = pack._id.timeStamp.toISOExtString();
+			nfo["dateAdded"] = pack._id.timeStamp.toUTC().toISOExtString();
 			nfo["owner"] = pack.owner.toString();
 			nfo["repository"] = serializeToJson(pack.repository);
 			nfo["categories"] = serializeToJson(pack.categories);
