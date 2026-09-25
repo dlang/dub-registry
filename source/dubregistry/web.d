@@ -293,6 +293,9 @@ class DubRegistryWebFrontend {
 
 			auto gitVer = verinfo.version_;
 			gitVer = gitVer.startsWith("~") ? gitVer[1 .. $] : "v"~gitVer;
+			auto readmeFileName = versionInfo["readmeFile"].opt!string;
+			if (!readmeFileName.length)
+				readmeFileName = "README.md";
 			string urlFilter(string url, bool is_image)
 			{
 				if (url.startsWith("http://") || url.startsWith("https://"))
@@ -306,7 +309,7 @@ class DubRegistryWebFrontend {
 						// TODO: BitBucket + GitLab
 						case "github":
 							if (is_image) return format("https://github.com/%s/%s/raw/%s/%s", owner, project, gitVer, url);
-							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url.startsWith("#") ? "README.md" ~ url : url);
+							else return format("https://github.com/%s/%s/blob/%s/%s", owner, project, gitVer, url.startsWith("#") ? readmeFileName ~ url : url);
 					}
 				}
 
@@ -328,6 +331,9 @@ class DubRegistryWebFrontend {
 			auto packageName = pname;
 			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
+			auto readmeFormat = versionInfo["readmeFormat"].opt!string;
+			if (!readmeFormat.length)
+				readmeFormat = "markdown";
 			//auto sampleURLs = ["test1", "test2"]; /* TODO: actually make this array exist and embed samples generated from repository */
 			string[] sampleURLs;
 			auto activeTab = req.query.get("tab", "info");
@@ -339,6 +345,7 @@ class DubRegistryWebFrontend {
 					packinfo,
 					versionInfo,
 					readmeContents,
+					readmeFormat,
 					sampleURLs,
 					urlFilter,
 					registry,

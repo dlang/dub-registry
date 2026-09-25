@@ -47,6 +47,8 @@ block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
 	- if (readmeContents.length)
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
+		- if (readmeFormat == "asciidoc")
+			link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/asciidoc.css")
 
 block body
 	.main
@@ -114,13 +116,10 @@ block body
 		- bool renderedTabContent;
 		- if (activeTab == "info")
 			- if (readmeContents.length)
-				.repositoryReadme.markdown-body
-					- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
-					- scope msettings = new MarkdownSettings;
-					- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
-					- msettings.headingBaseLevel = 2;
-					- msettings.urlFilter = &urlFilter;
-					!= filterMarkdown(readmeContents, msettings)
+				- string readmeExtraClass = readmeFormat == "asciidoc" ? "asciidoc-body" : "";
+				.repositoryReadme.markdown-body(class=readmeExtraClass)
+					- import dubregistry.viewutils : renderReadmeHtml;
+					!= renderReadmeHtml(readmeContents, readmeFormat, &urlFilter)
 			- else
 				.repositoryReadme
 			- renderedTabContent = true;

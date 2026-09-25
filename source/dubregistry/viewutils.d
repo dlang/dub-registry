@@ -7,6 +7,7 @@ module dubregistry.viewutils;
 
 import std.datetime;
 import std.string;
+import std.algorithm : canFind;
 import vibe.data.json;
 import vibe.textfilter.urlencode;
 
@@ -137,4 +138,102 @@ unittest {
 	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
 	assert(getBestVersionIndex(["~master", "~somebranch"]) == 0);
 	assert(getBestVersionIndex(["1.0.0", "1.0.1-alpha"]) == 1);
+}
+
+/** Detect README markup format from a file extension (including the leading dot). */
+string readmeFormatFromExtension(string ext) @safe
+{
+	import std.uni : sicmp;
+	if (ext.sicmp(".md") == 0 || ext.sicmp(".markdown") == 0)
+		return "markdown";
+	if (ext.sicmp(".adoc") == 0 || ext.sicmp(".asciidoc") == 0 || ext.sicmp(".asc") == 0)
+		return "asciidoc";
+	return "plain";
+}
+
+unittest {
+	assert(readmeFormatFromExtension(".md") == "markdown");
+	assert(readmeFormatFromExtension(".ADOC") == "asciidoc");
+	assert(readmeFormatFromExtension(".asciidoc") == "asciidoc");
+	assert(readmeFormatFromExtension(".txt") == "plain");
+	assert(readmeFormatFromExtension("") == "plain");
+}
+
+/**
+	Render a package README to HTML for the Info tab.
+
+	Markdown uses vibe-d's filter (no inline HTML). AsciiDoc uses asciidoctor-d
+	in secure fragment mode. Plain text is HTML-escaped inside a pre block.
+*/
+string renderReadmeHtml(string contents, string format,
+	string delegate(string, bool) urlFilter = null)
+{
+	import vibe.textfilter.html : htmlEscape;
+
+	switch (format.toLower) {
+		case "markdown", "md":
+			import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
+			scope msettings = new MarkdownSettings;
+			msettings.flags = MarkdownFlags.backtickCodeBlocks | MarkdownFlags.noInlineHtml | MarkdownFlags.tables;
+			msettings.headingBaseLevel = 2;
+			if (urlFilter !is null)
+				msettings.urlFilter = urlFilter;
+			return filterMarkdown(contents, msettings);
+		case "asciidoc", "adoc":
+			return renderAsciidocReadme(contents, urlFilter);
+		default:
+			return `<pre class="plain-readme">` ~ htmlEscape(contents) ~ `</pre>`;
+	}
+}
+
+private string renderAsciidocReadme(string contents,
+	string delegate(string, bool) urlFilter)
+{
+	import asciidoctor : ConvertOptions, convert;
+	import std.regex : ctRegex, replaceAll;
+	import std.uni : toLower;
+
+	ConvertOptions opts;
+	opts.backend = "html5";
+	opts.standalone = false;
+	opts.secure = true;
+	auto html = convert(contents, opts);
+
+	// Rewrite relative links/images similar to Markdown urlFilter when provided.
+	if (urlFilter !is null) {
+		static hrefRe = ctRegex!(`(?i)(<(?:a\s[^>]*href|img\s[^>]*src)=["'])([^"']+)(["'])`);
+		html = replaceAll!((c) {
+			auto url = c[2];
+			immutable isImage = c[1].toLower.canFind("<img");
+			return c[1] ~ urlFilter(url, isImage) ~ c[3];
+		})(html, hrefRe);
+	}
+
+	return sanitizeReadmeHtml(html);
+}
+
+/** Strip dangerous tags/attributes from README HTML (defense in depth). */
+string sanitizeReadmeHtml(string html)
+{
+	import std.regex : ctRegex, replaceAll;
+
+	// Drop script/style/iframe/object/embed/link/meta/form controls and their contents.
+	static dangerous = ctRegex!(
+		`(?is)<\s*(script|style|iframe|object|embed|link|meta|form|input|button|textarea|select)(\s[^>]*)?>.*?<\s*/\s*\1\s*>|<\s*(script|style|iframe|object|embed|link|meta|form|input|button|textarea|select)(\s[^>]*)?/?>`);
+	html = replaceAll(html, dangerous, "");
+
+	// Strip inline event handlers and javascript: URLs.
+	static onAttr = ctRegex!(`(?i)\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)`);
+	html = replaceAll(html, onAttr, "");
+	static jsUrl = ctRegex!(`(?i)\s*(href|src)\s*=\s*(['"])\s*javascript:[^'"]*\2`);
+	html = replaceAll(html, jsUrl, ` $1="#"`);
+
+	return html;
+}
+
+unittest {
+	auto safe = sanitizeReadmeHtml(`<p>Hi</p><script>alert(1)</script><a href="javascript:alert(1)">x</a>`);
+	assert(safe.canFind("<p>Hi</p>"));
+	assert(!safe.canFind("<script"));
+	assert(!safe.canFind("javascript:"));
 }

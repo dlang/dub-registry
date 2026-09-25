@@ -314,6 +314,13 @@ class DubRegistry {
 			nfo["date"] = v.date.toISOExtString();
 			nfo["readme"] = v.readme;
 			nfo["commitID"] = v.commitID;
+			auto fmt = v.readmeFormat;
+			// Historical default: Info tab always ran the Markdown filter.
+			if (!fmt.length)
+				fmt = "markdown";
+			nfo["readmeFormat"] = fmt;
+			if (v.readmeFile.length)
+				nfo["readmeFile"] = v.readmeFile;
 		}
 		nfo["version"] = v.version_;
 
@@ -590,30 +597,35 @@ class DubRegistry {
 
 		try {
 			auto files = rep.listFiles(reference.sha, InetPath("/"));
-			// check exactly for readme.me
-			ptrdiff_t readme;
-			readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README.MD"));
-			if (readme == -1) {
-				// check exactly for readme
-				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.equal("README"));
+			// Prefer README.md, then README.adoc / README.asciidoc, then bare README, then other README*
+			ptrdiff_t readme = -1;
+			foreach (name; ["README.MD", "README.ADOC", "README.ASCIIDOC", "README"]) {
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file
+					&& a.path.head.name.asUpperCase.equal(name));
+				if (readme != -1) break;
 			}
 			if (readme == -1) {
 				// check for all other readmes such as README.txt, README.jp.md, etc.
-				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file && a.path.head.name.asUpperCase.startsWith("README"));
+				readme = files.countUntil!(a => a.type == RepositoryFile.Type.file
+					&& a.path.head.name.asUpperCase.startsWith("README"));
 			}
 
 			if (readme != -1) {
-				rep.readFile(reference.sha, files[readme].path, (scope input) {
+				auto readmePath = files[readme].path;
+				auto readmeName = readmePath.head.name.to!string;
+				auto readmeExt = readmePath.head.extension.to!string;
+				rep.readFile(reference.sha, readmePath, (scope input) @safe {
 					dbver.readme = input.readAllUTF8();
-					auto ext = files[readme].path.head.extension;
-					// endsWith doesn't like to work with asLowerCase
-					dbver.readmeMarkdown = ext.sicmp(".md") == 0;
+					dbver.readmeFile = readmeName;
+					import dubregistry.viewutils : readmeFormatFromExtension;
+					dbver.readmeFormat = readmeFormatFromExtension(readmeExt);
+					dbver.readmeMarkdown = dbver.readmeFormat == "markdown";
 				});
-			} else logDiagnostic("No README.md found for %s %s", dbpack.name, ver);
+			} else logDiagnostic("No README found for %s %s", dbpack.name, ver);
 
 			// TODO: load in example(s), sample(s), test(s) and docs for the view package page here.
 			// possibly also parsing the README.md file for a documentation link
-		} catch (Exception e) { logDiagnostic("Failed to read README.md for %s %s: %s", dbpack.name, ver, e.msg); }
+		} catch (Exception e) { logDiagnostic("Failed to read README for %s %s: %s", dbpack.name, ver, e.msg); }
 
 		if (m_db.hasVersion(dbpack.name, ver)) {
 			logDebug("Updating existing version info.");

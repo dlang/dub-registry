@@ -1,0 +1,83 @@
+/* Lightweight AsciiDoc fragment styles for the package Info tab */
+
+.asciidoc-body #header h1 {
+  margin-top: 0;
+}
+
+.asciidoc-body .sect1 + .sect1,
+.asciidoc-body .sect2 + .sect2 {
+  margin-top: 1.5em;
+}
+
+.asciidoc-body .listingblock,
+.asciidoc-body .literalblock {
+  margin: 1em 0;
+}
+
+.asciidoc-body .listingblock pre,
+.asciidoc-body .literalblock pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f7f7f7;
+  border-radius: 3px;
+}
+
+.asciidoc-body .admonitionblock {
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  border-left: 4px solid #ddd;
+  background: #f8f8f8;
+}
+
+.asciidoc-body .admonitionblock.note { border-left-color: #3572A5; }
+.asciidoc-body .admonitionblock.tip { border-left-color: #2ea44f; }
+.asciidoc-body .admonitionblock.warning,
+.asciidoc-body .admonitionblock.caution { border-left-color: #d73a49; }
+.asciidoc-body .admonitionblock.important { border-left-color: #e36209; }
+
+.asciidoc-body .admonitionblock .title {
+  font-weight: bold;
+  margin-bottom: 0.25em;
+}
+
+.asciidoc-body .imageblock {
+  margin: 1em 0;
+}
+
+.asciidoc-body .imageblock img {
+  max-width: 100%;
+}
+
+.asciidoc-body .quoteblock {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 4px solid #ddd;
+  color: #555;
+}
+
+.asciidoc-body .sidebarblock {
+  margin: 1em 0;
+  padding: 1em;
+  background: #f6f8fa;
+  border-radius: 3px;
+}
+
+.asciidoc-body table.tableblock {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+}
+
+.asciidoc-body table.tableblock th,
+.asciidoc-body table.tableblock td {
+  border: 1px solid #ddd;
+  padding: 6px 13px;
+}
+
+.asciidoc-body .plain-readme {
+  white-space: pre-wrap;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 85%;
+}

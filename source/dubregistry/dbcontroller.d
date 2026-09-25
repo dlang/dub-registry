@@ -703,7 +703,12 @@ struct DbPackageVersion {
 	@optional string commitID;
 	Json info;
 	@optional string readme;
+	/// Legacy flag kept for older DB documents; prefer `readmeFormat`.
 	@optional bool readmeMarkdown;
+	/// One of: "markdown", "asciidoc", "plain". Empty means derive from `readmeMarkdown`.
+	@optional string readmeFormat;
+	/// Original README filename in the repository (e.g. README.adoc), for link rewriting.
+	@optional string readmeFile;
 	@optional string docFolder;
 }
 
