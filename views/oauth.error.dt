@@ -1,0 +1,11 @@
+extends layout
+
+block title
+	- title = "Authorization error";
+
+block body
+	.inputForm
+		h1 Authorization error
+		p.redAlert= error
+		p
+			a.blind(href="#{req.rootDir}") Back to the registry

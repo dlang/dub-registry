@@ -16,6 +16,8 @@ import dubregistry.registry;
 import dubregistry.web;
 import dubregistry.api;
 import dubregistry.config;
+import dubregistry.oauth;
+import dubregistry.oauthstore;
 
 import std.algorithm : sort;
 import std.process : environment;
@@ -155,6 +157,7 @@ void main()
 	s_registry = new DubRegistry(regsettings);
 
 	UserManController userdb;
+	OAuthStore oauthStore;
 
 	if (!s_mirror.length) {
 		// user management
@@ -184,6 +187,7 @@ void main()
 		}
 
 		userdb = createUserManController(udbsettings);
+		oauthStore = new OAuthStore(databaseName);
 	}
 
 	if (noServe) {
@@ -193,7 +197,9 @@ void main()
 	}
 
 	// web front end
-	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb);
+	if (userdb && oauthStore)
+		registerDubRegistryOAuth(router, userdb, oauthStore, appConfig);
+	s_web = router.registerDubRegistryWebFrontend(s_registry, userdb, oauthStore);
 	router.registerDubRegistryAPI(s_registry);
 
 	// check whether dummy data should be loaded

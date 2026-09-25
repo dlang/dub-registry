@@ -1,0 +1,35 @@
+extends layout
+
+block title
+	- title = "Authorize application";
+
+block body
+	- if(error.length)
+		p.redAlert= error
+
+	.inputForm
+		h1 Authorize application
+			p.light A local application wants to manage packages on your DUB account (signed in as #[strong #{user.name}]).
+
+		p
+			strong Client:
+			|  #{ar.clientId}
+		p
+			strong Redirect:
+			|  #[code #{ar.redirectUri}]
+		p
+			strong Access:
+			|  manage your packages (register, update, settings)
+
+		form(method="POST", action="#{req.rootDir}oauth/authorize")
+			input(type="hidden", name="response_type", value=ar.responseType)
+			input(type="hidden", name="client_id", value=ar.clientId)
+			input(type="hidden", name="redirect_uri", value=ar.redirectUri)
+			input(type="hidden", name="state", value=ar.state)
+			input(type="hidden", name="code_challenge", value=ar.codeChallenge)
+			input(type="hidden", name="code_challenge_method", value=ar.codeChallengeMethod)
+			input(type="hidden", name="scope", value=ar.scopeName)
+			p
+				button(type="submit", name="allow", value="1") Authorize
+				|  
+				button.danger(type="submit", name="allow", value="0") Deny

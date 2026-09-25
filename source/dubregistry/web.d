@@ -7,6 +7,8 @@ module dubregistry.web;
 
 import dubregistry.dbcontroller;
 import dubregistry.internal.utils;
+import dubregistry.oauth;
+import dubregistry.oauthstore;
 import dubregistry.registry;
 import dubregistry.repositories.bitbucket;
 import dubregistry.repositories.github;
@@ -18,6 +20,7 @@ import std.array;
 import std.file;
 import std.path;
 import std.string;
+import std.typecons : Nullable;
 import userman.db.controller : UserManController;
 import userman.web;
 import vibe.d;
@@ -26,11 +29,11 @@ static import userman.api;
 static import userman.db.controller;
 
 
-DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman)
+DubRegistryWebFrontend registerDubRegistryWebFrontend(URLRouter router, DubRegistry registry, UserManController userman, OAuthStore oauthStore = null)
 {
 	DubRegistryWebFrontend webfrontend;
 	if (userman) {
-		auto ff = new DubRegistryFullWebFrontend(registry, userman);
+		auto ff = new DubRegistryFullWebFrontend(registry, userman, oauthStore);
 		webfrontend = ff;
 		router.registerWebInterface(ff);
 		router.registerUserManWebInterface(userman);
@@ -497,12 +500,14 @@ unittest
 class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 	private {
 		UserManWebAuthenticator m_usermanauth;
+		OAuthStore m_oauthStore;
 	}
 
-	this(DubRegistry registry, UserManController userman)
+	this(DubRegistry registry, UserManController userman, OAuthStore oauthStore = null)
 	{
 		super(registry, userman);
 		m_usermanauth = new UserManWebAuthenticator(createLocalUserManAPI(userman));
+		m_oauthStore = oauthStore;
 	}
 
 	void querySearch(string q = "")
@@ -966,6 +971,11 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 
 	private User performAuth(HTTPServerRequest req, HTTPServerResponse res)
 	{
+		auto bearer = tryBearerAuth(req, m_userman, m_oauthStore);
+		if (!bearer.isNull)
+			return bearer.get;
+		if (extractBearerToken(req).length)
+			throw new HTTPStatusException(HTTPStatus.unauthorized, "Invalid access token");
 		return m_usermanauth.performAuth(req, res);
 	}
 }
