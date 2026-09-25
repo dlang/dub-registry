@@ -15,9 +15,19 @@ Body params: (application/x-www-form-urlencoded, multipart/form-data or applicat
 
 ## `POST /api/packages/:packageName/update/github`
 
-Queues an update for the specified package. Compatible with GitHub webhooks and only triggers on `create` events. Must pass secret as query param and not in GitHub webhook settings.
+Queues an update for the specified package. Compatible with GitHub webhooks. Must pass the package secret as a query param on the payload URL (not in GitHub’s webhook “Secret” field).
 
-This can be configured in Github like this:
+Triggers on these `X-GitHub-Event` values:
+
+| Event | When it helps |
+| --- | --- |
+| `release` | Preferred for release-driven packages. Fires for release created, edited, published, unpublished, or deleted. |
+| `create` | Tag or branch creation (legacy / tag-only workflows). Branch creates are noisy if you use feature branches. |
+| `delete` | Tag or branch deletion. A package update removes registry versions whose refs no longer exist. |
+
+Webhook `ping` validation succeeds if the hook listens for **any** of those events.
+
+This can be configured in GitHub like this (enable **Releases**, and optionally **Branch or tag deletion**; **Branch or tag creation** remains supported):
 
 ![GitHub webhook example for DUB package integration](github-webhook.png)
 

@@ -201,7 +201,14 @@ override {
 
 	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init)
 	{
-		if (event == "create") {
+		import std.algorithm : canFind;
+
+		// create: tag/branch created
+		// release: GitHub Releases lifecycle (created/edited/published/unpublished/deleted/…)
+		// delete: tag/branch removed (updatePackage drops versions for missing refs)
+		static immutable acceptedEvents = ["create", "release", "delete"];
+
+		if (acceptedEvents.canFind(event)) {
 			return postUpdate(_name, secret);
 		} else if (event == "ping") {
 			enforceBadRequest(hook.type == Json.Type.object, "hook is not of type json");
@@ -209,15 +216,16 @@ override {
 			enforceBadRequest(events.type == Json.Type.array, "Hook events must be of type array");
 
 			foreach (ev; events[])
-				if (ev.type == Json.Type.string && ev.get!string == "create")
+				if (ev.type == Json.Type.string && acceptedEvents.canFind(ev.get!string))
 					return "valid";
 
 			// only add package error message on valid secret
 			if (m_registry.validatePackageSecret(_name, secret))
 				m_registry.addPackageError(_name,
-					"GitHub hook configuration is invalid. Hook is missing 'create' event. (Tags or branches)");
+					"GitHub hook configuration is invalid. Hook is missing a supported event "
+					~ "(create, release, or delete).");
 
-			return "invalid hook - create event missing";
+			return "invalid hook - supported event missing";
 		} else {
 			return "ignored event " ~ event;
 		}

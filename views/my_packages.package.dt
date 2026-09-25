@@ -124,7 +124,7 @@ block body
 		- if (permAdmin)
 			h3 Update Hooks
 			p You can POST to a special endpoint on the dub registry to trigger a manual package update.
-			p Setup these hooks in GitHub, GitLab or some other service you use to trigger when you push a new tag to make them available on the registry as quickly as possible.
+			p Setup these hooks in GitHub, GitLab or some other service you use to trigger when you publish a release or push a new tag, so versions appear on the registry as quickly as possible. For GitHub, prefer the Releases event (optionally also Branch or tag deletion); Branch or tag creation still works but is noisier if you create many branches.
 			.inputForm
 				- auto apiUrl = req.fullURL;
 				- apiUrl.path = typeof(apiUrl.path).init;
@@ -145,7 +145,7 @@ block body
 						label(for="secret") Secret:
 						input#secret(type="text", readonly, autocomplete="off", value=placeholder)
 					p.warn This secret will only be shown once, please make sure to note it down.
-					p Read more in the #[a(href="https://github.com/dlang/dub/blob/master/docs/http-update.md", target="_blank") API documentation]
+					p Read more in the #[a(href="https://github.com/dlang/dub-registry/blob/master/api-docs/http-update.md", target="_blank") API documentation]
 					hr
 				- if (secretBcrypt.length)
 					form(method="POST", action="#{req.rootDir}my_packages/#{packageName}/unset_secret", onsubmit="return confirm('Are you sure you want to revoke the secret and disable webhook support? Existing update webhooks will stop working.')")
