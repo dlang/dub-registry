@@ -267,7 +267,10 @@ class DubRegistryWebFrontend {
 			logDebug("%s %s", packageInfo["id"].toString(), verinfo.downloadURL);
 
 			// add download to statistic
-			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
+			auto userAgent = req.headers.get("User-agent", null);
+			if (shouldCountDownload(req.method, userAgent))
+				m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, userAgent);
+
 			if (verinfo.downloadURL.length > 0) {
 				// redirect to hosting service specific URL
 				redirect(verinfo.downloadURL);
@@ -492,6 +495,39 @@ unittest
 	assert(decodePackageVersion("~next%2Fv0.6.1") == "~next/v0.6.1");
 	assert(decodePackageVersion("~master") == "~master");
 	assert(decodePackageVersion("0.6.1") == "0.6.1");
+}
+
+/**
+	Decides whether a package download should be added to the statistics.
+
+	Only downloads made by DUB itself are counted. Requests from CI
+	environments (tagged with `; ci` in the User-Agent), crawlers and
+	`HEAD` requests are ignored.
+*/
+private bool shouldCountDownload(HTTPMethod method, string userAgent)
+{
+	import std.algorithm : canFind;
+	import std.uni : toLower;
+
+	if (method == HTTPMethod.HEAD) return false;
+	if (!userAgent.startsWith("dub/")) return false;
+	if (userAgent.canFind("; ci")) return false;
+	auto ua = userAgent.toLower;
+	foreach (bot; ["bot", "crawler", "spider"])
+		if (ua.canFind(bot)) return false;
+	return true;
+}
+
+unittest
+{
+	enum dubUA = "dub/1.42.0 (std.net.curl; +https://github.com/rejectedsoftware/dub)";
+	assert(shouldCountDownload(HTTPMethod.GET, dubUA));
+	assert(!shouldCountDownload(HTTPMethod.HEAD, dubUA));
+	assert(!shouldCountDownload(HTTPMethod.GET, "dub/1.42.0 (std.net.curl; ci; +https://github.com/rejectedsoftware/dub)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "dub/1.42.0 (SomeBot)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "Mozilla/5.0 (compatible; Googlebot/2.1)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "curl/8.5.0"));
+	assert(!shouldCountDownload(HTTPMethod.GET, null));
 }
 
 class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
