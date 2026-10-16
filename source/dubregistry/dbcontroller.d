@@ -71,15 +71,8 @@ class DbController {
 		fts["weights"] = Bson.emptyObject;
 		foreach (k, w; keyWeights)
 		{
-			// @@BUG@@ <https://github.com/dlang/dmd/issues/23642>
-			version (none)
 			fts["key"][k] = Bson("text");
-			else
-			(*("key" in fts))[k] = Bson("text");
-			version (none)
 			fts["weights"][k] = Bson(w);
-			else
-			(*("weights" in fts))[k] = Bson(w);
 		}
 		fts["name"] = "packages_full_text_search_index_v4";
 		fts["background"] = true;
