@@ -133,6 +133,8 @@ void main()
 		}
 	}
 
+	HTTPClient.setUserAgentString("dub-registry (+https://code.dlang.org/)");
+
 	GithubRepositoryProvider.register(appConfig.ghauth);
 	BitbucketRepositoryProvider.register(appConfig.bbuser, appConfig.bbpassword);
 	if (appConfig.glurl.length) GitLabRepositoryProvider.register(appConfig.glauth, appConfig.glurl);
