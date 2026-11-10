@@ -42,6 +42,42 @@
   margin-bottom: 0.25em;
 }
 
+/* Admonitions are layout tables. markdown.css draws borders and zebra rows on every table. */
+.markdown-body.asciidoc-body .admonitionblock > table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: separate;
+  background: transparent;
+  overflow: visible;
+  word-break: normal;
+}
+
+.markdown-body.asciidoc-body .admonitionblock > table tr,
+.markdown-body.asciidoc-body .admonitionblock > table tr:nth-child(2n) {
+  background: transparent;
+  border-top: 0;
+}
+
+.markdown-body.asciidoc-body .admonitionblock > table td {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-body.asciidoc-body .admonitionblock > table td.icon {
+  width: 1%;
+  padding-right: 0.75em;
+  vertical-align: top;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.markdown-body.asciidoc-body .admonitionblock > table td.content {
+  vertical-align: top;
+}
+
 .asciidoc-body .imageblock {
   margin: 1em 0;
 }

@@ -154,7 +154,9 @@ unittest {
 	Render a package README to HTML for the Info tab.
 
 	Markdown uses vibe-d's filter (no inline HTML). AsciiDoc uses asciidoctor-d
-	in secure fragment mode. Plain text is HTML-escaped inside a pre block.
+	in secure fragment mode. Link and image URLs are allowlisted there
+	(`http`, `https`, `mailto`, fragments, relative paths). Plain text is
+	HTML-escaped inside a pre block.
 */
 string renderReadmeHtml(string contents, string format,
 	string delegate(string, bool) urlFilter = null)
@@ -181,50 +183,27 @@ private string renderAsciidocReadme(string contents,
 	string delegate(string, bool) urlFilter)
 {
 	import asciidoctor : ConvertOptions, convert;
-	import std.regex : ctRegex, replaceAll;
-	import std.uni : toLower;
 
 	ConvertOptions opts;
 	opts.backend = "html5";
 	opts.standalone = false;
 	opts.secure = true;
-	auto html = convert(contents, opts);
-
-	// Rewrite relative links/images similar to Markdown urlFilter when provided.
-	if (urlFilter !is null) {
-		static hrefRe = ctRegex!(`(?i)(<(?:a\s[^>]*href|img\s[^>]*src)=["'])([^"']+)(["'])`);
-		html = replaceAll!((c) {
-			auto url = c[2];
-			immutable isImage = c[1].toLower.canFind("<img");
-			return c[1] ~ urlFilter(url, isImage) ~ c[3];
-		})(html, hrefRe);
-	}
-
-	return sanitizeReadmeHtml(html);
-}
-
-/** Strip dangerous tags/attributes from README HTML (defense in depth). */
-string sanitizeReadmeHtml(string html)
-{
-	import std.regex : ctRegex, replaceAll;
-
-	// Drop script/style/iframe/object/embed/link/meta/form controls and their contents.
-	static dangerous = ctRegex!(
-		`(?is)<\s*(script|style|iframe|object|embed|link|meta|form|input|button|textarea|select)(\s[^>]*)?>.*?<\s*/\s*\1\s*>|<\s*(script|style|iframe|object|embed|link|meta|form|input|button|textarea|select)(\s[^>]*)?/?>`);
-	html = replaceAll(html, dangerous, "");
-
-	// Strip inline event handlers and javascript: URLs.
-	static onAttr = ctRegex!(`(?i)\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)`);
-	html = replaceAll(html, onAttr, "");
-	static jsUrl = ctRegex!(`(?i)\s*(href|src)\s*=\s*(['"])\s*javascript:[^'"]*\2`);
-	html = replaceAll(html, jsUrl, ` $1="#"`);
-
-	return html;
+	opts.urlFilter = urlFilter;
+	return convert(contents, opts);
 }
 
 unittest {
-	auto safe = sanitizeReadmeHtml(`<p>Hi</p><script>alert(1)</script><a href="javascript:alert(1)">x</a>`);
-	assert(safe.canFind("<p>Hi</p>"));
-	assert(!safe.canFind("<script"));
-	assert(!safe.canFind("javascript:"));
+	auto html = renderReadmeHtml("link:javascript:alert(1)[click]\n\nhttps://example.com[ok]\n", "asciidoc");
+	assert(html.canFind("click"));
+	assert(!html.canFind("javascript:"));
+	assert(html.canFind(`href="https://example.com"`));
+}
+
+unittest {
+	auto html = renderReadmeHtml("image:photo.png[Alt]\n", "asciidoc", (string url, bool isImage) {
+		if (isImage)
+			return "https://cdn.example/" ~ url;
+		return url;
+	});
+	assert(html.canFind(`src="https://cdn.example/photo.png"`));
 }

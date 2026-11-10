@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
+		"asciidoctor-d": "0.4.0",
 		"botan": "1.13.8",
 		"botan-math": "1.0.4",
 		"diet-ng": "1.8.4",
