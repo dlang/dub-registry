@@ -9,7 +9,6 @@ module dubregistry.oauth;
 
 import dubregistry.config;
 import dubregistry.internal.utils : generateRandomHash;
-import dubregistry.oauthflags;
 import dubregistry.oauthstore;
 
 import core.time;
@@ -48,6 +47,7 @@ enum oauthDefaultScope = "packages";
 private __gshared string g_githubClientId;
 private __gshared string g_githubClientSecret;
 private __gshared string g_serviceURL;
+private __gshared bool githubOAuthEnabled;
 
 /** Registers native-app OAuth and optional GitHub login routes.
 
@@ -62,6 +62,9 @@ void registerDubRegistryOAuth(URLRouter router, UserManController userman,
 	githubOAuthEnabled = g_githubClientId.length > 0 && g_githubClientSecret.length > 0;
 
 	auto oauth = new DubRegistryOAuth(userman, store);
+	// UserMan compiles views/userman.login.dt without this package on the
+	// import path, so the GitHub link cannot live in that file.
+	router.get("/login", (req, res) @trusted { oauth.getLogin(req, res); });
 	router.get("/oauth/authorize", (req, res) @trusted { oauth.getAuthorize(req, res); });
 	router.post("/oauth/authorize", (req, res) @trusted { oauth.postAuthorize(req, res); });
 	router.post("/oauth/token", (req, res) @trusted { oauth.postToken(req, res); });
@@ -440,6 +443,15 @@ private final class DubRegistryOAuth {
 			m_store.deleteToken(sha256Hex(token));
 		res.statusCode = HTTPStatus.ok;
 		res.writeBody("", "text/plain");
+	}
+
+	void getLogin(HTTPServerRequest req, HTTPServerResponse res)
+	{
+		string error = req.query.get("error", "");
+		string redirect = req.query.get("redirect", "");
+		auto settings = m_userman.settings;
+		bool githubLogin = githubOAuthEnabled;
+		res.render!("oauth.login.dt", req, error, redirect, settings, githubLogin);
 	}
 
 	void getGitHubLogin(HTTPServerRequest req, HTTPServerResponse res)
