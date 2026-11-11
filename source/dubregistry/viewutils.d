@@ -8,6 +8,7 @@ module dubregistry.viewutils;
 import std.datetime;
 import std.string;
 import vibe.data.json;
+import vibe.inet.url : URL;
 import vibe.textfilter.urlencode;
 
 string packageVersionURL(string rootDir, string packageName, string versionString)
@@ -137,4 +138,36 @@ unittest {
 	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
 	assert(getBestVersionIndex(["~master", "~somebranch"]) == 0);
 	assert(getBestVersionIndex(["1.0.0", "1.0.1-alpha"]) == 1);
+}
+
+/** Base URL for the webhook fields on the package page.
+
+	The page URL can carry `?secret=` and `#repository` after enabling a
+	secret. Those must not leak into the URL the user copies into GitHub.
+	A default port such as `:443` is dropped too.
+*/
+URL webhookDisplayBase(URL page)
+{
+	page.path = typeof(page.path).init;
+	page.queryString = null;
+	page.anchor = null;
+	if (page.port == page.defaultPort)
+		page.port = 0;
+	return page;
+}
+
+unittest
+{
+	auto page = URL("https://code.dlang.org:443/my_packages/foo?secret=SECRET#repository");
+	auto base = webhookDisplayBase(page);
+	assert(base.queryString.length == 0);
+	assert(base.anchor.length == 0);
+	auto text = base.toString();
+	assert(text.indexOf(":443") < 0, text);
+	assert(text.indexOf("secret") < 0, text);
+	assert(text.indexOf("my_packages") < 0, text);
+	assert(text.indexOf("#") < 0, text);
+	auto shown = text ~ "/api/packages/foo/update/github?secret=SECRET";
+	assert(shown == "https://code.dlang.org/api/packages/foo/update/github?secret=SECRET"
+		|| shown == "https://code.dlang.org//api/packages/foo/update/github?secret=SECRET", shown);
 }
