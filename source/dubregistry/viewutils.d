@@ -8,6 +8,13 @@ module dubregistry.viewutils;
 import std.datetime;
 import std.string;
 import vibe.data.json;
+import vibe.inet.url : URL;
+import vibe.textfilter.urlencode;
+
+string packageVersionURL(string rootDir, string packageName, string versionString)
+{
+	return rootDir ~ "packages/" ~ urlEncode(packageName) ~ "/" ~ urlEncode(versionString);
+}
 
 string formatDate(Json date)
 {
@@ -123,9 +130,44 @@ size_t getBestVersionIndex(R)(R versions)
 }
 
 unittest {
+	assert(packageVersionURL("/", "example-package", "~next/v0.6.1") == "/packages/example-package/~next%2Fv0.6.1");
+	assert(packageVersionURL("/", "example-package", "~master") == "/packages/example-package/~master");
+	assert(packageVersionURL("/", "example-package", "0.6.1") == "/packages/example-package/0.6.1");
 	assert(getBestVersionIndex(["~master", "0.0.1", "1.0.0"]) == 2);
 	assert(getBestVersionIndex(["~master", "0.0.1-alpha"]) == 1);
 	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
 	assert(getBestVersionIndex(["~master", "~somebranch"]) == 0);
 	assert(getBestVersionIndex(["1.0.0", "1.0.1-alpha"]) == 1);
+}
+
+/** Base URL for the webhook fields on the package page.
+
+	The page URL can carry `?secret=` and `#repository` after enabling a
+	secret. Those must not leak into the URL the user copies into GitHub.
+	A default port such as `:443` is dropped too.
+*/
+URL webhookDisplayBase(URL page)
+{
+	page.path = typeof(page.path).init;
+	page.queryString = null;
+	page.anchor = null;
+	if (page.port == page.defaultPort)
+		page.port = 0;
+	return page;
+}
+
+unittest
+{
+	auto page = URL("https://code.dlang.org:443/my_packages/foo?secret=SECRET#repository");
+	auto base = webhookDisplayBase(page);
+	assert(base.queryString.length == 0);
+	assert(base.anchor.length == 0);
+	auto text = base.toString();
+	assert(!text.canFind(":443"), text);
+	assert(!text.canFind("secret"), text);
+	assert(!text.canFind("my_packages"), text);
+	assert(!text.canFind("#"), text);
+	auto shown = text ~ "/api/packages/foo/update/github?secret=SECRET";
+	assert(shown == "https://code.dlang.org/api/packages/foo/update/github?secret=SECRET"
+		|| shown == "https://code.dlang.org//api/packages/foo/update/github?secret=SECRET", shown);
 }

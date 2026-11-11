@@ -130,6 +130,47 @@ struct RepositoryFile {
 	Type type;
 }
 
+/** Constructs a `RepositoryFile.path` from a decoded path of a hosting API.
+
+	Hoster APIs report file paths in decoded form (e.g. `"The Book of EVE.md"`),
+	whereas `InetPath` expects URI-encoded path strings. This percent-encodes
+	each path segment so that names containing spaces, non-ASCII characters or
+	literal `%` sequences are represented correctly.
+
+	Params:
+		decoded_path = decoded repository path using `/` separators, without a
+			leading `/`
+
+	Returns:
+		the corresponding absolute `InetPath`
+
+	Throws:
+		`PathValidationException` if the encoded path is not a valid `InetPath`
+*/
+package InetPath repositoryFilePath(string decoded_path)
+@safe {
+	import std.algorithm : map, splitter;
+	import std.array : join;
+	import std.uri : encodeComponent;
+
+	auto encoded = () @trusted {
+		return decoded_path.splitter('/').map!encodeComponent.join("/");
+	} ();
+	return InetPath("/" ~ encoded);
+}
+
+unittest {
+	import std.conv : to;
+
+	assert(repositoryFilePath("README.md") == InetPath("/README.md"));
+	assert(repositoryFilePath("The Book of EVE.md").toString() == "/The%20Book%20of%20EVE.md");
+	assert(repositoryFilePath("The Book of EVE.md").head.name.to!string == "The Book of EVE.md");
+	assert(repositoryFilePath("src/foo bar.d").toString() == "/src/foo%20bar.d");
+	assert(repositoryFilePath("foo%20bar.md").head.name.to!string == "foo%20bar.md");
+	assert(repositoryFilePath("héllo.md").head.name.to!string == "héllo.md");
+	assert(repositoryFilePath("a/b/c.txt").toString() == "/a/b/c.txt");
+}
+
 package Json readJson(string url, bool sanitize = false, bool cache_priority = false,
 	RequestModifier request_modifier = null)
 @safe {
