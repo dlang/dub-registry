@@ -7,6 +7,7 @@ module dubregistry.viewutils;
 
 import std.datetime;
 import std.string;
+import std.algorithm : canFind;
 import vibe.data.json;
 import vibe.textfilter.urlencode;
 
@@ -137,4 +138,81 @@ unittest {
 	assert(getBestVersionIndex(["~somebranch", "~master"]) == 1);
 	assert(getBestVersionIndex(["~master", "~somebranch"]) == 0);
 	assert(getBestVersionIndex(["1.0.0", "1.0.1-alpha"]) == 1);
+}
+
+/** Detect README markup format from a file extension (including the leading dot). */
+string readmeFormatFromExtension(string ext) @safe
+{
+	import std.uni : sicmp;
+	if (ext.sicmp(".md") == 0 || ext.sicmp(".markdown") == 0)
+		return "markdown";
+	if (ext.sicmp(".adoc") == 0 || ext.sicmp(".asciidoc") == 0 || ext.sicmp(".asc") == 0)
+		return "asciidoc";
+	return "plain";
+}
+
+unittest {
+	assert(readmeFormatFromExtension(".md") == "markdown");
+	assert(readmeFormatFromExtension(".ADOC") == "asciidoc");
+	assert(readmeFormatFromExtension(".asciidoc") == "asciidoc");
+	assert(readmeFormatFromExtension(".txt") == "plain");
+	assert(readmeFormatFromExtension("") == "plain");
+}
+
+/**
+	Render a package README to HTML for the Info tab.
+
+	Markdown uses vibe-d's filter (no inline HTML). AsciiDoc uses asciidoctor-d
+	in secure fragment mode. Link and image URLs are allowlisted there
+	(`http`, `https`, `mailto`, fragments, relative paths). Plain text is
+	HTML-escaped inside a pre block.
+*/
+string renderReadmeHtml(string contents, string format,
+	string delegate(string, bool) urlFilter = null)
+{
+	import vibe.textfilter.html : htmlEscape;
+
+	switch (format.toLower) {
+		case "markdown", "md":
+			import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
+			scope msettings = new MarkdownSettings;
+			msettings.flags = MarkdownFlags.backtickCodeBlocks | MarkdownFlags.noInlineHtml | MarkdownFlags.tables;
+			msettings.headingBaseLevel = 2;
+			if (urlFilter !is null)
+				msettings.urlFilter = urlFilter;
+			return filterMarkdown(contents, msettings);
+		case "asciidoc", "adoc":
+			return renderAsciidocReadme(contents, urlFilter);
+		default:
+			return `<pre class="plain-readme">` ~ htmlEscape(contents) ~ `</pre>`;
+	}
+}
+
+private string renderAsciidocReadme(string contents,
+	string delegate(string, bool) urlFilter)
+{
+	import asciidoctor : ConvertOptions, convert;
+
+	ConvertOptions opts;
+	opts.backend = "html5";
+	opts.standalone = false;
+	opts.secure = true;
+	opts.urlFilter = urlFilter;
+	return convert(contents, opts);
+}
+
+unittest {
+	auto html = renderReadmeHtml("link:javascript:alert(1)[click]\n\nhttps://example.com[ok]\n", "asciidoc");
+	assert(html.canFind("click"));
+	assert(!html.canFind("javascript:"));
+	assert(html.canFind(`href="https://example.com"`));
+}
+
+unittest {
+	auto html = renderReadmeHtml("image:photo.png[Alt]\n", "asciidoc", (string url, bool isImage) {
+		if (isImage)
+			return "https://cdn.example/" ~ url;
+		return url;
+	});
+	assert(html.canFind(`src="https://cdn.example/photo.png"`));
 }
