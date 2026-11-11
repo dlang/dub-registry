@@ -45,7 +45,7 @@ block title
 
 block css
 	link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/common.css")
-	- if (readmeContents.length)
+	- if (readmeContents.length || readmeHtmlOmitted)
 		link(rel="stylesheet", type="text/css", href="#{req.rootDir}styles/markdown.css")
 
 block body
@@ -104,7 +104,7 @@ block body
 						|= "- " ~ sp["description"].opt!string
 
 		.subtabsHeader
-			- if (readmeContents.length)
+			- if (readmeContents.length || readmeHtmlOmitted)
 				a.tab(class=activeTab == "info" ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=info") Info
 			- foreach (i, sample; sampleURLs)
 				a.tab(class=activeTab == "sample_"~i.to!string ? "active" : "", href="#{req.rootDir}packages/#{normalizedPackageName}?tab=sample_#{i}")= sample
@@ -113,14 +113,17 @@ block body
 				a.tab.external(href=doc_url, target="_blank") Documentation
 		- bool renderedTabContent;
 		- if (activeTab == "info")
-			- if (readmeContents.length)
+			- if (readmeContents.length || readmeHtmlOmitted)
 				.repositoryReadme.markdown-body
-					- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
-					- scope msettings = new MarkdownSettings;
-					- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
-					- msettings.headingBaseLevel = 2;
-					- msettings.urlFilter = &urlFilter;
-					!= filterMarkdown(readmeContents, msettings)
+					- if (readmeHtmlOmitted)
+						p.readme-html-note This readme contains HTML. This page does not render those tags, so they were left out.
+					- if (readmeContents.length)
+						- import vibe.textfilter.markdown : MarkdownFlags, MarkdownSettings, filterMarkdown;
+						- scope msettings = new MarkdownSettings;
+						- msettings.flags = MarkdownFlags.backtickCodeBlocks|MarkdownFlags.noInlineHtml|MarkdownFlags.tables;
+						- msettings.headingBaseLevel = 2;
+						- msettings.urlFilter = &urlFilter;
+						!= filterMarkdown(readmeContents, msettings)
 			- else
 				.repositoryReadme
 			- renderedTabContent = true;

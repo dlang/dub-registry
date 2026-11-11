@@ -220,6 +220,15 @@ h3 {
 	font-family: "fontello";
 }
 
+.repositoryReadme .readme-html-note {
+	margin: 0 0 1em;
+	padding: 0.6em 0.8em;
+	background: #fff8e6;
+	border: 1px solid #e6d7a2;
+	border-radius: 4px;
+	color: #5c4a12;
+}
+
 .subtabsHeader + div.repositoryReadme, section.pkgconfig {
 	margin-top: 0;
 	padding: 10pt;
