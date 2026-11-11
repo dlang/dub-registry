@@ -469,6 +469,12 @@ class DubRegistry {
 		return m_db.validatePackageSecret(pack_name, secret);
 	}
 
+	/// Whether a webhook secret is configured (boolean only; plaintext is never returned).
+	bool hasPackageSecret(string pack_name)
+	{
+		return m_db.hasPackageSecret(pack_name);
+	}
+
 	void unsetPackageSecret(string pack_name)
 	{
 		m_db.setPackageSecret(pack_name, null);

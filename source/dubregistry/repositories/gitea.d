@@ -174,7 +174,7 @@ class GiteaRepository : Repository {
 			}
 			else continue;
 			file.commitSha = commit_sha;
-			file.path = InetPath("/" ~ entry["path"].get!string);
+			file.path = repositoryFilePath(entry["path"].get!string);
 			ret ~= file;
 		}
 		return ret;
