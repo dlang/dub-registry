@@ -188,7 +188,7 @@ class BitbucketRepository : Repository {
 			}
 			else continue;
 			file.commitSha = entry["commit"]["hash"].get!string;
-			file.path = InetPath("/" ~ entry["path"].get!string);
+			file.path = repositoryFilePath(entry["path"].get!string);
 			ret ~= file;
 		}
 		return ret;

@@ -238,7 +238,7 @@ class DubRegistryWebFrontend {
 		import std.algorithm : canFind;
 
 		auto pname = _packname;
-		auto ver = _version.replace(" ", "+");
+		auto ver = decodePackageVersion(_version);
 		string ext;
 
 		if (_version.length) {
@@ -267,7 +267,10 @@ class DubRegistryWebFrontend {
 			logDebug("%s %s", packageInfo["id"].toString(), verinfo.downloadURL);
 
 			// add download to statistic
-			m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, req.headers.get("User-agent", null));
+			auto userAgent = req.headers.get("User-agent", null);
+			if (shouldCountDownload(req.method, userAgent))
+				m_registry.addDownload(BsonObjectID.fromString(packageInfo["id"].get!string), ver, userAgent);
+
 			if (verinfo.downloadURL.length > 0) {
 				// redirect to hosting service specific URL
 				redirect(verinfo.downloadURL);
@@ -480,6 +483,51 @@ class DubRegistryWebFrontend {
 		}
 		m_packages = newpacks.data;
 	}
+}
+
+private string decodePackageVersion(string versionString)
+{
+	return versionString.urlDecode.replace(" ", "+");
+}
+
+unittest
+{
+	assert(decodePackageVersion("~next%2Fv0.6.1") == "~next/v0.6.1");
+	assert(decodePackageVersion("~master") == "~master");
+	assert(decodePackageVersion("0.6.1") == "0.6.1");
+}
+
+/**
+	Decides whether a package download should be added to the statistics.
+
+	Only downloads made by DUB itself are counted. Requests from CI
+	environments (tagged with `; ci` in the User-Agent), crawlers and
+	`HEAD` requests are ignored.
+*/
+private bool shouldCountDownload(HTTPMethod method, string userAgent)
+{
+	import std.algorithm : canFind;
+	import std.uni : toLower;
+
+	if (method == HTTPMethod.HEAD) return false;
+	if (!userAgent.startsWith("dub/")) return false;
+	if (userAgent.canFind("; ci")) return false;
+	auto ua = userAgent.toLower;
+	foreach (bot; ["bot", "crawler", "spider"])
+		if (ua.canFind(bot)) return false;
+	return true;
+}
+
+unittest
+{
+	enum dubUA = "dub/1.42.0 (std.net.curl; +https://github.com/rejectedsoftware/dub)";
+	assert(shouldCountDownload(HTTPMethod.GET, dubUA));
+	assert(!shouldCountDownload(HTTPMethod.HEAD, dubUA));
+	assert(!shouldCountDownload(HTTPMethod.GET, "dub/1.42.0 (std.net.curl; ci; +https://github.com/rejectedsoftware/dub)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "dub/1.42.0 (SomeBot)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "Mozilla/5.0 (compatible; Googlebot/2.1)"));
+	assert(!shouldCountDownload(HTTPMethod.GET, "curl/8.5.0"));
+	assert(!shouldCountDownload(HTTPMethod.GET, null));
 }
 
 class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
@@ -734,6 +782,18 @@ class DubRegistryFullWebFrontend : DubRegistryWebFrontend {
 		m_registry.unsetPackageSecret(_packname);
 
 		redirect("/my_packages/"~_packname~"#repository");
+	}
+
+	/// Non-destructive webhook status for package admins / tooling.
+	/// Returns JSON `{"package":"...","configured":true|false}` — never the plaintext secret.
+	@auth @path("/my_packages/:packname/webhook")
+	void getPackageWebhook(scope HTTPServerRequest request, scope HTTPServerResponse response, string _packname, User _user)
+	{
+		enforceUserPackage(_user, _packname, DbPackage.Permissions.admin);
+		Json ret = Json.emptyObject;
+		ret["package"] = _packname;
+		ret["configured"] = m_registry.hasPackageSecret(_packname);
+		response.writeJsonBody(ret);
 	}
 
 	@auth @path("/my_packages/:packname/update")

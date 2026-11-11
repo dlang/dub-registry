@@ -71,8 +71,15 @@ class DbController {
 		fts["weights"] = Bson.emptyObject;
 		foreach (k, w; keyWeights)
 		{
+			// @@BUG@@ <https://github.com/dlang/dmd/issues/23642>
+			version (none)
 			fts["key"][k] = Bson("text");
+			else
+			(*("key" in fts))[k] = Bson("text");
+			version (none)
 			fts["weights"][k] = Bson(w);
+			else
+			(*("weights" in fts))[k] = Bson(w);
 		}
 		fts["name"] = "packages_full_text_search_index_v4";
 		fts["background"] = true;
@@ -225,6 +232,15 @@ class DbController {
 		auto ret = m_packages.findOne(["name": packname]).tryIndex("secret");
 		if (ret.isNull) return false;
 		else return validateBcryptHash(ret.get.get!string, secret);
+	}
+
+	/// True when a webhook secret hash is stored (does not reveal the plaintext).
+	bool hasPackageSecret(string packname)
+	{
+		auto ret = m_packages.findOne(["name": packname]).tryIndex("secret");
+		if (ret.isNull) return false;
+		auto hash = ret.get.get!string;
+		return hash.length > 0;
 	}
 
 	void setPackageSecret(string packname, string secret)
