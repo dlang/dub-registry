@@ -247,6 +247,8 @@ string validateAuthorizeRequest(const ref AuthorizeRequest ar)
 		return "invalid client_id";
 	if (!isLoopbackRedirectURI(ar.redirectUri))
 		return "redirect_uri must be an http loopback URI (127.0.0.1, localhost, or [::1])";
+	if (!ar.state.strip.length)
+		return "state is required";
 	if (ar.codeChallengeMethod != "S256")
 		return "code_challenge_method must be S256";
 	if (!isValidPKCEChallenge(ar.codeChallenge))
@@ -758,7 +760,14 @@ private void writeOAuthError(HTTPServerResponse res, OAuthHTTPException e)
 	ar.codeChallenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 	ar.codeChallengeMethod = "S256";
 	ar.scopeName = "packages";
+	ar.state = "client-nonce";
 	assert(validateAuthorizeRequest(ar) is null);
+
+	auto noState = ar;
+	noState.state = "";
+	assert(validateAuthorizeRequest(noState) !is null);
+	noState.state = "   ";
+	assert(validateAuthorizeRequest(noState) !is null);
 
 	auto bad = ar;
 	bad.redirectUri = "https://code.dlang.org/callback";

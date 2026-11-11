@@ -26,7 +26,7 @@ Query:
 | `response_type` | yes | `code` |
 | `client_id` | no | default `native` |
 | `redirect_uri` | yes | loopback HTTP URI |
-| `state` | recommended | echoed back |
+| `state` | yes | echoed back; required so the client can reject a response it did not start |
 | `code_challenge` | yes | S256 |
 | `code_challenge_method` | yes | `S256` |
 | `scope` | no | default `packages` |
