@@ -87,7 +87,8 @@ Nullable!User tryBearerAuth(HTTPServerRequest req, UserManController userman, OA
 		return none;
 	try {
 		auto api = createLocalUserManAPI(userman);
-		auto user = api.users.get(User.ID.fromString(rec.get.userId));
+		auto id = User.ID.fromString(rec.get.userId);
+		auto user = api.users[id].get();
 		if (!user.active || user.banned)
 			return none;
 		none = user;
@@ -508,7 +509,7 @@ private final class DubRegistryOAuth {
 			return;
 		}
 
-		auto redirectTo = req.session.get!string("github_oauth_redirect", "");
+		string redirectTo = req.session.get!string("github_oauth_redirect", "").idup;
 		req.session.remove("github_oauth_state");
 		req.session.remove("github_oauth_redirect");
 
@@ -581,11 +582,11 @@ private final class DubRegistryOAuth {
 			auto password = generateRandomHash!16;
 			try {
 				auto id = m_api.users.register(email, username, fullName, password);
-				user = m_api.users.get(id);
+				user = m_api.users[id].get();
 			} catch (Exception e) {
 				username = "gh-" ~ ghId;
 				auto id = m_api.users.register(email, username, fullName, password);
-				user = m_api.users.get(id);
+				user = m_api.users[id].get();
 			}
 		}
 
@@ -613,7 +614,7 @@ private string sanitizeUserName(string login, string ghId)
 }
 
 private string pickGitHubEmail(Json user, Json emails)
-@safe {
+{
 	if (emails.type == Json.Type.array) {
 		foreach (e; emails) {
 			if (e["primary"].opt!bool && e["verified"].opt!bool)
@@ -630,7 +631,7 @@ private string pickGitHubEmail(Json user, Json emails)
 }
 
 private string githubCallbackURL()
-@safe {
+{
 	auto base = g_serviceURL;
 	if (!base.length)
 		base = "https://code.dlang.org/";
