@@ -163,10 +163,10 @@ unittest
 	assert(base.queryString.length == 0);
 	assert(base.anchor.length == 0);
 	auto text = base.toString();
-	assert(!text.canFind(":443"), text);
-	assert(!text.canFind("secret"), text);
-	assert(!text.canFind("my_packages"), text);
-	assert(!text.canFind("#"), text);
+	assert(text.indexOf(":443") < 0, text);
+	assert(text.indexOf("secret") < 0, text);
+	assert(text.indexOf("my_packages") < 0, text);
+	assert(text.indexOf("#") < 0, text);
 	auto shown = text ~ "/api/packages/foo/update/github?secret=SECRET";
 	assert(shown == "https://code.dlang.org/api/packages/foo/update/github?secret=SECRET"
 		|| shown == "https://code.dlang.org//api/packages/foo/update/github?secret=SECRET", shown);
