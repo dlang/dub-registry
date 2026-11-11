@@ -17,9 +17,10 @@ struct PreparedReadme {
 	Prepare a readme for the package page.
 
 	The page renders Markdown with inline HTML disabled. `<br>` and
-	autolinks still render, so those stay. Other HTML tags are left out,
+	autolinks still render, so those stay. Known HTML tags are left out,
 	and `htmlOmitted` is set so the page can say so. Text inside ordinary
-	tags stays. Fenced code and inline code stay as written.
+	tags stays. A name that is not an HTML tag stays, including a line that
+	starts with `<T>`. Fenced code and inline code stay as written.
 
 	`img` tags are not shown. Their alt text is kept, because that is the
 	label a reader would have seen.
@@ -65,7 +66,7 @@ PreparedReadme prepareReadmeMarkdown(string source) @safe pure
 		}
 		if (source[i] == '<') {
 			bool wrote;
-			if (consumeHtml(source, i, app, omitted, onlyWs, wrote)) {
+			if (consumeHtml(source, i, app, omitted, wrote)) {
 				if (wrote) onlyWs = false;
 				continue;
 			}
@@ -142,7 +143,7 @@ private bool isClosingFence(string s, size_t i, char ch, size_t len) @safe pure
 	return true;
 }
 
-private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bool omitted, bool atLineStart, out bool wrote)
+private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bool omitted, out bool wrote)
 	@safe pure
 {
 	wrote = false;
@@ -151,8 +152,7 @@ private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bo
 	if (j >= s.length) return false;
 
 	if (s[j .. $].startsWith("!--")) {
-		auto windowEnd = min(s.length, j + 3 + 8192);
-		auto end = indexOf(s[j + 3 .. windowEnd], "-->");
+		auto end = indexOf(s[j + 3 .. $], "-->");
 		omitted = true;
 		if (end < 0) {
 			while (i < s.length && s[i] != '\n') i++;
@@ -169,7 +169,7 @@ private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bo
 		return true;
 	}
 	if (s[j] == '?') {
-		auto end = indexOf(s[j .. min(s.length, j + 8192)], "?>");
+		auto end = indexOf(s[j .. $], "?>");
 		if (end < 0) return false;
 		omitted = true;
 		i = j + end + 2;
@@ -191,10 +191,9 @@ private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bo
 		return false;
 
 	string name = s[nameStart .. j].toLower;
+	if (!isKnownHtmlTag(name)) return false;
 	auto gt = findTagEnd(s, j);
 	if (gt == size_t.max) return false;
-	bool known = isKnownHtmlTag(name);
-	if (!known && !atLineStart) return false;
 
 	bool selfClosing = gt > j && s[gt - 1] == '/';
 	if (name == "br" && !closing) {
@@ -227,8 +226,7 @@ private bool consumeHtml(string s, ref size_t i, ref Appender!string app, ref bo
 private size_t findTagEnd(string s, size_t j) @safe pure
 {
 	bool inDq, inSq;
-	size_t limit = min(s.length, j + 8192);
-	for (size_t k = j; k < limit; k++) {
+	for (size_t k = j; k < s.length; k++) {
 		char c = s[k];
 		if (inDq) {
 			if (c == '"') inDq = false;
@@ -328,11 +326,6 @@ private bool isSpace(char c) @safe pure
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
-private size_t min(size_t a, size_t b) @safe pure
-{
-	return a < b ? a : b;
-}
-
 @safe unittest
 {
 	auto plain = prepareReadmeMarkdown("# Hello\n\nA paragraph.\n");
@@ -372,6 +365,34 @@ private size_t min(size_t a, size_t b) @safe pure
 	assert(generic.text == "Use Foo<T> here.\n");
 
 	auto widget = prepareReadmeMarkdown("<widget>\ninner\n</widget>\n");
-	assert(widget.htmlOmitted);
-	assert(widget.text == "\ninner\n\n");
+	assert(!widget.htmlOmitted);
+	assert(widget.text == "<widget>\ninner\n</widget>\n");
+
+	auto genericLine = prepareReadmeMarkdown("<T>\nnext\n");
+	assert(!genericLine.htmlOmitted);
+	assert(genericLine.text == "<T>\nnext\n");
+
+	char[] filler;
+	filler.length = 9000;
+	filler[] = 'x';
+	auto longComment = prepareReadmeMarkdown("A <!--" ~ filler.idup ~ "--> B\n");
+	assert(longComment.htmlOmitted);
+	assert(longComment.text == "A  B\n");
+}
+
+/** Markdown is the only readme this scanner should rewrite. */
+bool readmeOmitsUnreadHtml(string format) @safe pure
+{
+	import std.uni : toLower;
+	auto f = format.toLower;
+	return f.length == 0 || f == "markdown" || f == "md";
+}
+
+@safe unittest
+{
+	assert(readmeOmitsUnreadHtml(""));
+	assert(readmeOmitsUnreadHtml("markdown"));
+	assert(readmeOmitsUnreadHtml("MD"));
+	assert(!readmeOmitsUnreadHtml("asciidoc"));
+	assert(!readmeOmitsUnreadHtml("plain"));
 }

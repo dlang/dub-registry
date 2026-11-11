@@ -332,7 +332,12 @@ class DubRegistryWebFrontend {
 			auto packageName = pname;
 			auto registry = m_registry;
 			auto readmeContents = m_registry.getReadme(versionInfo, packageInfo["repository"].deserializeJson!DbRepository);
-			auto preparedReadme = prepareReadmeMarkdown(readmeContents);
+			auto readmeFormat = versionInfo["readmeFormat"].opt!string;
+			PreparedReadme preparedReadme;
+			if (readmeOmitsUnreadHtml(readmeFormat))
+				preparedReadme = prepareReadmeMarkdown(readmeContents);
+			else
+				preparedReadme = PreparedReadme(readmeContents, false);
 			if (preparedReadme.htmlOmitted)
 				logWarn("Readme for %s contains HTML this page does not render; those tags were left out.", packageName);
 			readmeContents = preparedReadme.text;
