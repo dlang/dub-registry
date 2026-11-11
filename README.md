@@ -46,6 +46,27 @@ It's recommended to create a separate account for the DUB registry GitHub authen
 
 It's absolutely recommended to create a personal access token without any extra permissions for your GitHub account instead of entering your password plain text into the settings file. You can generate an access token at https://github.com/settings/tokens (Settings -> Developer Settings -> Personal access tokens)
 
+Native app / CLI login (OAuth)
+------------------------------
+
+Package-management tools (for example a local `dub-publish` CLI) can log in with
+the OAuth 2.0 authorization-code + PKCE flow and a loopback callback instead of
+posting a password. See [api-docs/oauth.md](api-docs/oauth.md).
+
+Optional GitHub login for the website (and thus for that authorize step) uses a
+GitHub OAuth App. Add the app's credentials to `settings.json` and set the
+callback URL to `https://<this-host>/login/github/callback`:
+
+```json
+{
+	"github-oauth-client-id": "<GitHub OAuth App client ID>",
+	"github-oauth-client-secret": "<GitHub OAuth App client secret>"
+}
+```
+
+This is separate from `github-auth`, which is only a personal access token for
+GitHub API rate limits when polling packages.
+
 ### SECURITY NOTICE
 
 Development versions prior to 2.3.0 were leaking the GitLab private token in error messages shown to the user. Please make sure to use the latest version along with a freshly generated token.
