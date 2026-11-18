@@ -126,8 +126,8 @@ block body
 			p You can POST to a special endpoint on the dub registry to trigger a manual package update.
 			p Setup these hooks in GitHub, GitLab or some other service you use to trigger when you push a new tag to make them available on the registry as quickly as possible.
 			.inputForm
-				- auto apiUrl = req.fullURL;
-				- apiUrl.path = typeof(apiUrl.path).init;
+				- import dubregistry.viewutils : webhookDisplayBase;
+				- auto apiUrl = webhookDisplayBase(req.fullURL);
 				#secret-guide(style=secret.length ? "" : "display: none")
 					- auto placeholder = secret.length ? secret : "{SECRET}";
 					p A webhook secret for this package is configured.
@@ -145,6 +145,7 @@ block body
 						label(for="secret") Secret:
 						input#secret(type="text", readonly, autocomplete="off", value=placeholder)
 					p.warn This secret will only be shown once, please make sure to note it down.
+					p Example test (must use POST and Content-Type application/json): ``curl -X POST -H "Content-Type: application/json" -d "{}" "#{apiUrl}/api/packages/#{packageName}/update/github?secret=#{placeholder}"``
 					p Read more in the #[a(href="https://github.com/dlang/dub-registry/blob/master/api-docs/http-update.md", target="_blank") API documentation]
 					hr
 				- if (secretBcrypt.length)
