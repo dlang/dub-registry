@@ -6,6 +6,7 @@
 module dubregistry.api;
 
 import dubregistry.dbcontroller;
+import dubregistry.githubhook;
 import dubregistry.registry;
 
 import std.algorithm.iteration : map;
@@ -201,23 +202,30 @@ override {
 
 	string postUpdateGithub(string _name, string secret, string event, Json hook = Json.init)
 	{
-		if (event == "create") {
+		// create: tag/branch created
+		// release: GitHub Releases lifecycle (created/edited/published/unpublished/deleted/…)
+		// delete: tag/branch removed (updatePackage drops versions for missing refs)
+		if (githubUpdateEvent(event)) {
 			return postUpdate(_name, secret);
 		} else if (event == "ping") {
 			enforceBadRequest(hook.type == Json.Type.object, "hook is not of type json");
 			auto events = *enforceBadRequest("events" in hook, "no events object sent in hook object");
 			enforceBadRequest(events.type == Json.Type.array, "Hook events must be of type array");
 
+			string[] names;
 			foreach (ev; events[])
-				if (ev.type == Json.Type.string && ev.get!string == "create")
-					return "valid";
+				if (ev.type == Json.Type.string)
+					names ~= ev.get!string;
+			if (githubPingListsUpdateEvent(names))
+				return "valid";
 
 			// only add package error message on valid secret
 			if (m_registry.validatePackageSecret(_name, secret))
 				m_registry.addPackageError(_name,
-					"GitHub hook configuration is invalid. Hook is missing 'create' event. (Tags or branches)");
+					"GitHub hook configuration is invalid. Hook is missing a supported event "
+					~ "(create, release, or delete).");
 
-			return "invalid hook - create event missing";
+			return "invalid hook - supported event missing";
 		} else {
 			return "ignored event " ~ event;
 		}
