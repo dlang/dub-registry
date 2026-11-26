@@ -191,7 +191,6 @@ function regenerateSecret(event) {
 				alert("Generating secret failed, please reload and try again");
 				return;
 			}
-			console.log(token);
 			for (let input of guide.querySelectorAll("input")) {
 				input.value = input.value.replace(/\{SECRET\}/g, token);
 			}
